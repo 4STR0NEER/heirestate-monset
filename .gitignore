@@ -1,0 +1,6 @@
+node_modules
+dist
+.env*
+# raw client files (1 GB+ of video); web-ready cuts live in public/media
+resources/
+.impeccable/review/

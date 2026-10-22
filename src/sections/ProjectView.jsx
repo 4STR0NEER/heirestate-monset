@@ -1,0 +1,470 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { animate, stagger } from "animejs";
+import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react";
+import Logo, { Mark } from "@/components/Logo";
+import { order, projects } from "@/projects";
+
+const EASE = [0.23, 1, 0.32, 1];
+const EASE_IO = [0.77, 0, 0.175, 1];
+const GUTTER = "px-[clamp(16px,4vw,64px)]";
+// the stills keep their native proportions so the horizontal track can be measured before they load
+const SIZES = { alto: [1600, 688], wave: [1530, 640], pristina: [1600, 800] };
+
+const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px)`;
+const FULL = "inset(0px 0px 0px 0px)";
+
+function useMedia(query) {
+  const [match, setMatch] = useState(() => matchMedia(query).matches);
+  useEffect(() => {
+    const m = matchMedia(query);
+    const on = () => setMatch(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, [query]);
+  return match;
+}
+
+// The project opens out of the window that was clicked: the overlay starts clipped to that
+// window's glass and expands to the screen. Without an origin (deep link, next project) it fades.
+export default function ProjectView({ id, origin, onClose, onGo }) {
+  const scroller = useRef(null);
+  const closeBtn = useRef(null);
+  const reduce = useReducedMotion();
+  const clip = origin && !reduce;
+
+  useEffect(() => {
+    const before = document.activeElement;
+    const html = document.documentElement;
+    html.style.overflow = "hidden";
+    closeBtn.current?.focus({ preventScroll: true });
+    const onKey = (e) => e.key === "Escape" && onClose();
+    addEventListener("keydown", onKey);
+    return () => {
+      removeEventListener("keydown", onKey);
+      html.style.overflow = "";
+      before?.focus?.({ preventScroll: true });
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    scroller.current?.scrollTo(0, 0);
+  }, [id]);
+
+  return (
+    <motion.div
+      ref={scroller}
+      role="dialog"
+      aria-modal="true"
+      aria-label={projects[id].name}
+      className="fixed inset-0 z-30 overflow-y-auto overscroll-contain bg-navy"
+      initial={clip ? { clipPath: insetOf(origin) } : { opacity: 0 }}
+      animate={clip ? { clipPath: FULL } : { opacity: 1 }}
+      exit={clip ? { clipPath: insetOf(origin), transition: { duration: 0.7, ease: EASE_IO } } : { opacity: 0, transition: { duration: 0.4 } }}
+      transition={{ duration: clip ? 0.95 : 0.5, ease: EASE_IO }}
+    >
+      <div className="sticky top-0 z-20 h-0">
+        {/* a soft fade behind the bar keeps logo and close button legible over any section */}
+        <div className={`flex items-center justify-between bg-linear-to-b from-navy/85 via-navy/40 to-transparent pt-6 pb-8 ${GUTTER}`}>
+          <button type="button" onClick={onClose} aria-label="Back to the facade">
+            <Logo />
+          </button>
+          <button
+            ref={closeBtn}
+            type="button"
+            onClick={onClose}
+            aria-label="Close project"
+            className="grid size-12 place-items-center rounded-full border border-gold/50 bg-navy-deep/40 text-champagne backdrop-blur-sm transition-[background-color,transform] duration-200 hover:bg-gold hover:text-navy-deep active:scale-95"
+          >
+            <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+          style={{ "--accent": projects[id].accent }}
+        >
+          <Project id={id} scroller={scroller} onClose={onClose} onGo={onGo} opened={clip} />
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function Project({ id, scroller, onClose, onGo, opened }) {
+  const p = projects[id];
+  const nextId = order[(order.indexOf(id) + 1) % order.length];
+  const film = useRef(null);
+  // when the overlay grew out of a window, the title waits for the glass to finish opening
+  const t0 = opened ? 0.55 : 0.15;
+
+  return (
+    <>
+      <section className="relative h-svh overflow-hidden">
+        <motion.video
+          src={`${p.hero}.mp4`}
+          poster={`${p.hero}.jpg`}
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+          className="absolute inset-0 size-full object-cover"
+          initial={{ scale: 1.18 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.8, ease: EASE }}
+        />
+        <div className="absolute inset-0 bg-linear-to-t from-navy via-navy/25 to-navy/40" />
+        <div className={`absolute inset-x-0 bottom-0 flex flex-col gap-8 pb-[clamp(32px,7vh,80px)] md:flex-row md:items-end md:justify-between ${GUTTER}`}>
+          <div>
+            <h2 className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em]">
+              {p.name.split(" ").map((w, i) => (
+                <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
+                  <motion.span
+                    className="inline-block"
+                    initial={{ transform: "translateY(105%)" }}
+                    animate={{ transform: "translateY(0%)" }}
+                    transition={{ duration: 1.1, ease: EASE, delay: t0 + i * 0.08 }}
+                  >
+                    {w}
+                  </motion.span>
+                </span>
+              ))}
+            </h2>
+            <motion.p
+              className="font-inscription mt-4 text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.3em] text-gold uppercase"
+              initial={{ opacity: 0, filter: "blur(6px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1, ease: EASE, delay: t0 + 0.35 }}
+            >
+              {p.tagline}
+            </motion.p>
+            {p.kicker && (
+              <motion.p
+                className="mt-2 text-champagne/70"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: t0 + 0.5 }}
+              >
+                {p.kicker}
+              </motion.p>
+            )}
+          </div>
+          <motion.button
+            type="button"
+            onClick={() => film.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            className="group font-inscription flex items-center gap-4 self-start text-[0.8rem] tracking-[0.3em] text-champagne uppercase md:self-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: t0 + 0.6 }}
+          >
+            <PlayRing className="size-14" />
+            Watch the film
+          </motion.button>
+        </div>
+      </section>
+
+      <section className={`mx-auto grid max-w-[1440px] gap-14 py-[clamp(88px,16vh,180px)] md:grid-cols-[1.35fr_1fr] md:gap-20 ${GUTTER}`}>
+        <Rise className="font-display max-w-[32ch] text-[clamp(1.45rem,2.5vw,2.35rem)] leading-[1.28] text-champagne">
+          {p.statement}
+        </Rise>
+        {p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />}
+      </section>
+
+      <Gallery id={id} items={p.spaces} scroller={scroller} />
+      {p.residences && <Residences sets={p.residences} />}
+      {p.nearby && <Nearby places={p.nearby} />}
+      <Film ref={film} src={p.film} name={p.name} />
+
+      <button type="button" onClick={() => onGo(nextId)} className="group relative block h-[62svh] w-full overflow-hidden text-left">
+        <img
+          src={`${projects[nextId].hero}.jpg`}
+          alt=""
+          loading="lazy"
+          className="absolute inset-0 size-full scale-105 object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-100"
+        />
+        <div className="absolute inset-0 bg-navy/65 transition-colors duration-700 group-hover:bg-navy/40" />
+        <div className={`absolute inset-x-0 bottom-0 pb-[clamp(32px,7vh,80px)] ${GUTTER}`}>
+          <span className="font-display block text-[clamp(2.6rem,7vw,6.5rem)] leading-none tracking-[-0.03em]">
+            {projects[nextId].name}
+          </span>
+          <span className="font-inscription mt-4 flex items-center gap-3 text-[0.78rem] tracking-[0.3em] text-gold uppercase">
+            Next project
+            <svg viewBox="0 0 24 10" className="w-6 transition-transform duration-300 group-hover:translate-x-1.5" aria-hidden="true">
+              <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+          </span>
+        </div>
+      </button>
+
+      <footer className={`flex items-center justify-between py-10 ${GUTTER}`}>
+        <button type="button" onClick={onClose} className="font-inscription text-[0.78rem] tracking-[0.3em] text-champagne/75 uppercase hover:text-gold">
+          Back to the facade
+        </button>
+        <Mark className="h-8 w-auto text-champagne/70" />
+      </footer>
+    </>
+  );
+}
+
+function Rise({ children, className, as: Tag = motion.p }) {
+  return (
+    <Tag
+      className={className}
+      initial={{ opacity: 0, transform: "translateY(24px)", filter: "blur(6px)" }}
+      whileInView={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 1.1, ease: EASE }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// the spec sheet drawn like the title block in the corner of an architect's elevation
+function TitleBlock({ name, facts }) {
+  return (
+    <motion.dl
+      className="self-start border border-gold/35"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 1, ease: EASE, delay: 0.15 }}
+    >
+      <div className="flex items-center justify-between gap-4 border-b border-gold/35 px-5 py-4">
+        <span className="font-inscription text-[0.72rem] tracking-[0.3em] text-champagne uppercase">{name}</span>
+        <Mark className="h-6 w-auto text-champagne/80" />
+      </div>
+      {facts.map(([label, value], i) => (
+        <motion.div
+          key={label}
+          className="grid grid-cols-[minmax(7.5rem,auto)_1fr] gap-4 border-b border-gold/15 px-5 py-3.5 last:border-b-0"
+          initial={{ opacity: 0, transform: "translateX(-8px)" }}
+          whileInView={{ opacity: 1, transform: "translateX(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.25 + i * 0.05 }}
+        >
+          <dt className="font-inscription pt-0.5 text-[0.68rem] tracking-[0.24em] text-champagne/55 uppercase">{label}</dt>
+          <dd className="text-champagne tabular-nums">{value}</dd>
+        </motion.div>
+      ))}
+    </motion.dl>
+  );
+}
+
+// Desktop: the section pins and vertical scroll pans the renders sideways.
+// Phones: a plain swipeable row with snap points.
+function Gallery({ id, items, scroller }) {
+  const wide = useMedia("(min-width: 768px)");
+  const section = useRef(null);
+  const track = useRef(null);
+  const [dist, setDist] = useState(0);
+  const [w, h] = SIZES[id];
+
+  useLayoutEffect(() => {
+    if (!wide) return;
+    const measure = () => setDist(Math.max(0, track.current.scrollWidth - innerWidth));
+    const ro = new ResizeObserver(measure);
+    ro.observe(track.current);
+    return () => ro.disconnect();
+  }, [wide, id]);
+
+  const { scrollYProgress } = useScroll({ container: scroller, target: section, offset: ["start start", "end end"] });
+  const x = useTransform(scrollYProgress, [0, 1], [0, -dist]);
+
+  const heading = (
+    <div className={`mb-8 flex items-end justify-between gap-6 ${GUTTER}`}>
+      <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Spaces</h3>
+      {wide && (
+        <div className="mb-2 h-px w-[min(240px,30vw)] bg-gold/20">
+          <motion.div className="h-px origin-left bg-gold" style={{ scaleX: scrollYProgress }} />
+        </div>
+      )}
+    </div>
+  );
+
+  const card = (s, i) => (
+    <figure key={s.src} className={wide ? "shrink-0" : "w-[86vw] shrink-0 snap-center"}>
+      {/* the wrapper is what gets observed: a clipped element has no visible area, so it never "enters" */}
+      <motion.div
+        className="group overflow-hidden bg-navy-deep"
+        initial="hidden"
+        whileInView="shown"
+        viewport={{ once: true, amount: 0.2 }}
+      >
+        <motion.img
+          src={s.src}
+          alt={s.name}
+          width={w}
+          height={h}
+          decoding="async"
+          className={`${wide ? "h-[min(56vh,560px)] w-auto" : "h-auto w-full"} object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]`}
+          variants={{ hidden: { clipPath: "inset(0 0 100% 0)" }, shown: { clipPath: "inset(0 0 0% 0)" } }}
+          transition={{ duration: 1.1, ease: EASE_IO, delay: wide ? 0 : 0.05 * i }}
+        />
+      </motion.div>
+      <figcaption className="mt-4 flex items-baseline justify-between gap-6">
+        <span className="font-display text-[clamp(1.05rem,1.4vw,1.35rem)]">{s.name}</span>
+        {s.area && <span className="font-inscription text-[0.72rem] tracking-[0.24em] text-champagne/60 uppercase tabular-nums">{s.area}</span>}
+      </figcaption>
+    </figure>
+  );
+
+  if (!wide)
+    return (
+      <section ref={section} className="pb-24">
+        {heading}
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">{items.map(card)}</div>
+      </section>
+    );
+
+  return (
+    <section ref={section} style={{ height: `calc(100svh + ${dist}px)` }} className="relative">
+      <div className="sticky top-0 flex h-svh flex-col justify-center overflow-hidden">
+        {heading}
+        <motion.div ref={track} style={{ x }} className={`flex w-max gap-[clamp(20px,2.4vw,40px)] ${GUTTER}`}>
+          {items.map(card)}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function Residences({ sets }) {
+  const names = Object.keys(sets);
+  const [tab, setTab] = useState(names[0]);
+  return (
+    <section className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Residences</h3>
+          <p className="mt-3 text-champagne/65">Photographed in the dress-up units.</p>
+        </div>
+        <div role="tablist" aria-label="Unit type" className="flex rounded-full border border-gold/35 p-1">
+          {names.map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="tab"
+              aria-selected={tab === n}
+              onClick={() => setTab(n)}
+              className={`font-inscription relative rounded-full px-5 py-2 text-[0.72rem] tracking-[0.24em] uppercase transition-colors duration-300 ${tab === n ? "text-navy-deep" : "text-champagne/75 hover:text-champagne"}`}
+            >
+              {tab === n && (
+                <motion.span layoutId="unit-tab" className="absolute inset-0 rounded-full bg-gold" transition={{ type: "spring", duration: 0.45, bounce: 0.15 }} />
+              )}
+              <span className="relative">{n}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          role="tabpanel"
+          className="columns-2 gap-[clamp(10px,1.4vw,20px)] md:columns-3"
+          initial={{ opacity: 0, filter: "blur(6px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, filter: "blur(6px)", transition: { duration: 0.2 } }}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          {sets[tab].map((src, i) => (
+            <img
+              key={src}
+              src={src}
+              alt={`${tab} dress-up unit, view ${i + 1}`}
+              width={760}
+              height={802}
+              loading="lazy"
+              decoding="async"
+              className="mb-[clamp(10px,1.4vw,20px)] w-full break-inside-avoid"
+            />
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </section>
+  );
+}
+
+// A measured scale, not a list: each bar is the real distance on one linear kilometre axis.
+// anime.js draws the bars out in order once the section is on screen.
+function Nearby({ places }) {
+  const root = useRef(null);
+  const inView = useInView(root, { once: true, margin: "-120px" });
+  const max = Math.ceil(Math.max(...places.map(([, km]) => km)));
+
+  useEffect(() => {
+    if (!inView) return;
+    const bars = root.current.querySelectorAll("[data-bar]");
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return void bars.forEach((b) => (b.style.transform = "none"));
+    const a = animate(bars, { scaleX: [0, 1], duration: 1200, delay: stagger(70), ease: "outExpo" });
+    return () => a.pause();
+  }, [inView]);
+
+  return (
+    <section ref={root} className={`mx-auto max-w-[1200px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+      <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Within reach</h3>
+      <p className="mt-3 text-champagne/65">Distances from The Wave, in kilometres.</p>
+      <ol className="mt-12">
+        {places.map(([name, km]) => (
+          <li key={name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-x-4 border-b border-gold/12 py-3 md:grid-cols-[18rem_minmax(0,1fr)_4rem]">
+            <span className="text-champagne">{name}</span>
+            <span className="order-last col-span-2 mt-2 h-px bg-gold/12 md:order-none md:col-span-1 md:mt-0">
+              <span data-bar className="block h-px origin-left bg-gold" style={{ width: `${(km / max) * 100}%`, transform: "scaleX(0)" }} />
+            </span>
+            <span className="font-inscription text-right text-[0.8rem] tracking-[0.12em] text-gold tabular-nums">{km} km</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function Film({ ref, src, name }) {
+  const video = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const play = () => {
+    setPlaying(true);
+    video.current.play().catch(() => {});
+  };
+  return (
+    <section ref={ref} className={`mx-auto max-w-[1440px] pb-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+      <h3 className="font-display mb-8 text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">The walkthrough</h3>
+      <div className="relative aspect-video overflow-hidden border border-gold/25 bg-navy-deep">
+        <video
+          ref={video}
+          src={`${src}.mp4`}
+          poster={`${src}.jpg`}
+          preload="none"
+          playsInline
+          controls={playing}
+          className="size-full object-cover"
+        />
+        {!playing && (
+          <button type="button" onClick={play} aria-label={`Play the ${name} walkthrough`} className="group absolute inset-0 grid place-items-center bg-navy/35">
+            <span className="flex flex-col items-center gap-4">
+              <PlayRing className="size-24 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
+              <span className="font-inscription text-[0.78rem] tracking-[0.3em] text-champagne uppercase">Play the film</span>
+            </span>
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PlayRing({ className }) {
+  return (
+    <svg viewBox="0 0 56 56" className={className} aria-hidden="true">
+      <circle cx="28" cy="28" r="27" fill="rgb(12 21 38 / 0.35)" stroke="var(--color-gold)" strokeWidth="1" />
+      <path d="M23 19.5v17l14-8.5z" fill="var(--color-champagne)" />
+    </svg>
+  );
+}
