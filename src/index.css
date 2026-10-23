@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* client palette, plus Heir Navy as the ground */
+  /* client palette, plus Heir Navy */
   --color-navy: #14213a;
   --color-navy-raised: #1d2e4c;
   --color-navy-deep: #0c1526;
@@ -10,6 +10,14 @@
   --color-gold: #c49b4c;
   --color-teal: #0a4f54;
   --color-champagne: #e2d2b4;
+
+  /* the light site: warm paper, navy ink. Brand gold is too pale for type on paper
+     (2.3:1), so gold text uses deeper cuts of it: display ≥3:1, small text ≥4.5:1 */
+  --color-paper: #f6f1e8;
+  --color-stone: #ece3d3;
+  --color-ink: #14213a;
+  --color-gold-display: #9a7633;
+  --color-gold-ink: #7d5d22;
 
   --font-display: "Bodoni Moda Variable", "Bodoni 72", Didot, serif;
   --font-inscription: "Marcellus", "Trajan Pro", serif;
@@ -20,108 +28,19 @@
 }
 
 html {
-  background: var(--color-navy);
-  color: var(--color-champagne);
+  background: var(--color-paper);
+  color: var(--color-charcoal);
   font-family: var(--font-body);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
-  scrollbar-color: var(--color-gold) var(--color-navy-deep);
+  scrollbar-color: var(--color-gold) var(--color-stone);
 }
 
-/* film grain over the whole facade, so flat navy reads as stone instead of a screen */
+/* fine paper grain over everything, so flat colour reads as a material, not a screen */
 body {
-  background-color: var(--color-navy);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .89 0 0 0 0 .82 0 0 0 0 .7 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-color: var(--color-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .19 0 0 0 0 .22 0 0 0 0 .24 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-
-::selection {
-  background: var(--color-gold);
-  color: var(--color-navy-deep);
-}
-
-:focus-visible {
-  outline: 1px solid var(--color-gold);
-  outline-offset: 4px;
-}
-
-.lit-window {
-  filter: drop-shadow(0 0 5px rgb(196 155 76 / 0.75));
-}
-
-/* ---------- facade ---------- */
-
-/* the light band moving across the glass: fixed attachment makes it one continuous
-   reflection across all five windows; --lx is set from the pointer in Hero.jsx */
-.glass-sheen {
-  background-image: linear-gradient(
-    112deg,
-    transparent 0%,
-    transparent calc(var(--lx, 50%) - 14%),
-    rgb(226 210 180 / 0.1) var(--lx, 50%),
-    transparent calc(var(--lx, 50%) + 9%),
-    transparent 100%
-  );
-  background-attachment: fixed;
-  mix-blend-mode: screen;
-}
-
-/* hovering one window lets the rest of the street fall into dusk */
-@media (hover: hover) and (pointer: fine) {
-  .facade:has(.win:hover) .win:not(:hover) .win-glass {
-    filter: brightness(0.55) saturate(0.7);
-  }
-}
-.win-glass {
-  transition: filter 500ms ease;
-}
-
-/* louvre shutters on the unannounced projects */
-.shutter {
-  perspective: 900px;
-}
-.slat {
-  background: linear-gradient(
-    to bottom,
-    rgb(226 210 180 / 0.16) 0,
-    var(--color-navy-raised) 2px,
-    var(--color-navy-raised) 55%,
-    var(--color-navy-deep) 100%
-  );
-  transform-origin: 50% 0;
-  transition: transform 700ms var(--ease-out-strong);
-  transition-delay: calc(var(--i) * 22ms);
-}
-@media (hover: hover) and (pointer: fine) {
-  .win:hover .slat {
-    transform: rotateX(-48deg);
-  }
-}
-.shutter-light {
-  background: radial-gradient(60% 45% at 50% 55%, rgb(196 155 76 / 0.55), rgb(122 32 56 / 0.25) 55%, transparent 80%);
-  opacity: 0.15;
-  transition: opacity 700ms var(--ease-out-strong);
-}
-@media (hover: hover) and (pointer: fine) {
-  .win:hover .shutter-light {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .slat {
-    transition: none;
-  }
-}
-
-/* window reveal: the wall is thick, so the jamb throws shadow onto the glass (light from above) */
-.reveal {
-  box-shadow:
-    inset 0 22px 26px -14px rgb(5 10 20 / 0.75),
-    inset 12px 0 18px -12px rgb(5 10 20 / 0.55),
-    inset -12px 0 18px -12px rgb(5 10 20 / 0.35);
-}
-
-/* grain sits over everything (sky, facade, videos) so every surface shares one material */
 body::after {
   content: "";
   position: fixed;
@@ -131,37 +50,31 @@ body::after {
   background-image: inherit;
 }
 
-/* a warm lamp on the facade wall that follows the pointer (--lx/--ly from Hero.jsx) */
-.wall-light {
-  background: radial-gradient(520px circle at var(--lx, 50%) var(--ly, 40%), rgb(196 155 76 / 0.09), transparent 70%);
-  background-attachment: fixed;
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ink);
 }
 
-/* the towers breathe: a very slow push-in behind the glass, each window on its own clock */
-@media (prefers-reduced-motion: no-preference) {
-  .breathe {
-    animation: breathe var(--d, 14s) ease-in-out infinite alternate;
-  }
-  .shutter-light {
-    animation: leak 7s ease-in-out infinite alternate;
-  }
-}
-@keyframes breathe {
-  to {
-    transform: scale(1.07);
-  }
-}
-@keyframes leak {
-  from {
-    opacity: 0.08;
-  }
-  to {
-    opacity: 0.24;
-  }
+:focus-visible {
+  outline: 1px solid var(--color-gold-ink);
+  outline-offset: 4px;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .live-win {
-    cursor: none;
-  }
+.lit-window {
+  filter: drop-shadow(0 0 5px rgb(196 155 76 / 0.75));
+}
+
+/* the blur that turns the morphing shapes into silk (SilkBackground.jsx) */
+.silk {
+  filter: blur(11px) saturate(1.1);
+}
+
+/* a panel's film fading into its project colour (--accent) at the foot, where its name sits */
+.accent-fade {
+  background: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--accent) 88%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 35%, transparent) 38%,
+    transparent 70%
+  );
 }

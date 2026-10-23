@@ -1,12 +1,6 @@
-// The facade reads left to right. Shuttered windows are the two projects not announced yet;
-// The Wave sits in the centre because its loop ends at night with every window lit.
-export const windows = [
-  { id: "soon-1", soon: true },
-  { id: "alto", name: "Alto Ranudo", media: "/media/alto", accent: "var(--color-teal)" },
-  { id: "wave", name: "The Wave", media: "/media/wave", accent: "var(--color-navy-raised)" },
-  { id: "pristina", name: "Pristina Town", media: "/media/pristina", accent: "var(--color-burgundy)" },
-  { id: "soon-2", soon: true },
-];
+// The five projects side by side in the hero, left to right. "soon" marks the two
+// not yet announced; replace one with a project id when it launches.
+export const showcase = ["alto", "wave", "pristina", "soon", "soon"];
 
 const P = "/media/p";
 
@@ -18,6 +12,7 @@ export const projects = {
     name: "Alto Ranudo",
     accent: "var(--color-teal)",
     hero: `${P}/alto-hero`,
+    panel: `${P}/alto-panel`,
     film: `${P}/alto-film`,
     tagline: "Twin towers above the city",
     // ours: described from the walkthrough
@@ -42,8 +37,9 @@ export const projects = {
 
   wave: {
     name: "The Wave",
-    accent: "var(--color-navy-raised)",
+    accent: "var(--color-navy)",
     hero: `${P}/wave-hero`,
+    panel: `${P}/wave-panel`,
     film: `${P}/wave-film`,
     tagline: "A New Wave of Living",
     kicker: "Rooted in Japan, rising from Cebu",
@@ -93,6 +89,7 @@ export const projects = {
     name: "Pristina Town",
     accent: "var(--color-burgundy)",
     hero: `${P}/pristina-hero`,
+    panel: `${P}/pristina-panel`,
     film: `${P}/pristina-film`,
     tagline: "Welcome to Pristina Town",
     // ours: described from the walkthrough

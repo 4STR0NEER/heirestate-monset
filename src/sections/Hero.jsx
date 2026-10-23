@@ -1,347 +1,216 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useMotionValueEvent,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "motion/react";
-import Logo from "@/components/Logo";
-import Sky from "@/components/Sky";
-import TextRoll from "@/components/skiper/text-roll";
-import { windows } from "@/projects";
+import { animate, splitText, stagger } from "animejs";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import SilkBackground from "@/components/SilkBackground";
+import { useMedia } from "@/lib/use-media";
+import { projects, showcase } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
-const HEADLINE_DONE = 0.9; // windows start lighting once the headline has risen
-const SLATS = 18;
-// window heights step down from the centre, so the facade reads as one composed elevation
-const HEIGHTS = [86, 93, 100, 93, 86];
-const finePointer = () =>
-  matchMedia("(hover: hover) and (pointer: fine)").matches;
+const OPEN = { duration: 0.75, ease: [0.77, 0, 0.175, 1] };
+const HOVER_INTENT = 90; // ms the pointer must rest before a panel opens, so sweeping across never flickers
 
-export default function Hero({ ready = true, onOpen }) {
+export default function Hero({ ready = true, onOpen, paused, onSection }) {
   const reduce = useReducedMotion();
-  const facade = useRef(null);
-  const [hovered, setHovered] = useState(null);
+  const section = useRef(null);
+  const heading = useRef(null);
+  const inView = useInView(section, { margin: "-10% 0px" });
+  useEffect(() => {
+    if (inView) onSection?.("top");
+  }, [inView, onSection]);
 
-  // one pointer drives the scene in depth: sky still, headline a little, towers behind glass the most
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 60, damping: 20 });
-  const sy = useSpring(my, { stiffness: 60, damping: 20 });
-  const px = useTransform(sx, (v) => `${v * -22}px`);
-  const py = useTransform(sy, (v) => `${v * -14}px`);
-  const hx = useTransform(sx, (v) => `${v * 8}px`);
-  const hy = useTransform(sy, (v) => `${v * 5}px`);
-  // the reflection band and the warm wall light both follow the same spring
-  useMotionValueEvent(sx, "change", (v) =>
-    facade.current?.style.setProperty("--lx", `${(v + 0.5) * 100}%`),
-  );
-  useMotionValueEvent(sy, "change", (v) =>
-    facade.current?.style.setProperty("--ly", `${(v + 0.5) * 100}%`),
-  );
-
-  // raw pointer position for the cursor label
-  const cx = useMotionValue(-100);
-  const cy = useMotionValue(-100);
-
-  const onPointerMove = (e) => {
-    if (e.pointerType !== "mouse") return;
-    cx.set(e.clientX);
-    cy.set(e.clientY);
-    if (reduce) return;
-    mx.set(e.clientX / innerWidth - 0.5);
-    my.set(e.clientY / innerHeight - 0.5);
-  };
+  // anime.js splits the headline into letters, each rising out of its own clipped line
+  useEffect(() => {
+    const split = splitText(heading.current, { chars: { wrap: "clip" } });
+    if (!ready) {
+      split.chars.forEach((c) => (c.style.transform = "translateY(110%)"));
+      return () => split.revert();
+    }
+    const a = reduce
+      ? animate(split.chars, { translateY: "0%", duration: 0 })
+      : animate(split.chars, { translateY: ["110%", "0%"], duration: 1100, delay: stagger(16, { start: 150 }), ease: "outExpo" });
+    return () => {
+      a.revert();
+      split.revert();
+    };
+  }, [ready, reduce]);
 
   return (
-    <section
-      onPointerMove={onPointerMove}
-      className="relative flex min-h-svh flex-col overflow-hidden"
-    >
-      {/* the sky band ends at the cornice, so the distant city stands right behind the facade */}
-      <div className="relative pb-[clamp(64px,12vh,132px)]">
-        <Sky ready={ready} />
+    <section ref={section} id="top" className="relative flex min-h-svh flex-col overflow-hidden pt-[clamp(84px,12vh,120px)]">
+      <SilkBackground />
 
-        <header className="relative flex justify-center pt-7">
-          <motion.a
-            href="/"
-            aria-label="Heir Estate, home"
-            initial={{ opacity: 0 }}
-            animate={ready ? { opacity: 1 } : undefined}
-            transition={{ duration: 1, ease: EASE }}
-          >
-            <Logo />
-          </motion.a>
-        </header>
-
-        <motion.div
-          style={{ x: hx, y: hy }}
-          className="relative mt-[clamp(28px,5.5vh,64px)] px-4 text-center"
+      <div className="relative px-4 text-center">
+        <h1 className="font-display text-[clamp(2rem,4.4vw,4.4rem)] leading-[1.06] font-normal tracking-[-0.02em] text-balance text-ink">
+          <span ref={heading} className="block">
+            Building your future, <span className="text-gold-display">one property at a time</span>
+          </span>
+        </h1>
+        <motion.p
+          initial={{ opacity: 0, filter: "blur(6px)" }}
+          animate={ready ? { opacity: 1, filter: "blur(0px)" } : undefined}
+          transition={{ duration: 1, ease: EASE, delay: 0.9 }}
+          className="font-inscription mt-5 flex items-center justify-center gap-4 text-[clamp(0.7rem,1vw,0.9rem)] tracking-[0.32em] text-balance text-charcoal/80 uppercase"
         >
-          <h1 className="font-display text-[clamp(2rem,4.5vw,4.6rem)] leading-[1.04] font-normal tracking-[-0.02em] text-balance">
-            <Line ready={ready} delay={0.15}>
-              Building your future,
-            </Line>
-            <Line ready={ready} delay={0.3} className="text-gold">
-              one property at a time
-            </Line>
-          </h1>
-          <motion.p
-            initial={{ opacity: 0, filter: "blur(6px)" }}
-            animate={ready ? { opacity: 1, filter: "blur(0px)" } : undefined}
-            transition={{ duration: 1, ease: EASE, delay: 0.7 }}
-            className="font-inscription mt-5 text-[clamp(0.7rem,1vw,0.9rem)] tracking-[0.32em] text-balance text-champagne/75 uppercase"
-          >
-            Securing wealth, creating your legacy
-          </motion.p>
-        </motion.div>
+          <span aria-hidden="true" className="hidden h-px w-10 bg-gold sm:block" />
+          Securing wealth, creating your legacy
+          <span aria-hidden="true" className="hidden h-px w-10 bg-gold sm:block" />
+        </motion.p>
       </div>
 
-      <div
-        ref={facade}
-        className="facade relative flex flex-1 flex-col bg-navy"
-      >
-        <div className="wall-light pointer-events-none absolute inset-0" />
-        {/* cornice: a double rule the windows hang from, drawn out from the centre */}
-        <motion.div
-          className="absolute inset-x-0 top-0 h-px origin-center bg-gold/55"
-          initial={{ scaleX: 0 }}
-          animate={ready ? { scaleX: 1 } : undefined}
-          transition={{ duration: 1.6, ease: [0.77, 0, 0.175, 1], delay: 0.2 }}
-        />
-        <motion.div
-          className="absolute inset-x-0 top-[5px] h-px origin-center bg-gold/15"
-          initial={{ scaleX: 0 }}
-          animate={ready ? { scaleX: 1 } : undefined}
-          transition={{ duration: 1.6, ease: [0.77, 0, 0.175, 1], delay: 0.35 }}
-        />
-
-        <div className="relative grid min-h-[clamp(300px,50vh,620px)] flex-1 grid-cols-5 items-end gap-[clamp(6px,1.6vw,24px)] px-[clamp(16px,3.4vw,48px)] pt-[clamp(14px,2.2vw,30px)]">
-          {windows.map((w, i) =>
-            w.soon ? (
-              <Shutter
-                key={w.id}
-                ready={ready}
-                height={HEIGHTS[i]}
-                delay={HEADLINE_DONE + 0.5}
-              />
-            ) : (
-              <Window
-                key={w.id}
-                {...w}
-                height={HEIGHTS[i]}
-                px={reduce ? 0 : px}
-                py={reduce ? 0 : py}
-                reduce={reduce}
-                ready={ready}
-                // the centre window lights first, then outwards
-                delay={HEADLINE_DONE + Math.abs(i - 2) * 0.22}
-                onHover={setHovered}
-                onOpen={onOpen}
-              />
-            ),
-          )}
-        </div>
-
-        {/* sill and plinth */}
-        <div className="relative h-px bg-gold/45" />
-        <div className="relative h-[clamp(16px,3vh,34px)] bg-navy-deep/70" />
-      </div>
-
-      <CursorLabel x={cx} y={cy} label={hovered} />
+      <Panels ready={ready} playing={ready && inView && !paused && !reduce} onOpen={onOpen} />
     </section>
   );
 }
 
-function Line({ children, delay, className, ready }) {
+// Five projects side by side as tall panels; the active one widens and its name and way in appear.
+// The expand-on-hover interaction follows Skiper UI's HoverExpand (skiper52); on phones
+// the row turns into a vertical stack that expands the same way (its skiper53 sibling).
+function Panels({ ready, playing, onOpen }) {
+  const wide = useMedia("(min-width: 768px)");
+  const [active, setActive] = useState(1);
+  const intent = useRef(0);
+
+  const hoverStart = (i) => {
+    clearTimeout(intent.current);
+    intent.current = setTimeout(() => setActive(i), HOVER_INTENT);
+  };
+  useEffect(() => () => clearTimeout(intent.current), []);
+
   return (
-    <span className="block overflow-hidden pb-[0.1em]">
-      <motion.span
-        className={`block ${className ?? ""}`}
-        initial={{ transform: "translateY(105%)", filter: "blur(8px)" }}
-        animate={
-          ready
-            ? { transform: "translateY(0%)", filter: "blur(0px)" }
-            : undefined
-        }
-        transition={{ duration: 1.2, ease: EASE, delay }}
-      >
-        {children}
-      </motion.span>
-    </span>
+    <motion.div
+      className={`relative mx-auto mt-[clamp(28px,5vh,56px)] mb-[clamp(20px,4vh,44px)] flex w-full max-w-[1480px] flex-1 gap-[clamp(6px,0.8vw,12px)] px-[clamp(16px,3.4vw,48px)] ${
+        wide ? "min-h-[clamp(340px,50vh,600px)] flex-row" : "min-h-[560px] flex-col"
+      }`}
+      initial={{ opacity: 0, transform: "translateY(24px)" }}
+      animate={ready ? { opacity: 1, transform: "translateY(0px)" } : undefined}
+      transition={{ duration: 1.1, ease: EASE, delay: 0.55 }}
+      onHoverEnd={() => clearTimeout(intent.current)}
+    >
+      {showcase.map((id, i) => (
+        <Panel
+          key={`${id}-${i}`}
+          id={id}
+          wide={wide}
+          isActive={active === i}
+          playing={playing}
+          onHover={wide ? () => hoverStart(i) : undefined}
+          onActivate={() => setActive(i)}
+          onOpen={onOpen}
+        />
+      ))}
+    </motion.div>
   );
 }
 
-function Window({
-  id,
-  name,
-  media,
-  accent,
-  height,
-  px,
-  py,
-  delay,
-  reduce,
-  ready,
-  onHover,
-  onOpen,
-}) {
+function Panel({ id, wide, isActive, playing, onHover, onActivate, onOpen }) {
+  const p = projects[id];
+  const self = useRef(null);
   const video = useRef(null);
-  const glass = useRef(null);
 
-  // start each walkthrough as its window switches on; it plays once and holds the last frame
+  // the three loops run together and never pause on hover (that restart is what stuttered);
+  // they only stop while the hero is off screen or a project page covers it
   useEffect(() => {
-    if (reduce || !ready) return;
-    const t = setTimeout(
-      () => video.current?.play().catch(() => {}),
-      delay * 1000,
-    );
-    return () => clearTimeout(t);
-  }, [delay, reduce, ready]);
-
-  const enter = () => {
-    if (finePointer()) onHover("Enter");
     const v = video.current;
-    if (reduce || !v || !v.ended) return;
-    v.currentTime = 0;
-    v.play().catch(() => {});
+    if (!v) return;
+    if (playing) v.play().catch(() => {});
+    else v.pause();
+  }, [playing]);
+
+  const press = () => {
+    if (!p) return onActivate();
+    // first tap opens a closed panel (touch has no hover); a tap on the open one enters it
+    if (isActive) onOpen?.(id, self.current.getBoundingClientRect());
+    else onActivate();
   };
 
   return (
     <motion.button
+      ref={self}
       type="button"
-      aria-label={`Enter ${name}`}
-      onClick={() => onOpen?.(id, glass.current.getBoundingClientRect())}
-      className="win live-win group relative flex min-w-0 flex-col self-end text-left"
-      style={{ "--accent": accent, height: `${height}%` }}
-      initial="initial"
-      whileHover="hovered"
-      whileTap={{ scale: 0.985 }}
-      onPointerEnter={enter}
-      onPointerLeave={() => onHover(null)}
+      onClick={press}
+      onHoverStart={onHover}
+      // keyboard focus opens a panel; a tap also focuses, and must not open-then-enter in one go
+      onFocus={(e) => e.currentTarget.matches(":focus-visible") && onActivate()}
+      aria-label={p ? (isActive ? `Enter ${p.name}` : `Show ${p.name}`) : "Forthcoming project"}
+      aria-expanded={isActive}
+      className="group relative min-h-0 min-w-0 overflow-hidden rounded-[6px] text-left focus-visible:outline-offset-2"
+      style={{ flexBasis: 0, "--accent": p?.accent ?? "var(--color-gold)" }}
+      animate={{ flexGrow: isActive ? (wide ? 5.4 : 4) : 1 }}
+      transition={OPEN}
+      whileTap={{ scale: 0.99 }}
     >
-      <Transom>
-        <TextRoll className="font-inscription text-[clamp(0.6rem,0.85vw,0.8rem)] tracking-[0.28em] uppercase">
-          {name}
-        </TextRoll>
-      </Transom>
-
-      <div
-        ref={glass}
-        className="win-glass relative w-full flex-1 overflow-hidden border border-gold/35 bg-navy-deep"
-      >
-        {/* the light switching on: a quick flicker, then steady */}
-        <motion.div
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={
-            ready ? { opacity: reduce ? 1 : [0, 0.55, 0.25, 1] } : undefined
-          }
-          transition={{
-            duration: reduce ? 0.6 : 1,
-            times: [0, 0.18, 0.32, 1],
-            ease: "easeOut",
-            delay,
-          }}
-        >
-          <div
-            className="breathe absolute inset-0"
-            style={{ "--d": `${13 + height / 10}s` }}
-          >
-            <motion.video
-              ref={video}
-              src={`${media}.mp4`}
-              poster={`${media}.jpg`}
-              muted
-              playsInline
-              preload="auto"
-              aria-hidden="true"
-              style={{ x: px, y: py, scale: 1.12 }}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          </div>
-          <div className="absolute inset-0 bg-linear-to-t from-navy/85 via-navy/25 to-navy/5 transition-opacity duration-500 group-hover:opacity-35" />
-        </motion.div>
-
-        <div className="glass-sheen pointer-events-none absolute inset-0" />
-        <div className="reveal pointer-events-none absolute inset-0" />
-        <div className="pointer-events-none absolute inset-[5px] border border-gold/20 transition-colors duration-500 group-hover:border-gold/55 group-focus-visible:border-gold" />
-
-        {/* phones: the transom is too narrow, so the name runs up the glass */}
-        <span className="font-inscription absolute bottom-3 left-1/2 -translate-x-1/2 rotate-180 text-[0.6rem] tracking-[0.3em] whitespace-nowrap text-champagne uppercase [writing-mode:vertical-rl] sm:hidden">
-          {name}
-        </span>
-      </div>
-    </motion.button>
-  );
-}
-
-function Shutter({ delay, ready, height }) {
-  return (
-    <motion.article
-      className="win group relative flex min-w-0 flex-col self-end"
-      style={{ height: `${height}%` }}
-      initial={{ opacity: 0 }}
-      animate={ready ? { opacity: 1 } : undefined}
-      transition={{ duration: 1.2, ease: EASE, delay }}
-      aria-label="Forthcoming project"
-    >
-      <Transom>
-        <span className="font-inscription text-[clamp(0.6rem,0.85vw,0.8rem)] tracking-[0.28em] text-champagne/55 uppercase">
-          Forthcoming
-        </span>
-      </Transom>
-
-      <div className="win-glass shutter relative flex flex-1 flex-col overflow-hidden border border-gold/25 bg-navy-deep">
-        <div className="shutter-light absolute inset-0" />
-        {Array.from({ length: SLATS }, (_, i) => (
-          <div
-            key={i}
-            className="slat relative flex-1 border-b border-navy-deep"
-            style={{ "--i": i }}
+      {p ? (
+        <>
+          {/* sized to the widest the panel ever gets, so opening a panel only reveals more of it:
+              the video is never resized or re-scaled mid-animation */}
+          <video
+            ref={video}
+            src={`${p.panel}.mp4`}
+            poster={`${p.panel}.jpg`}
+            muted
+            loop
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+            aria-hidden="true"
+            className={`pointer-events-none absolute max-w-none object-cover ${
+              wide ? "top-0 left-1/2 h-full w-[max(100%,62vw)] -translate-x-1/2" : "top-1/2 left-0 h-[max(100%,380px)] w-full -translate-y-1/2"
+            }`}
           />
-        ))}
-        <div className="reveal pointer-events-none absolute inset-0" />
-        <div className="pointer-events-none absolute inset-[5px] border border-gold/15" />
-      </div>
-    </motion.article>
-  );
-}
+          {/* the film fades into the project's own colour from the palette */}
+          <div className="accent-fade absolute inset-0 opacity-90 transition-opacity duration-700 group-aria-expanded:opacity-75" />
+        </>
+      ) : (
+        // the unannounced projects: champagne card with a gold hairline, nothing to show yet
+        <div className="absolute inset-0 border border-gold/45 bg-champagne/60" />
+      )}
 
-function Transom({ children }) {
-  return (
-    <div className="relative hidden h-[clamp(36px,4.6vh,48px)] w-full items-center justify-center border border-b-0 border-gold/35 bg-navy-deep/60 px-2 transition-colors duration-500 group-hover:bg-(--accent) sm:flex">
-      {children}
-    </div>
-  );
-}
+      {/* closed: an accent dot and the name running up the slice */}
+      <motion.span
+        className={`absolute flex items-center gap-3 ${wide ? "bottom-5 left-1/2 -translate-x-1/2 flex-col-reverse" : "top-1/2 left-5 -translate-y-1/2"}`}
+        animate={{ opacity: isActive ? 0 : 1 }}
+        transition={{ duration: isActive ? 0.15 : 0.5, delay: isActive ? 0 : 0.35 }}
+      >
+        <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ring-1 ${p ? "bg-(--accent) ring-paper/80" : "bg-gold ring-gold"}`} />
+        <span
+          className={`font-inscription text-[0.68rem] tracking-[0.3em] whitespace-nowrap uppercase ${p ? "text-paper" : "text-charcoal/70"} ${
+            wide ? "rotate-180 [writing-mode:vertical-rl]" : ""
+          }`}
+        >
+          {p ? p.name : "Forthcoming"}
+        </span>
+      </motion.span>
 
-// a gold ring that follows the pointer over the live windows (cursor-follow pattern from Skiper UI)
-function CursorLabel({ x, y, label }) {
-  const sx = useSpring(x, { stiffness: 500, damping: 40, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 500, damping: 40, mass: 0.4 });
-  return (
-    <motion.div
-      aria-hidden="true"
-      style={{ x: sx, y: sy }}
-      className="pointer-events-none fixed top-0 left-0 z-40"
-    >
+      {/* open: title, line and a way in, arriving after the panel has widened */}
       <AnimatePresence>
-        {label && (
+        {isActive && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
-            transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-            className="font-inscription -mt-9 -ml-9 grid size-18 place-items-center rounded-full border border-gold/70 bg-navy-deep/40 text-[0.62rem] tracking-[0.3em] text-champagne uppercase backdrop-blur-[2px]"
+            className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-[clamp(16px,2vw,28px)]"
+            initial={{ opacity: 0, transform: "translateY(12px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: 0.6, ease: EASE, delay: 0.3 } }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
           >
-            {label}
+            {p ? (
+              <>
+                <div className="min-w-0">
+                  <p className="font-display text-[clamp(1.7rem,2.8vw,2.9rem)] leading-none tracking-[-0.02em] whitespace-nowrap text-paper">{p.name}</p>
+                  <p className="font-inscription mt-2 text-[0.7rem] tracking-[0.28em] whitespace-nowrap text-champagne uppercase">{p.tagline}</p>
+                </div>
+                <span className="font-inscription flex items-center gap-3 rounded-full bg-paper px-5 py-3 text-[0.7rem] tracking-[0.26em] whitespace-nowrap text-ink uppercase ring-1 ring-paper transition-colors duration-200 group-hover:bg-(--accent) group-hover:text-paper">
+                  Enter
+                  <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
+                    <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
+                  </svg>
+                </span>
+              </>
+            ) : (
+              <div>
+                <p className="font-display text-[clamp(1.5rem,2.4vw,2.4rem)] leading-tight text-ink">Forthcoming</p>
+                <p className="mt-1 text-charcoal/80">The next Heir Estate project is on the drawing board.</p>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </motion.button>
   );
 }
