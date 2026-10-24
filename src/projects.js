@@ -57,16 +57,84 @@ export const projects = {
       ["Hallways", "1.50 m to 1.80 m wide"],
       ["Developer", "CLNUD Ventures: Cebu Landmasters with NTT UD Asia"],
     ],
+    // The brochure's full renders (pages 16 to 31), told as a story: each space fills the
+    // screen behind its text (src/sections/Spaces.jsx). Lists are the brochure's own; notes
+    // are ours, described from the renders, except the first. pos keeps the subject in a
+    // phone's narrow crop.
     spaces: [
-      { src: `${P}/wave-dropoff.jpg`, name: "Drop Off Area" },
-      { src: `${P}/wave-lobby.jpg`, name: "Main Lobby" },
-      { src: `${P}/wave-pool.jpg`, name: "Swimming Pool", area: "6th floor" },
-      { src: `${P}/wave-garden.jpg`, name: "Japanese Garden", area: "6th floor" },
-      { src: `${P}/wave-function.jpg`, name: "Function Hall", area: "6th floor" },
-      { src: `${P}/wave-theater.jpg`, name: "Theater Room", area: "6th floor" },
-      { src: `${P}/wave-lounge.jpg`, name: "Lounge Hall", area: "6th floor" },
-      { src: `${P}/wave-gym.jpg`, name: "Fitness Gym", area: "37th floor" },
-      { src: `${P}/wave-library.jpg`, name: "Library Lounge", area: "37th floor" },
+      {
+        src: `${P}/wave-dropoff.webp`,
+        name: "Drop Off Area",
+        pos: "30% 50%",
+        note: "Rising within Cebu I.T. Park, The Wave Towers stands at the center of one of Cebu's most dynamic business and lifestyle hubs.",
+      },
+      {
+        src: `${P}/wave-lobby.webp`,
+        name: "Main Lobby",
+        pos: "55% 50%",
+        note: "Low seating among timber screens and stone: Japanese restraint from the front door.",
+        list: ["5 elevators", "Hallways 1.50 m to 1.80 m wide", "100% back-up power", "Podium and basement parking"],
+      },
+      {
+        src: `${P}/wave-pool.webp`,
+        name: "Swimming Pool",
+        area: "6th floor",
+        pos: "45% 50%",
+        note: "Three pools set into a planted deck between the towers.",
+        list: ["Lap pool", "Lounge pool", "Kid's pool", "Pool deck and outdoor shower"],
+      },
+      {
+        src: `${P}/wave-spa.webp`,
+        name: "Spa Pavilion",
+        area: "6th floor",
+        note: "A timber pavilion at the water's edge, loungers drawn up on the deck.",
+        list: ["Spa pavilion", "Indoor sauna"],
+      },
+      {
+        src: `${P}/wave-garden.webp`,
+        name: "Japanese Garden",
+        area: "6th floor",
+        pos: "60% 50%",
+        note: "Stepping stones under cherry trees, between clipped pines and lanterns.",
+        list: ["Chapel seating", "Prayer pavilion"],
+      },
+      {
+        src: `${P}/wave-function.webp`,
+        name: "Function Hall",
+        area: "6th floor",
+        note: "Round tables set beneath a coffered timber ceiling, for dinners and celebrations.",
+      },
+      {
+        src: `${P}/wave-theater.webp`,
+        name: "Theater Room",
+        area: "6th floor",
+        note: "A screen in a wall of timber slats, deep sofas drawn up to face it.",
+      },
+      {
+        src: `${P}/wave-lounge.webp`,
+        name: "Lounge Hall",
+        area: "6th floor",
+        note: "Paper lanterns hung low over sofas, screened by timber and planting.",
+      },
+      {
+        src: `${P}/wave-kids.webp`,
+        name: "Kids Room",
+        area: "6th floor",
+        note: "A playroom of painted trees, a climbing ladder and a giraffe to measure by.",
+      },
+      {
+        src: `${P}/wave-gym.webp`,
+        name: "Fitness Gym",
+        area: "37th floor",
+        note: "Treadmills lined up along the window wall, thirty-seven floors above the city.",
+      },
+      {
+        src: `${P}/wave-library.webp`,
+        name: "Library Lounge",
+        area: "37th floor",
+        pos: "62% 50%",
+        note: "Shelves around a long reading table, and armchairs set by the light.",
+      },
     ],
     // every layout photographed in its dress-up unit; size is each set's native pixel size
     residences: [
@@ -84,7 +152,6 @@ export const projects = {
         id: "1br",
         name: "One bedroom",
         size: [760, 704],
-        walkthrough: true,
         photos: [
           { src: `${P}/unit-1br-1.jpg`, caption: "Living and dining" },
           { src: `${P}/unit-1br-3.jpg`, caption: "Bedroom" },
@@ -106,21 +173,56 @@ export const projects = {
         photos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ src: `${P}/unit-${n}3BR.jpg` })),
       },
     ],
-    // The one-bedroom film as scroll frames (public/frames/wave-1br, 8 per second; the README has
-    // the cut). Scrolling walks the unit and pauses at each stop, where a line points out what is
-    // there. at: frame number; x, y: the point in the frame, 0 to 1. Notes are ours, from the film.
-    walkthrough: {
-      frames: "/frames/wave-1br",
-      cut: 188, // the film jumps from the en-suite to the powder room here
-      stops: [
-        { at: 24, x: 0.31, y: 0.6, room: "Dining", title: "Dining for four", note: "A round table under the pendant, just inside the door." },
-        { at: 60, x: 0.5, y: 0.66, room: "Living", title: "The living room", note: "An L-shaped sofa in the corner, curtains running floor to ceiling." },
-        { at: 108, x: 0.15, y: 0.42, room: "Bedroom", title: "The bedroom", note: "A full-height wardrobe, a desk beneath the TV, and the window wall." },
-        { at: 168, x: 0.5, y: 0.72, room: "En-suite", title: "En-suite bathroom", note: "A floating vanity under a wide mirror, beside a glass-screened shower." },
-        { at: 212, x: 0.74, y: 0.76, room: "Powder room", title: "Powder room", note: "A second WC with its own basin, for guests." },
-        { at: 296, x: 0.34, y: 0.66, room: "Kitchen", title: "Galley kitchen", note: "A cooktop and under-mount sink in a grey counter, wood-grain cabinets above." },
-      ],
-    },
+    // Each unit's film as scroll frames (public/frames/wave-<id>; the README has the cuts), one
+    // per unit with a walkthrough, picked like the residences tabs. Scrolling walks the unit and
+    // pauses at each stop, where a line points out what is there. at: frame number; x, y: the
+    // point in the frame, 0 to 1. Notes are ours, from the films, checked against the brochure.
+    walkthroughs: [
+      {
+        id: "1br",
+        name: "One bedroom",
+        frames: "/frames/wave-1br",
+        cut: 188, // the film jumps from the en-suite to the powder room here
+        stops: [
+          { at: 24, x: 0.31, y: 0.6, room: "Dining", title: "Dining for four", note: "A round table under the pendant, just inside the door." },
+          { at: 60, x: 0.5, y: 0.66, room: "Living", title: "The living room", note: "An L-shaped sofa in the corner, curtains running floor to ceiling." },
+          { at: 108, x: 0.15, y: 0.42, room: "Bedroom", title: "The bedroom", note: "A full-height wardrobe, a desk beneath the TV, and the window wall." },
+          { at: 168, x: 0.5, y: 0.72, room: "En-suite", title: "En-suite bathroom", note: "A floating vanity under a wide mirror, beside a glass-screened shower." },
+          { at: 212, x: 0.74, y: 0.76, room: "Powder room", title: "Powder room", note: "A second WC with its own basin, for guests." },
+          { at: 296, x: 0.34, y: 0.66, room: "Kitchen", title: "Galley kitchen", note: "A cooktop and under-mount sink in a grey counter, wood-grain cabinets above." },
+        ],
+      },
+      {
+        id: "2br",
+        name: "Two bedroom",
+        frames: "/frames/wave-2br",
+        stops: [
+          { at: 18, x: 0.2, y: 0.62, room: "Kitchen", title: "The kitchen", note: "A double sink in a stone counter, cabinets above and below." },
+          { at: 42, x: 0.7, y: 0.62, room: "Dining", title: "Dining", note: "A long table under a paper lantern, the living room just beyond." },
+          { at: 84, x: 0.3, y: 0.7, room: "Den", title: "The den", note: "A lit desk running the length of the wall, behind louvred doors." },
+          { at: 192, x: 0.55, y: 0.58, room: "Living", title: "The living room", note: "An L-shaped sofa by the window; sliding Japanese doors open onto the second bedroom." },
+          { at: 234, x: 0.4, y: 0.6, room: "Bedroom", title: "Second bedroom", note: "A bed and a lit shelf behind the sliding screens." },
+          { at: 270, x: 0.45, y: 0.55, room: "Bathroom", title: "Bathroom", note: "A stone vanity beside a glass-enclosed shower." },
+          { at: 306, x: 0.4, y: 0.62, room: "Master", title: "Master bedroom", note: "A wardrobe at the door, the bed set against a timber headboard." },
+          { at: 366, x: 0.8, y: 0.5, room: "En-suite", title: "Master bath", note: "A wide mirror over the vanity, the shower behind glass." },
+        ],
+      },
+      {
+        id: "3br",
+        name: "Three bedroom",
+        frames: "/frames/wave-3br",
+        stops: [
+          { at: 30, x: 0.45, y: 0.7, room: "Dining", title: "The island", note: "The dining table runs on from a stone island counter." },
+          { at: 54, x: 0.55, y: 0.55, room: "Living", title: "The living room", note: "A leather sofa behind a glass-paned Japanese screen." },
+          { at: 120, x: 0.85, y: 0.45, room: "Kitchen", title: "The kitchen", note: "A cooktop under the rangehood, facing the island." },
+          { at: 156, x: 0.6, y: 0.5, room: "Bunk room", title: "Third bedroom", note: "Bunk beds behind louvred doors." },
+          { at: 264, x: 0.75, y: 0.62, room: "Bedroom", title: "Second bedroom", note: "A bed beside a long desk, curtains floor to ceiling." },
+          { at: 318, x: 0.5, y: 0.45, room: "Bathroom", title: "Bathroom", note: "A glass-enclosed shower and a stone vanity." },
+          { at: 348, x: 0.3, y: 0.35, room: "Master", title: "Master bedroom", note: "A desk set into the window, the city beyond." },
+          { at: 390, x: 0.5, y: 0.72, room: "En-suite", title: "Master bath", note: "A bathtub with a separate shower, behind glass." },
+        ],
+      },
+    ],
     // from the agent's card in resources/
     agent: {
       names: "Marilyn & Percival Laranjo",

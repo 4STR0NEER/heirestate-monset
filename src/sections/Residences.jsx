@@ -21,7 +21,7 @@ function spans(n) {
 
 // Every layout, photographed in its dress-up unit. Pick a unit; any photo opens out of its
 // tile into a full view you can swipe through.
-export default function Residences({ units, name }) {
+export default function Residences({ units, name, walks = [], onWalk }) {
   const [current, setCurrent] = useState(units[0].id);
   const tabs = useRef([]);
   const unit = units.find((u) => u.id === current);
@@ -41,7 +41,7 @@ export default function Residences({ units, name }) {
         <h3 id="residences" className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em] text-ink">
           Residences
         </h3>
-        <p className="max-w-[38ch] text-ink/65">Four layouts, each photographed in its dress-up unit. Open any photo to see it whole.</p>
+        <p className="max-w-[38ch] text-ink/65">Four layouts, each photographed in its dress-up unit. Open any photo to see it whole, or walk through the larger three.</p>
       </div>
 
       <div role="tablist" aria-label="Unit type" className="mt-12 flex gap-x-[clamp(20px,3vw,48px)] gap-y-3 overflow-x-auto border-b border-ink/12 [scrollbar-width:none] max-md:pr-10 max-md:[mask-image:linear-gradient(to_right,black_80%,transparent)]">
@@ -82,13 +82,13 @@ export default function Residences({ units, name }) {
             <p className="font-inscription text-[0.72rem] tracking-[0.26em] text-ink/60 uppercase">
               {word[unit.photos.length] ?? unit.photos.length} photographs
             </p>
-            {unit.walkthrough && (
-              <a href="#walkthrough" className="group font-inscription flex items-center gap-3 text-[0.72rem] tracking-[0.26em] text-(--accent) uppercase">
+            {walks.includes(unit.id) && (
+              <button type="button" onClick={() => onWalk(unit.id)} className="group font-inscription flex items-center gap-3 text-[0.72rem] tracking-[0.26em] text-(--accent) uppercase">
                 Walk through it
                 <svg viewBox="0 0 10 24" className="h-4 transition-transform duration-300 group-hover:translate-y-1" aria-hidden="true">
                   <path d="M5 0v22M1 18l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
                 </svg>
-              </a>
+              </button>
             )}
           </div>
           <Mosaic unit={unit} name={name} />

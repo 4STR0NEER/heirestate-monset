@@ -5,6 +5,7 @@ import Logo, { Mark } from "@/components/Logo";
 import { inPlace, siteUrl } from "@/lib/links";
 import { useMedia } from "@/lib/use-media";
 import Residences from "@/sections/Residences";
+import Spaces from "@/sections/Spaces";
 import Walkthrough from "@/sections/Walkthrough";
 import { order, projects } from "@/projects";
 
@@ -12,7 +13,7 @@ const EASE = [0.23, 1, 0.32, 1];
 const EASE_IO = [0.77, 0, 0.175, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 // the stills keep their native proportions so the horizontal track can be measured before they load
-const SIZES = { alto: [1600, 688], wave: [1530, 640], pristina: [1600, 800] };
+const SIZES = { alto: [1600, 688], pristina: [1600, 800] };
 
 const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px)`;
 const FULL = "inset(0px 0px 0px 0px)";
@@ -142,6 +143,12 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
   const p = projects[id];
   const nextId = order[(order.indexOf(id) + 1) % order.length];
   const film = useRef(null);
+  const [walk, setWalk] = useState(p.walkthroughs?.[0].id);
+  // picking a unit (here or in the residences) starts its tour at the door
+  const pickWalk = (w) => {
+    setWalk(w);
+    requestAnimationFrame(() => document.getElementById("walkthrough")?.scrollIntoView());
+  };
   // when the overlay grew out of a window, the title waits for the glass to finish opening
   const t0 = opened ? 0.55 : 0.15;
 
@@ -218,9 +225,10 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
         {p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />}
       </section>
 
-      <Gallery id={id} items={p.spaces} scroller={scroller} />
-      {p.residences && <Residences units={p.residences} name={p.name} />}
-      {p.walkthrough && <Walkthrough walk={p.walkthrough} unit={`${p.name}, one bedroom`} />}
+      {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
+      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
+      {p.residences && <Residences units={p.residences} name={p.name} walks={p.walkthroughs?.map((w) => w.id)} onWalk={pickWalk} />}
+      {p.walkthroughs && <Walkthrough walks={p.walkthroughs} current={walk} onPick={pickWalk} name={p.name} />}
       {p.nearby && <Nearby places={p.nearby} />}
       <Film ref={film} src={p.film} name={p.name} />
       {p.agent && <Agent agent={p.agent} name={p.name} />}
@@ -475,26 +483,28 @@ function Film({ ref, src, name }) {
     video.current.play().catch(() => {});
   };
   return (
-    <section ref={ref} className={`mx-auto max-w-[1440px] pb-[clamp(88px,14vh,160px)] ${GUTTER}`}>
-      <h3 className="font-display mb-8 text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">The walkthrough</h3>
-      <div className="relative aspect-video overflow-hidden border border-ink/15 bg-stone">
-        <video
-          ref={video}
-          src={`${src}.mp4`}
-          poster={`${src}.jpg`}
-          preload="none"
-          playsInline
-          controls={playing}
-          className="size-full object-cover"
-        />
-        {!playing && (
-          <button type="button" onClick={play} aria-label={`Play the ${name} walkthrough`} className="group absolute inset-0 grid place-items-center bg-ink/25">
-            <span className="flex flex-col items-center gap-4">
-              <PlayRing className="size-24 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
-              <span className="font-inscription text-[0.78rem] tracking-[0.3em] text-paper uppercase">Play the film</span>
-            </span>
-          </button>
-        )}
+    <section ref={ref} className="bg-navy-deep text-paper">
+      <div className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+        <h3 className="font-display mb-8 text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">The film</h3>
+        <div className="relative aspect-video overflow-hidden border border-paper/15 bg-navy">
+          <video
+            ref={video}
+            src={`${src}.mp4`}
+            poster={`${src}.jpg`}
+            preload="none"
+            playsInline
+            controls={playing}
+            className="size-full object-cover"
+          />
+          {!playing && (
+            <button type="button" onClick={play} aria-label={`Play the ${name} film`} className="group absolute inset-0 grid place-items-center bg-ink/25">
+              <span className="flex flex-col items-center gap-4">
+                <PlayRing className="size-24 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
+                <span className="font-inscription text-[0.78rem] tracking-[0.3em] text-paper uppercase">Play the film</span>
+              </span>
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );

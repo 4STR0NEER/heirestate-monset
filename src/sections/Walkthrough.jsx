@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInView, useScroll } from "motion/react";
+import { motion, useInView, useScroll } from "motion/react";
 import { sequence } from "@/lib/frames";
 
 // Scroll walks you through the unit, frame by frame. At each stop the camera holds still and a
 // line draws from the thing worth seeing to a note about it; scroll on and it lets go.
 //
 // Scroll is measured in units: one per frame while walking, HOLD while standing at a stop.
-const HOLD = 44;
+const HOLD = 40;
 const LEAD = 22; // standing at the door, under the title, before the first step
 const TAIL = 14;
-const UNIT_VH = 1.15; // section height per unit
+const UNIT_VH = 0.9; // section height per unit
+// the camera trails the scrollbar by about this long (ms), so a notched wheel glides
+// instead of jumping a dozen frames at a time
+const GLIDE = 110;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const ease = (t) => 1 - (1 - t) ** 3;
 
@@ -19,7 +22,7 @@ function timeline(stops, count, cut) {
   const holds = [];
   let u = LEAD;
   let f = 0;
-  let cutAt = 0;
+  let cutAt = -99;
   for (const s of stops) {
     if (cut > f && cut <= s.at) cutAt = u + (cut - f);
     u += s.at - f;
@@ -47,7 +50,13 @@ function frameAt(pts, u) {
   return pts.at(-1)[1];
 }
 
-export default function Walkthrough({ walk, unit }) {
+// One tour at a time, picked like the residences tabs; a new unit starts again at its door.
+export default function Walkthrough({ walks, current, onPick, name }) {
+  const walk = walks.find((w) => w.id === current) ?? walks[0];
+  return <Tour key={walk.id} walk={walk} walks={walks} onPick={onPick} unit={`${name}, ${walk.name.toLowerCase()}`} />;
+}
+
+function Tour({ walk, walks, onPick, unit }) {
   const root = useRef(null);
   const canvas = useRef(null);
   const els = useRef({});
@@ -65,17 +74,19 @@ export default function Walkthrough({ walk, unit }) {
     const c = canvas.current;
     const ctx = c.getContext("2d");
     const { dot, line, card, title, veil, fill } = els.current;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let dpr = 1;
     let w = 0;
     let h = 0;
+    let cw = 0; // the note's size, measured when it changes rather than read every frame
+    let ch = 0;
     let drawn = "";
-    let queued = false;
+    let raf = 0;
+    let last = 0;
+    let u = null; // where the camera is, gliding after the scroll position
     let shown = -2;
 
-    const draw = () => {
-      queued = false;
-      const u = scrollYProgress.get() * tl.total;
-
+    const render = (moving) => {
       // the stop in view, and how far its note is drawn: in as you arrive, out as you leave
       let k = -1;
       let a = 0;
@@ -91,12 +102,20 @@ export default function Walkthrough({ walk, unit }) {
       const show = k >= 0 ? k : passed;
       if (show !== shown) setStop((shown = show));
 
-      title.style.opacity = 1 - clamp(u / LEAD);
+      const t = 1 - clamp(u / LEAD);
+      title.style.opacity = t;
+      title.style.visibility = t < 0.02 ? "hidden" : "";
       veil.style.opacity = clamp(1 - Math.abs(u - tl.cutAt) / 5);
       fill.style.transform = `scaleX(${u / tl.total})`;
 
-      const img = seq.nearest(Math.round(frameAt(tl.pts, u)));
+      // while the camera moves, the next frame fades in over this one, so the walk glides rather
+      // than stepping a frame at a time; once it comes to rest it settles on the nearer frame
+      const f = moving ? frameAt(tl.pts, u) : Math.round(frameAt(tl.pts, u));
+      const i0 = Math.floor(f);
+      const mix = f - i0;
+      const img = seq.images[i0] ?? seq.nearest(Math.round(f));
       if (!img) return;
+      const next = mix > 0.02 && i0 + 1 !== walk.cut ? seq.images[i0 + 1] : null;
       // turn toward the thing being pointed at: on a narrow screen it may sit outside the crop
       const s = walk.stops[k] ?? { x: 0.5, y: 0.5 };
       const fx = 0.5 + (s.x - 0.5) * ease(a);
@@ -106,10 +125,15 @@ export default function Walkthrough({ walk, unit }) {
       const dh = img.naturalHeight * kk;
       const dx = clamp(c.width / 2 - fx * dw, c.width - dw, 0);
       const dy = clamp(c.height / 2 - fy * dh, c.height - dh, 0);
-      const key = `${w}:${img.src}:${dx | 0}:${dy | 0}`;
+      const key = `${w}:${img.src}:${next ? mix.toFixed(2) : ""}:${dx | 0}:${dy | 0}`;
       if (key !== drawn) {
         drawn = key;
         ctx.drawImage(img, dx, dy, dw, dh);
+        if (next) {
+          ctx.globalAlpha = mix;
+          ctx.drawImage(next, dx, dy, dw, dh);
+          ctx.globalAlpha = 1;
+        }
       }
 
       // the note: a dot on the thing, a line out to the side with more room, the card at its end
@@ -129,13 +153,27 @@ export default function Walkthrough({ walk, unit }) {
       line.style.strokeDashoffset = 1 - draw01;
       card.style.opacity = clamp((draw01 - 0.55) / 0.45) * a;
       if (w >= 768) {
-        const cw = card.offsetWidth;
         const left = clamp(side > 0 ? ex + 14 : ex - 14 - cw, 16, w - cw - 16);
-        card.style.transform = `translate(${left}px, ${clamp(ey - 28, 88, h - card.offsetHeight - 120)}px)`;
+        card.style.transform = `translate(${left}px, ${clamp(ey - 28, 88, h - ch - 120)}px)`;
       } else card.style.transform = "";
     };
+
+    const tick = (now) => {
+      raf = 0;
+      const target = scrollYProgress.get() * tl.total;
+      if (u === null || still) u = target;
+      else {
+        u += (target - u) * (1 - Math.exp(-Math.min(now - last, 64) / GLIDE));
+        if (Math.abs(target - u) < 0.02) u = target;
+      }
+      last = now;
+      render(u !== target);
+      if (u !== target) raf = requestAnimationFrame(tick);
+    };
     const schedule = () => {
-      if (!queued) (queued = true), requestAnimationFrame(draw);
+      if (raf) return;
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
     };
     const size = () => {
       dpr = Math.min(devicePixelRatio, 1.5);
@@ -146,24 +184,35 @@ export default function Walkthrough({ walk, unit }) {
       drawn = "";
       schedule();
     };
+    const ro = new ResizeObserver(([e]) => {
+      cw = e.borderBoxSize[0].inlineSize;
+      ch = e.borderBoxSize[0].blockSize;
+    });
 
     size();
+    ro.observe(card);
     const off = scrollYProgress.on("change", schedule);
+    // a frame that lands may be the one on screen, or the one fading in over it
+    const landed = () => ((drawn = ""), schedule());
     addEventListener("resize", size);
-    addEventListener("heir:frame", schedule);
+    addEventListener("heir:frame", landed);
     return () => {
       off();
+      ro.disconnect();
+      cancelAnimationFrame(raf);
       removeEventListener("resize", size);
-      removeEventListener("heir:frame", schedule);
+      removeEventListener("heir:frame", landed);
     };
-  }, [scrollYProgress, seq, tl, walk.stops]);
+  }, [scrollYProgress, seq, tl, walk]);
 
+  const top = () => root.current.getBoundingClientRect().top + scrollY;
   // a room on the rail takes you to the middle of its stop
   const goTo = (i) => {
-    const top = root.current.getBoundingClientRect().top + scrollY;
     const run = root.current.offsetHeight - innerHeight;
-    scrollTo({ top: top + ((tl.holds[i] + HOLD * 0.45) / tl.total) * run, behavior: "smooth" });
+    scrollTo({ top: top() + ((tl.holds[i] + HOLD * 0.45) / tl.total) * run, behavior: "smooth" });
   };
+  // the tour is long; whoever has seen enough steps straight out past its end
+  const skip = () => scrollTo({ top: top() + root.current.offsetHeight, behavior: "instant" });
 
   const s = walk.stops[stop];
   const ref = (name) => (n) => void (els.current[name] = n);
@@ -179,12 +228,47 @@ export default function Walkthrough({ walk, unit }) {
         {/* a pool of navy under the title, so it reads over whatever the first frame holds */}
         <div ref={ref("title")} className="pointer-events-none absolute inset-0 grid place-items-center bg-[radial-gradient(60%_45%_at_50%_45%,rgb(12_21_38/0.72),transparent_75%)] px-4 pb-[12vh] text-center">
           <div>
-          <p className="font-inscription text-[0.72rem] tracking-[0.3em] text-champagne uppercase">{unit}</p>
-          <h3 id="walkthrough-title" className="font-display mt-4 text-[clamp(2.4rem,6vw,5.2rem)] leading-[0.98] tracking-[-0.02em] text-paper">
-            Walk through it
-          </h3>
-          <p className="mx-auto mt-5 max-w-[34ch] text-paper/85">Scroll to step inside. The camera stops in each room to show you around.</p>
+            <p className="font-inscription text-[0.72rem] tracking-[0.3em] text-champagne uppercase">{unit}</p>
+            <h3 id="walkthrough-title" className="font-display mt-4 text-[clamp(2.4rem,6vw,5.2rem)] leading-[0.98] tracking-[-0.02em] text-paper">
+              Walk through it
+            </h3>
+            <p className="mx-auto mt-5 max-w-[34ch] text-paper/85">Pick a unit, then scroll to step inside. The camera stops in each room to show you around.</p>
           </div>
+        </div>
+
+        {/* which unit, and the way out: always in reach, wherever you are in the tour */}
+        <div className="absolute inset-x-0 top-[clamp(84px,12vh,112px)] flex flex-wrap items-center justify-center gap-3 px-4">
+          <div role="radiogroup" aria-label="Unit" className="flex rounded-full border border-paper/25 bg-navy-deep/60 p-1">
+            {walks.map((wk) => {
+              const on = wk.id === walk.id;
+              return (
+                <button
+                  key={wk.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => !on && onPick(wk.id)}
+                  className={`font-inscription relative rounded-full px-3.5 py-2 text-[0.66rem] tracking-[0.22em] uppercase transition-colors duration-200 sm:px-5 ${on ? "text-ink" : "text-paper/75 hover:text-paper"}`}
+                >
+                  {on && <motion.span layoutId="walk-pill" className="absolute inset-0 rounded-full bg-champagne" transition={{ type: "spring", duration: 0.4, bounce: 0 }} />}
+                  <span className="relative">
+                    <span className="sm:hidden">{wk.id.toUpperCase()}</span>
+                    <span className="max-sm:hidden">{wk.name}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={skip}
+            className="font-inscription flex items-center gap-2 rounded-full px-3 py-2 text-[0.66rem] tracking-[0.22em] text-paper/70 uppercase transition-colors duration-200 hover:text-paper"
+          >
+            Skip the tour
+            <svg viewBox="0 0 10 24" className="h-3.5" aria-hidden="true">
+              <path d="M5 0v22M1 18l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+          </button>
         </div>
 
         <svg aria-hidden="true" className="pointer-events-none absolute inset-0 hidden size-full md:block">

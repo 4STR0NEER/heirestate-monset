@@ -43,4 +43,13 @@ The Wave's one-bedroom walkthrough (`src/sections/Walkthrough.jsx`; its stops, b
 ffmpeg -i "resources/1br-walkthrough the wave.mp4" -filter_complex "[0:v]trim=0:23.5,setpts=PTS-STARTPTS[a];[0:v]trim=30:44.5,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1:a=0,fps=8" -c:v libwebp -quality 50 public/frames/wave-1br/%03d.webp
 ```
 
+The two- and three-bedroom films are cut whole, at 6 frames per second (the walkthrough blends between frames while it moves, so fewer frames still glide):
+
+```
+ffmpeg -i "resources/2br-walkthrough the wave.mov" -vf "fps=6,scale=1024:-2" -c:v libwebp -quality 50 public/frames/wave-2br/%03d.webp
+ffmpeg -i "resources/3br-walkthrough the wave.mov" -vf "fps=6,scale=1024:-2" -c:v libwebp -quality 50 public/frames/wave-3br/%03d.webp
+```
+
+The Wave's amenity photos (`public/media/p/wave-<space>.webp`, the Spaces story) are the full renders embedded in `resources/The wave.pdf`, pages 16 to 31, pulled out at their own resolution (PyMuPDF `extract_image`) and saved at 1920 wide: `ffmpeg -i <render>.jpeg -vf scale=1920:-2 -c:v libwebp -quality 74`.
+
 Unit photos in `public/media/p/unit-studio-*` and `unit-1br-*` are the brochure squares with their label bar cropped off: `-vf "crop=1080:1000:0:0,scale=760:-2"`.

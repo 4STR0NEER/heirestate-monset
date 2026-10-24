@@ -1,7 +1,7 @@
 // Frame sequences for the scroll descent, cut from each project's film into public/frames/<id>/.
 // A sequence loads only when the visitor nears its building, and coarse-to-fine (every 8th frame,
 // then every 4th, 2nd, the rest) so scrubbing works early and only gets smoother as frames land.
-export const COUNTS = { alto: 93, wave: 65, pristina: 63, "wave-1br": 304 };
+export const COUNTS = { alto: 93, wave: 65, pristina: 63, "wave-1br": 304, "wave-2br": 507, "wave-3br": 531 };
 
 const cache = {};
 
