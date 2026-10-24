@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { FINS } from "@/lib/fins";
 import { brushEdge } from "@/lib/ink";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 // the film's opening: its brush-stroke title, then "Rooted in Japan", then the aerial, which is
-// where our own title comes up
+// where our own title comes up (a project's introAt moves it)
 const TITLE_AT = 8;
+
 
 // The opening of the brand film plays once and comes to rest on the towers; scrolling then pulls
 // a sheet of paper up over it, its top edge left ragged as if laid down with a brush, carrying
@@ -17,22 +19,25 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
   const reduce = useReducedMotion();
   const [titled, setTitled] = useState(false);
   const [ended, setEnded] = useState(false);
-  const edge = useMemo(() => [brushEdge(7), brushEdge(19)], []);
+  const fins = p.motif === "fins";
+  const edge = useMemo(() => !fins && [brushEdge(7), brushEdge(19)], [fins]);
 
   // the film pushes back and dims as the paper covers it
   const { scrollYProgress } = useScroll({ target: top, offset: ["start start", "end start"] });
   const transform = useTransform(scrollYProgress, (v) => `scale(${1 + v * 0.08})`);
   const dim = useTransform(scrollYProgress, [0, 1], [0, 0.6]);
+  // the fins grow to full height as the sheet comes up
+  const rise = useTransform(scrollYProgress, [0, 0.7], ["scaleY(0.3)", "scaleY(1)"]);
 
   useEffect(() => {
     const v = video.current;
     if (reduce) return setTitled(true), setEnded(true);
-    const tick = () => v.currentTime >= TITLE_AT && setTitled(true);
+    const tick = () => v.currentTime >= (p.introAt ?? TITLE_AT) && setTitled(true);
     v.addEventListener("timeupdate", tick);
     // a phone in low-power mode will not autoplay: show the towers and the title instead
     const t = setTimeout(() => v.paused && v.currentTime === 0 && (setEnded(true), setTitled(true)), 2500);
     return () => (v.removeEventListener("timeupdate", tick), clearTimeout(t));
-  }, [reduce]);
+  }, [reduce, p.introAt]);
 
   return (
     <div className="relative">
@@ -103,12 +108,26 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
         </div>
       </section>
 
-      {/* the sheet of paper, its leading edge brushed */}
+      {/* the sheet of paper, its leading edge brushed, or set with the facade's fins */}
       <div className="relative z-10">
-        <svg viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true" className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(28px,5vw,80px)] w-full">
-          <path d={edge[1]} className="fill-paper/50" transform="translate(0 -6)" />
-          <path d={edge[0]} className="fill-paper" />
-        </svg>
+        {fins ? (
+          <motion.svg
+            viewBox="0 0 1000 60"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(36px,7vw,110px)] w-full origin-bottom"
+            style={{ transform: reduce ? "none" : rise }}
+          >
+            {FINS.map((f, i) => (
+              <rect key={i} x={f.x} y={60 - f.h} width="5" height={f.h} className="fill-paper" />
+            ))}
+          </motion.svg>
+        ) : (
+          <svg viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true" className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(28px,5vw,80px)] w-full">
+            <path d={edge[1]} className="fill-paper/50" transform="translate(0 -6)" />
+            <path d={edge[0]} className="fill-paper" />
+          </svg>
+        )}
         <div className="bg-paper">{children}</div>
       </div>
     </div>

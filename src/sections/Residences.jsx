@@ -4,7 +4,7 @@ import Lightbox from "@/components/Lightbox";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
-const PLAN = [1165, 805]; // every plan is cut to the same frame from the brochure
+const PLAN = [1165, 805]; // The Wave's plans are all cut to one frame; a unit can give its own (planSize)
 const sqm = (n) => `${n.toFixed(2).replace(/\.?0+$/, "")} sqm`;
 const range = (plans) => {
   const a = plans.map((p) => p[2]);
@@ -34,7 +34,7 @@ export default function Residences({ units, name, features = [], tours = [], onT
     <section id="residences" aria-labelledby="residences-title" className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
       <div className="grid gap-x-20 gap-y-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
         <div>
-          {layouts > 0 && (
+          {layouts > units.length && (
             <p className="font-display text-[1.15rem] text-gold-ink italic">
               {layouts} layouts in {units.length} types
             </p>
@@ -162,15 +162,19 @@ function Unit({ unit, name, tour, onTour, onBook }) {
 
         <div>
           <p className="font-display text-[clamp(1.3rem,1.8vw,1.6rem)] leading-snug text-ink">{unit.about}</p>
-          <h3 className="font-display mt-10 text-[1.15rem] text-gold-ink italic">Finishes</h3>
-          <dl className="mt-3 border-t border-ink/12">
-            {unit.finishes.map(([k, v]) => (
-              <div key={k} className="grid gap-1 border-b border-ink/10 py-3.5 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4">
-                <dt className="text-ink">{k}</dt>
-                <dd className="text-[0.95rem] leading-relaxed text-ink/70">{v}</dd>
-              </div>
-            ))}
-          </dl>
+          {unit.finishes && (
+            <>
+              <h3 className="font-display mt-10 text-[1.15rem] text-gold-ink italic">Finishes</h3>
+              <dl className="mt-3 border-t border-ink/12">
+                {unit.finishes.map(([k, v]) => (
+                  <div key={k} className="grid gap-1 border-b border-ink/10 py-3.5 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4">
+                    <dt className="text-ink">{k}</dt>
+                    <dd className="text-[0.95rem] leading-relaxed text-ink/70">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
           {/* the type's own next step */}
           <div className="mt-10 bg-stone p-6">
             <p className="font-display text-[1.35rem] leading-tight text-ink">Interested in the {unit.name.toLowerCase()}?</p>
@@ -193,23 +197,25 @@ function Unit({ unit, name, tour, onTour, onBook }) {
 // every layout of the type, picked by name; the open plan grows into a full view to read its areas
 function Plans({ unit, name }) {
   const [at, setAt] = useState(0);
+  const [pw, ph] = unit.planSize ?? PLAN;
   const images = useMemo(
     () =>
       unit.plans.map(([type, src, area]) => ({
         src,
-        width: PLAN[0],
-        height: PLAN[1],
+        width: pw,
+        height: ph,
         caption: `${unit.name}, ${type}: ${sqm(area)}`,
         alt: `${name}, ${unit.name.toLowerCase()} ${type}: floor plan with room areas, ${sqm(area)} in total`,
       })),
-    [unit, name]
+    [unit, name, pw, ph]
   );
-  const [type, , area, has] = unit.plans[at];
+  const [type, , area, has, rooms] = unit.plans[at];
 
   return (
     <Lightbox images={images}>
       {({ open, thumb, active }) => (
         <div>
+          {unit.plans.length > 1 && (
           <div role="group" aria-label="Layout" className="flex flex-wrap gap-2">
             {unit.plans.map(([t, , a], i) => (
               <button
@@ -225,22 +231,23 @@ function Plans({ unit, name }) {
               </button>
             ))}
           </div>
+          )}
           <button
             ref={thumb(at)}
             type="button"
             onClick={() => open(at)}
             aria-label={`Open the ${type} plan`}
-            className="group mt-5 block w-full overflow-hidden border border-ink/10 bg-plan"
+            className={`group block w-full overflow-hidden border border-ink/10 bg-plan ${unit.plans.length > 1 ? "mt-5" : ""}`}
             style={{ opacity: active === at ? 0 : 1 }}
           >
             <img
               key={images[at].src}
               src={images[at].src}
               alt={images[at].alt}
-              width={PLAN[0]}
-              height={PLAN[1]}
+              width={pw}
+              height={ph}
               decoding="async"
-              className="h-auto w-full"
+              className={ph > pw ? "mx-auto h-auto max-h-[70svh] w-auto" : "h-auto w-full"}
             />
           </button>
           <p className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-ink">
@@ -249,6 +256,16 @@ function Plans({ unit, name }) {
             </span>
             {has.length > 0 && <span className="text-[0.92rem] text-ink/65">{has.join(", ")}</span>}
           </p>
+          {rooms && (
+            <dl className="mt-4 grid max-w-[28rem] grid-cols-[minmax(0,1fr)_auto] gap-x-6 border-t border-ink/12 text-[0.95rem]">
+              {rooms.map(([room, a]) => (
+                <div key={room} className="contents">
+                  <dt className="border-b border-ink/10 py-2 text-ink/75">{room}</dt>
+                  <dd className="border-b border-ink/10 py-2 text-right text-ink tabular-nums">{sqm(a)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
       )}
     </Lightbox>

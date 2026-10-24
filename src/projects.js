@@ -4,35 +4,213 @@ export const showcase = ["alto", "wave", "pristina", "soon", "soon"];
 
 const P = "/media/p";
 
-// Project pages. Every fact comes from the client's material: render labels (Alto),
+// The licensed agents for The Wave and Alto Ranudo, from their card in resources/
+const LARANJO = {
+  names: "Marilyn & Percival Laranjo",
+  role: "Licensed real estate salespersons",
+  firm: "Leuterio Realty & Brokerage",
+  licences: [
+    ["PRC licence", "0026225"],
+    ["DHSUD registration", "R7-A-04/21-630"],
+  ],
+  phones: ["+63 935 662 5281", "+63 956 870 7294"],
+  email: "lenlaranjo@gmail.com",
+};
+
+// Project pages. Every fact comes from the client's material: the presentation deck (Alto),
 // the brochure (The Wave) and the walkthrough films. Lines marked "ours" are descriptive
 // copy written from the footage, pending the client's own text.
 export const projects = {
   alto: {
     name: "Alto Ranudo",
-    accent: "var(--color-teal)",
+    // the deck's own forest green, on a site of its own (theme repaints the house palette)
+    accent: "var(--color-alto-mid)",
+    site: true,
+    // Alto's site repaints the house tokens in its deck's colours: forest green for the navy,
+    // bronze for the gold, a cool grey paper (sites.js writes these into the page head)
+    theme: {
+      "--color-navy-deep": "var(--color-alto)",
+      "--color-navy": "var(--color-alto-raised)",
+      "--color-champagne": "var(--color-bronze-light)",
+      "--color-gold": "var(--color-bronze)",
+      "--color-gold-ink": "var(--color-bronze-ink)",
+      "--color-paper": "var(--color-alto-paper)",
+      "--color-stone": "var(--color-alto-stone)",
+      "--color-plan": "var(--color-alto-stone)",
+      "--color-ink": "var(--color-alto)",
+    },
+    // the geometric hand: fins where The Wave has ink (FilmHero, Spaces)
+    motif: "fins",
     hero: `${P}/alto-hero`,
     panel: `${P}/alto-panel`,
     film: `${P}/alto-film`,
-    tagline: "Twin towers above the city",
-    // ours: described from the walkthrough
+    // the extended walkthrough film's first 12.6 s: the monogram, then the aerial approach
+    intro: `${P}/alto-intro`,
+    introAt: 4,
+    // Everything below is from the presentation deck (resources/Alto Ranudo); page numbers in
+    // brackets. Lines marked "ours" are descriptive, written from the renders.
+    tagline: "Built for Timeless Living",
+    kicker: "A landmark woven from Cebuano heritage",
+    // [8]
     statement:
-      "Two residential towers rise above a podium of shops and cafés, wrapped in a timber lattice that softens the light. Above the street, a sky deck of pools, gardens and rooms for gathering.",
+      "A home is not simply a place to stay, but a reflection of who a person is and the legacy they carry.",
     facts: [
+      ["Location", "V. Ranudo Street, Cebu City"],
+      ["Tower", "20 storeys plus a roof deck, 14 residential floors"],
+      ["Residences", "389 units, studio and one-bedroom"],
+      ["Lot area", "2,134.80 sqm"],
+      ["Gross floor area", "14,890.22 sqm"],
       ["Architect", "Casas Architects"],
-      ["Adult pool", "170 sqm"],
-      ["Function room", "73.07 sqm"],
-      ["Kid's playroom", "29.64 sqm"],
-      ["Kiddie pool", "25 sqm"],
+    ],
+    // [9, 10, 15, 16]
+    profile: {
+      word: "Landmark",
+      title: "A residence that honors Cebu's artistry",
+      body: [
+        "It is a space that allows one to live openly yet remain grounded, to be rooted in the richness of culture while enjoying the refinement of contemporary living.",
+        "It connects the past with the present, and elevates heritage as a lifestyle to live.",
+      ],
+      image: `${P}/alto-ext-2.webp`,
+      imageAlt: "Alto Ranudo at dusk, its terracotta lattice podium under the tower",
+      figures: [
+        ["389", "Residential units"],
+        ["20", "Storeys, plus a roof deck"],
+        ["14", "Residential floors"],
+        ["14,890.22", "Gross floor area, sqm"],
+        ["2,134.80", "Lot area, sqm"],
+        ["22", "Studios a floor, 22.4 sqm"],
+        ["5", "One-bedrooms a floor, 39 sqm"],
+      ],
+      features: [
+        "Premium residential lobby",
+        "4 levels of podium parking",
+        "3 passenger and 1 service elevator",
+        "Pedestrian access to Calle 104 retail",
+        "Commercial spaces on the ground floor",
+        "CLI property management",
+        "100% back-up power",
+        "24/7 security system",
+      ],
+    },
+    // [18 to 29]; arrival spaces are told full screen, the rest laid out as a grid (Spaces.jsx)
+    spacesIntro: "From the drop-off to the pool deck, rooms for every part of the day.",
+    // [17] every amenity the deck lists
+    amenities: [
+      "Adult and kids pool",
+      "Pool pavilion",
+      "Yoga area",
+      "Zen garden",
+      "Fitness gym",
+      "Study area",
+      "Indoor kid's playroom",
+      "Outdoor kid's play area",
+      "Pet play",
+      "Multi-purpose function rooms",
+      "Pre-function area",
+      "Lounge areas",
+      "Elegant main lobby with lounge",
+      "Indoor drop-off",
     ],
     spaces: [
-      { src: `${P}/alto-2.jpg`, name: "Adult Pool", area: "170 sqm" },
-      { src: `${P}/alto-3.jpg`, name: "Kiddie Pool", area: "25 sqm" },
-      { src: `${P}/alto-4.jpg`, name: "Amenity Lounge Area" },
-      { src: `${P}/alto-1.jpg`, name: "Kid's Playroom", area: "29.64 sqm" },
-      { src: `${P}/alto-5.jpg`, name: "Function Room", area: "73.07 sqm" },
-      { src: `${P}/alto-6.jpg`, name: "Function Room, set for an event", area: "73.07 sqm" },
+      { src: `${P}/alto-dropoff.webp`, name: "Drop Off and Retail", arrival: true, note: "Shops and a restaurant at street level, and an indoor drop-off for residents." },
+      { src: `${P}/alto-lobby.webp`, name: "Elegant Main Lobby", area: "168.04 sqm", arrival: true, note: "A premium residential lobby with a lounge, in stone and warm timber." },
+      { src: `${P}/alto-lobby-2.webp`, name: "The Lobby Lounge", arrival: true, note: "Low seating under a sculpted ceiling, a place to wait or to meet." },
+      { src: `${P}/alto-lift.webp`, name: "Lift Hallway", arrival: true, note: "Three passenger elevators and one for service." },
+      { src: `${P}/alto-pool.webp`, name: "Adult Pool", area: "170 sqm", floor: "6th floor" },
+      { src: `${P}/alto-kiddie.webp`, name: "Kiddie Pool", area: "25 sqm", floor: "6th floor" },
+      { src: `${P}/alto-lounge.webp`, name: "Amenity Lounge Area" },
+      { src: `${P}/alto-study.webp`, name: "Study Area", area: "28.40 sqm" },
+      { src: `${P}/alto-gym.webp`, name: "Fitness Gym", area: "56.98 sqm" },
+      { src: `${P}/alto-kids.webp`, name: "Kid's Playroom", area: "29.64 sqm" },
+      { src: `${P}/alto-function.webp`, name: "Function Room", area: "73.07 sqm", floor: "6th floor" },
+      { src: `${P}/alto-function-2.webp`, name: "Function Room, set for an event", area: "73.07 sqm", floor: "6th floor" },
     ],
+    // [30 to 39] the tower floor by floor, its plates as the deck draws them; size is each
+    // plate's pixel size. Notes are ours, read from the plates' labels and the site plan [13].
+    tower: {
+      note: "Designed for low-density living: fewer units a floor for greater privacy and comfort, each layout drawing in light and air.",
+      levels: [
+        { id: "g", label: "Ground floor", short: "G", plate: `${P}/alto-floor-g.webp`, size: [1600, 726], note: "Retail along Ranudo Street, the residential drop-off and the main lobby, with a passage to Calle 104." },
+        { id: "m", label: "Mezzanine", short: "M", plate: `${P}/alto-floor-m.webp`, size: [1600, 908], note: "Retail space and the admin office, open to the lobby below." },
+        { id: "2", label: "2nd floor", short: "2", plate: `${P}/alto-floor-2.webp`, size: [1600, 1150], note: "Podium parking, with retail." },
+        { id: "3", label: "3rd floor", short: "3", plate: `${P}/alto-floor-3.webp`, size: [1600, 1182], note: "Podium parking." },
+        { id: "4", label: "4th floor", short: "4", plate: `${P}/alto-floor-4.webp`, size: [1566, 1428], note: "Podium parking." },
+        { id: "5", label: "5th floor", short: "5", plate: `${P}/alto-floor-5.webp`, size: [1600, 1130], note: "Podium parking." },
+        { id: "6", label: "6th floor", short: "6", plate: `${P}/alto-floor-6.webp`, size: [1600, 1130], units: "10 studios and 1 one-bedroom", note: "The amenity floor: the adult and kiddie pools, the pool deck, a yoga area and the function room." },
+        { id: "7", label: "7th floor", short: "7", plate: `${P}/alto-floor-7.webp`, size: [1600, 1130], units: "22 studios and 5 one-bedrooms" },
+        { id: "8", label: "8th to 21st floor", short: "8–21", floors: 14, plate: `${P}/alto-floor-8.webp`, size: [1600, 928], units: "22 studios and 5 one-bedrooms a floor", note: "The typical floor, repeated fourteen times up the tower." },
+      ],
+    },
+    // [40] in every unit
+    unitFeatures: [
+      "Painted walls, partitions and ceilings",
+      "Homogeneous tiled flooring throughout",
+      "Premium toilet fixtures",
+      "Kitchen counter with top and base cabinets",
+      "Split-type air conditioning",
+      "Cooktop with rangehood, intercom and smart lockset",
+      "Fire detection and suppression",
+      "Provision for washer-dryer and a single-point water heater",
+      "Data connectivity and telco",
+    ],
+    // [41 to 46] each type with its plan and room areas; photos are frames of the walkthrough
+    // film and the deck's bare-unit renders. about is ours.
+    residences: [
+      {
+        id: "studio",
+        name: "Studio",
+        size: [1000, 700],
+        render: `${P}/alto-unit-studio.webp`,
+        about: "Sleeping, living and a galley kitchen in one long room, with its own toilet and bath at the door.",
+        planSize: [965, 1500],
+        plans: [
+          ["Typical", `${P}/alto-plan-studio.webp`, 22.72, [], [["Living area", 12.08], ["Kitchen", 6.07], ["Toilet", 4.28], ["Chase", 0.29]]],
+        ],
+        photos: [
+          { src: `${P}/alto-studio-1.webp`, caption: "Bedroom" },
+          { src: `${P}/alto-studio-3.webp`, caption: "Living" },
+          { src: `${P}/alto-studio-2.webp`, caption: "Bathroom" },
+          { src: `${P}/alto-studio-4.webp`, caption: "Bare unit" },
+          { src: `${P}/alto-studio-5.webp`, caption: "Bare unit, to the door" },
+        ],
+      },
+      {
+        id: "1br",
+        name: "One bedroom",
+        size: [1000, 700],
+        render: `${P}/alto-unit-1br.webp`,
+        about: "A separate bedroom beside the living room, a kitchen along one wall, and a balcony.",
+        planSize: [1600, 1310],
+        plans: [
+          ["Typical", `${P}/alto-plan-1br.webp`, 39.57, ["Balcony"], [["Living area", 10.99], ["Kitchen", 6.35], ["Toilet", 5.49], ["Chase", 0.37], ["Bedroom", 12.17], ["Balcony", 3.0], ["AC balcony", 1.2]]],
+        ],
+        photos: [
+          { src: `${P}/alto-1br-1.webp`, caption: "Living and dining" },
+          { src: `${P}/alto-1br-2.webp`, caption: "Bare unit, kitchen" },
+          { src: `${P}/alto-1br-3.webp`, caption: "Bare unit" },
+        ],
+      },
+    ],
+    // [11, 12] the deck's line and its distances in km, with its own minutes
+    locationLine: "Located at an iconic address that has long carried the dignity of Cebuano heritage.",
+    nearby: [
+      ["Velez Medical Arts Building", 0.015, "Healthcare", 1],
+      ["Velez General Hospital", 0.17, "Healthcare", 1],
+      ["Chong Hua Hospital", 1.1, "Healthcare", 4],
+      ["Vicente Sotto Medical Center", 1.2, "Healthcare", 4],
+      ["Cebu Doctors' Hospital", 1.8, "Healthcare", 8],
+      ["Casino Español de Cebu", 0.08, "Heritage and faith", 1],
+      ["Archbishop's Palace", 0.4, "Heritage and faith", 2],
+      ["Archdiocese of the Most Sacred Heart", 0.45, "Heritage and faith", 2],
+      ["Fuente Osmeña Circle", 0.7, "Heritage and faith", 3],
+      ["Robinsons Place Cebu Fuente", 0.55, "Shopping and stays", 3],
+      ["Citadines Cebu City", 1.5, "Shopping and stays", 5],
+      ["Cebu Normal University", 0.8, "Schools", 3],
+      ["St. Theresa's College", 1.0, "Schools", 4],
+    ],
+    // the same licensed agents as The Wave, with the user's approval
+    agent: LARANJO,
+    disclaimer: "Renders are architect's perspectives; details are from the developer's presentation and may change.",
   },
 
   wave: {
@@ -100,6 +278,7 @@ export const projects = {
         },
       ],
     },
+    spacesIntro: "Japanese-inspired amenities from the lobby to the thirty-seventh floor.",
     // The sixth floor as the brochure draws it (page 19): the amenity plan, 1200 by 1294, with a
     // marker on each amenity at x, y (0 to 1) and the render of it from spaces, where there is one.
     // Areas are the plan's key; notes without a space are ours, read from the plan.
@@ -384,33 +563,22 @@ export const projects = {
     // under the enquiry desk: who builds it, and where the pictures and figures come from
     disclaimer:
       "The Wave Towers is developed by CLNUD Ventures, a joint venture of Cebu Landmasters and NTT UD Asia. Renders are architect's perspectives; layouts and areas are from the developer's brochure and may change.",
-    // from the agent's card in resources/
-    agent: {
-      names: "Marilyn & Percival Laranjo",
-      role: "Licensed real estate salespersons",
-      firm: "Leuterio Realty & Brokerage",
-      licences: [
-        ["PRC licence", "0026225"],
-        ["DHSUD registration", "R7-A-04/21-630"],
-      ],
-      phones: ["+63 935 662 5281", "+63 956 870 7294"],
-      email: "lenlaranjo@gmail.com",
-    },
+    agent: LARANJO,
     // the brochure's location page (page 10): its line, and its distances in km, each with the kind of place it is
     locationLine: "Within Cebu I.T. Park, one of Cebu's most dynamic business and lifestyle hubs, with seamless connectivity to top-tier offices, retail and urban conveniences.",
     nearby: [
       ["Ayala Central Bloc", 0.22, "Shopping"],
-      ["Cebu Country Club", 1.1, "Everyday"],
+      ["Cebu Country Club", 1.1, "School, club and church"],
       ["Banilad Town Centre", 1.3, "Shopping"],
-      ["University of Cebu Banilad", 2.1, "Everyday"],
+      ["University of Cebu Banilad", 2.1, "School, club and church"],
       ["Ayala Center Cebu", 2.7, "Shopping"],
       ["SM City Cebu", 3.1, "Shopping"],
       ["Chong Hua Hospital", 3.1, "Healthcare"],
-      ["Redemptorist Church", 3.2, "Everyday"],
+      ["Redemptorist Church", 3.2, "School, club and church"],
       ["Perpetual Succor Hospital", 3.5, "Healthcare"],
       ["Cebu Doctors' Hospital", 3.6, "Healthcare"],
-      ["Seaport", 5.9, "Travel"],
-      ["Mactan-Cebu International Airport", 11.7, "Travel"],
+      ["Seaport", 5.9, "Getting away"],
+      ["Mactan-Cebu International Airport", 11.7, "Getting away"],
     ],
   },
 

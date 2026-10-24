@@ -33,6 +33,20 @@
   --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
+/* kept whether or not a class uses them: the project themes reach them by name */
+@theme static {
+  /* Alto Ranudo's deck: forest green, a lighter and a mid green, bronze in three strengths,
+     and its cool grey page; its site paints the house tokens with these (projects.js theme) */
+  --color-alto: #152f2b;
+  --color-alto-raised: #1e3d38;
+  --color-alto-mid: #24574d;
+  --color-bronze: #a48362;
+  --color-bronze-light: #cdb08e;
+  --color-bronze-ink: #6f5434;
+  --color-alto-paper: #f1f0ec;
+  --color-alto-stone: #e2e1dc;
+}
+
 html {
   background: var(--color-paper);
   color: var(--color-charcoal);
@@ -176,4 +190,37 @@ body::after {
   .ripple {
     animation: none;
   }
+}
+
+/* a word set huge in outline behind a section, as in Alto Ranudo's deck (Profile.jsx) */
+.outline-word {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--color-ink) 24%, transparent);
+}
+
+/* a storey in the tower's elevation, ruled with the facade's fins in its own text colour (FloorStack.jsx) */
+.fins {
+  background-image: repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 7px);
+}
+
+/* a fin of FinEdge.jsx, growing up from its foot */
+.fin {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: scale 800ms var(--ease-out-strong);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fin {
+    scale: 1 1 !important;
+    transition: none;
+  }
+}
+
+/* an architect's ruled sheet behind a section, as faint as a grid on drawing paper */
+.grid-paper {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-ink) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-ink) 6%, transparent) 1px, transparent 1px);
+  background-size: 96px 96px;
+  background-position: center top;
 }

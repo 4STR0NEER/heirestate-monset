@@ -6,8 +6,10 @@ import { useMedia } from "@/lib/use-media";
 import Reveal from "@/components/Reveal";
 import Enquiry from "@/sections/Enquiry";
 import FilmHero from "@/sections/FilmHero";
+import FloorStack from "@/sections/FloorStack";
 import Nearby from "@/sections/Nearby";
 import Partnership from "@/sections/Partnership";
+import Profile from "@/sections/Profile";
 import Residences from "@/sections/Residences";
 import Spaces from "@/sections/Spaces";
 import TourPlayer from "@/sections/TourPlayer";
@@ -17,7 +19,7 @@ const EASE = [0.23, 1, 0.32, 1];
 const EASE_IO = [0.77, 0, 0.175, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 // the stills keep their native proportions so the horizontal track can be measured before they load
-const SIZES = { alto: [1600, 688], pristina: [1600, 800] };
+const SIZES = { pristina: [1600, 800] };
 
 const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px)`;
 const FULL = "inset(0px 0px 0px 0px)";
@@ -217,6 +219,7 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
             {facts}
           </section>
           {p.venture && <Partnership venture={p.venture} />}
+          {p.profile && <Profile profile={p.profile} name={p.name} />}
         </FilmHero>
       ) : (
         <>
@@ -294,11 +297,12 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
       )}
 
       {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
-      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} deck={p.deck} onBook={() => book()} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
+      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} intro={p.spacesIntro} deck={p.deck} amenities={p.amenities} motif={p.motif} onBook={() => book()} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
+      {p.tower && <FloorStack tower={p.tower} name={p.name} />}
       {p.residences && <Residences units={p.residences} name={p.name} features={p.unitFeatures} tours={p.tours?.map((t) => t.id)} onTour={setTour} onBook={book} />}
       {p.nearby && <Nearby places={p.nearby} name={p.name} line={p.locationLine} onBook={p.agent && (() => book())} />}
       {!p.intro && <Film ref={film} src={p.film} name={p.name} />}
-      {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} />}
+      {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} fins={p.motif === "fins"} />}
       {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour || filming} />}
       <AnimatePresence>{filming && <FilmPlayer src={p.film} name={p.name} onClose={() => setFilming(false)} />}</AnimatePresence>
       <AnimatePresence>

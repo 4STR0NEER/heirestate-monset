@@ -1,23 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import FinEdge from "@/components/FinEdge";
+import Lightbox from "@/components/Lightbox";
 import Reveal from "@/components/Reveal";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 
 // The amenities as a walk up the tower, each floor told its own way: the arrival as full-screen
-// photographs the text scrolls over, the sixth floor as the brochure's plan to explore, the
-// thirty-seventh through a window that opens onto it. Without a plan (deck), every space is told
-// the first way.
-export default function Spaces({ items, name, deck, onBook }) {
-  const story = deck ? items.filter((s) => !s.area) : items;
+// photographs the text scrolls over, then the rest. With a plan (deck, The Wave), the sixth floor
+// is the brochure's plan to explore and the thirty-seventh a window that opens onto it. Where the
+// spaces mark which are the arrival (Alto Ranudo), the rest are laid out as a grid. The geometric
+// motif turns the arrival's crossfade into a louvre wipe.
+export default function Spaces({ items, name, intro, deck, amenities, motif, onBook }) {
+  const marked = items.some((s) => "arrival" in s);
+  const story = marked ? items.filter((s) => s.arrival) : deck ? items.filter((s) => !s.area) : items;
   const sky = deck ? items.filter((s) => s.area?.startsWith("37")) : [];
   return (
     <>
-      <Story items={story} name={name} />
+      <Story items={story} name={name} intro={intro} slats={motif === "fins"} />
       {deck && <Deck deck={deck} items={items} />}
       {sky.length > 0 && <Sky items={sky} />}
-      <Onward onBook={onBook} />
+      {marked && <Mosaic items={items.filter((s) => !s.arrival)} name={name} amenities={amenities} />}
+      <Onward onBook={onBook} fins={motif === "fins"} />
     </>
   );
 }
@@ -25,8 +30,10 @@ export default function Spaces({ items, name, deck, onBook }) {
 // Each space fills the screen and its text scrolls over it, so you read about the place while
 // standing in it. The photos sit in one pinned layer and crossfade as each note crosses the
 // middle of the screen.
-function Story({ items, name }) {
-  const [active, setActive] = useState(0);
+function Story({ items, name, intro, slats }) {
+  // the space on screen, and the one it replaced (a louvre wipe opens over it)
+  const [[active, prev], setPair] = useState([0, -1]);
+  const setActive = (n) => setPair(([a, b]) => (n === a ? [a, b] : [n, a]));
   // a photo loads once the reader is one space away from it, then stays
   const [reach, setReach] = useState(1);
   const cards = useRef([]);
@@ -49,10 +56,14 @@ function Story({ items, name }) {
 
   return (
     <section aria-labelledby="spaces" data-tone="dark" className="relative bg-navy-deep text-paper">
+      {slats && <FinEdge />}
       <div className="sticky top-0 h-svh overflow-hidden">
         {items.map(
           (s, i) =>
-            i <= reach && (
+            i <= reach &&
+            (slats ? (
+              <Slats key={s.src} s={s} state={i === active ? "on" : i === prev ? "under" : "off"} />
+            ) : (
               <img
                 key={s.src}
                 src={s.src}
@@ -64,7 +75,7 @@ function Story({ items, name }) {
                 }`}
                 style={{ objectPosition: s.pos }}
               />
-            )
+            ))
         )}
         {/* the text side darkens: the foot of the screen on phones, the left on wider screens */}
         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-navy-deep/95 via-navy-deep/65 via-50% to-navy-deep/10 md:bg-linear-to-r md:from-navy-deep/90 md:via-navy-deep/40 md:via-40% md:to-transparent md:to-70%" />
@@ -80,7 +91,7 @@ function Story({ items, name }) {
               Spaces
             </h3>
             <p data-rise className="mt-6 max-w-[34ch] text-[clamp(1rem,1.3vw,1.2rem)] leading-relaxed text-paper/85">
-              Japanese-inspired amenities from the lobby to the thirty-seventh floor. Scroll to walk up through them.
+              {intro} Scroll to walk through them.
             </p>
           </Reveal>
         </div>
@@ -89,7 +100,7 @@ function Story({ items, name }) {
           <article key={s.src} ref={card(i + 1)} data-bg={i} className={`flex min-h-svh items-end pb-[14svh] md:items-center md:pb-0 ${GUTTER}`}>
             <Reveal className="max-w-[34rem]">
               <p data-rise className="font-display text-[1.1rem] text-champagne italic">
-                {s.area ?? "Arrival"}
+                {s.arrival ? ["Arrival", s.area].filter(Boolean).join(", ") : (s.area ?? "Arrival")}
               </p>
               <h4 data-split className="font-display mt-3 text-[clamp(2.6rem,6vw,5.6rem)] leading-[0.95] tracking-[-0.02em]">
                 {s.name}
@@ -103,6 +114,150 @@ function Story({ items, name }) {
             </Reveal>
           </article>
         ))}
+      </div>
+    </section>
+  );
+}
+
+// A space shown through the facade's fins: seven slats, each holding its own slice of the photo.
+// Coming on, they open one after another across the screen over the space it replaces.
+const SLATS = 7;
+function Slats({ s, state }) {
+  return (
+    <div className="absolute inset-0" style={{ zIndex: { on: 2, under: 1, off: 0 }[state] }}>
+      {Array.from({ length: SLATS }, (_, i) => (
+        <div
+          key={i}
+          className="absolute inset-y-0 overflow-hidden transition-[clip-path] ease-(--ease-in-out-strong) motion-reduce:transition-none"
+          style={{
+            left: `${(i * 100) / SLATS}%`,
+            width: `calc(${100 / SLATS}% + 1px)`,
+            clipPath: state === "off" ? "inset(0 0 0 100%)" : "inset(0 0 0 0)",
+            transitionDuration: state === "on" ? "900ms" : "0ms",
+            transitionDelay: state === "on" ? `${i * 60}ms` : "0ms",
+          }}
+        >
+          <img
+            src={s.src}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-y-0 h-full max-w-none object-cover"
+            style={{ left: `${-i * 100}%`, width: `${SLATS * 100}%`, objectPosition: s.pos }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// The amenities as a louvre: a row of tall slats, one render to each, like the facade's fins
+// seen edge-on. The one under the pointer, or chosen, swings open to fill most of the row and
+// says what it is; open, a press shows it full screen. On a phone the slats stack and the
+// chosen one opens downward. The deck's full list of amenities sits above them.
+function Mosaic({ items, name, amenities = [] }) {
+  const [at, setAt] = useState(0);
+  const images = useMemo(
+    () => items.map((s) => ({ src: s.src, width: 1920, height: 1080, caption: [s.name, s.area].filter(Boolean).join(", "), alt: `${name}: ${s.name}` })),
+    [items, name]
+  );
+  const fine = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  return (
+    <section aria-labelledby="amenities-title" className="grid-paper">
+      <div className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+        <div className="grid gap-x-20 gap-y-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
+          <Reveal>
+            <p data-rise className="font-display text-[1.15rem] text-gold-ink italic">
+              Amenities
+            </p>
+            <h3 id="amenities-title" data-split className="font-display mt-3 text-[clamp(2.6rem,5vw,4.6rem)] leading-[0.95] tracking-[-0.02em] text-ink">
+              Crafted for today and tomorrow
+            </h3>
+            <p data-rise className="mt-5 max-w-[44ch] text-ink/75">
+              In {name}, leisure and convenience are seamlessly woven into everyday life.
+            </p>
+          </Reveal>
+          {amenities.length > 0 && (
+            <ul className="flex flex-wrap gap-2" aria-label="Every amenity">
+              {amenities.map((a) => (
+                <li key={a} className="border border-ink/15 bg-paper px-3 py-1.5 text-[0.88rem] text-ink/75">
+                  {a}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <Lightbox images={images}>
+          {({ open, thumb, active }) => (
+            <ul className="mt-12 flex h-[min(80svh,46rem)] flex-col gap-[clamp(4px,0.6vw,8px)] md:h-[clamp(26rem,68svh,44rem)] md:flex-row">
+              {items.map((s, i) => {
+                const on = i === at;
+                return (
+                  // the slat is what gets watched: a fully clipped element has no area, so it never comes into view
+                  <motion.li
+                    key={s.src}
+                    className="relative min-h-0 min-w-0 transition-[flex-grow] duration-700 ease-(--ease-in-out-strong) motion-reduce:transition-none"
+                    style={{ flex: `${on ? 7 : 1} 1 0%` }}
+                    initial="hidden"
+                    whileInView="shown"
+                    viewport={{ once: true, amount: 0.2 }}
+                  >
+                    <motion.div
+                      className="size-full"
+                      variants={{ hidden: { clipPath: "inset(100% 0% 0% 0%)" }, shown: { clipPath: "inset(0% 0% 0% 0%)" } }}
+                      transition={{ duration: 0.9, ease: [0.77, 0, 0.175, 1], delay: i * 0.06 }}
+                    >
+                      <button
+                        ref={thumb(i)}
+                        type="button"
+                        onMouseEnter={() => fine() && setAt(i)}
+                        onFocus={() => setAt(i)}
+                        onClick={() => (on ? open(i) : setAt(i))}
+                        aria-label={on ? `Show ${s.name} full screen` : s.name}
+                        aria-expanded={on}
+                        className="group relative block size-full overflow-hidden bg-stone text-left text-paper"
+                        style={{ opacity: active === i ? 0 : 1 }}
+                      >
+                        <img src={s.src} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" style={{ objectPosition: s.pos }} />
+                        <span
+                          aria-hidden="true"
+                          className={`absolute inset-0 transition-colors duration-500 ${on ? "bg-linear-to-t from-navy-deep/80 via-navy-deep/10 via-45% to-transparent" : "bg-navy-deep/55 group-hover:bg-navy-deep/40"}`}
+                        />
+                        {/* closed, the slat carries its number and name on its edge */}
+                        <span
+                          aria-hidden="true"
+                          className={`absolute inset-x-0 top-0 flex items-center gap-3 p-3 transition-opacity duration-300 md:inset-y-0 md:right-auto md:flex-col md:items-center md:px-0 md:py-5 ${on ? "opacity-0" : "opacity-100"} md:w-full`}
+                        >
+                          <span className="text-[0.75rem] text-champagne tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                          <span className="h-px w-5 bg-champagne/60 md:h-5 md:w-px" />
+                          <span className="font-display text-[1rem] whitespace-nowrap md:[writing-mode:vertical-rl] md:rotate-180">{s.name}</span>
+                        </span>
+                        {/* open, it says what it is */}
+                        <span
+                          className={`absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 p-[clamp(16px,2.2vw,28px)] transition-[opacity,transform] duration-500 ease-(--ease-out-strong) ${
+                            on ? "translate-y-0 opacity-100 delay-200" : "pointer-events-none translate-y-3 opacity-0"
+                          }`}
+                        >
+                          <span>
+                            <span className="block text-[0.85rem] text-champagne tabular-nums">
+                              {String(i + 1).padStart(2, "0")} / {String(items.length).padStart(2, "0")}
+                              {s.floor ? `, ${s.floor}` : ""}
+                            </span>
+                            <span className="font-display mt-1 block text-[clamp(1.6rem,3vw,2.8rem)] leading-none">{s.name}</span>
+                          </span>
+                          {s.area && <span className="font-display text-[clamp(1.2rem,2vw,1.7rem)] tabular-nums">{s.area}</span>}
+                        </span>
+                      </button>
+                    </motion.div>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          )}
+        </Lightbox>
+        <p className="mt-4 text-[0.88rem] text-ink/55">Point at a slat to open it; press an open one to see it full screen.</p>
       </div>
     </section>
   );
@@ -274,9 +429,10 @@ function Sky({ items }) {
 }
 
 // the top of the tower: on to the homes in it
-function Onward({ onBook }) {
+function Onward({ onBook, fins }) {
   return (
-    <section data-tone="dark" className="bg-navy-deep text-paper">
+    <section data-tone="dark" className="relative bg-navy-deep text-paper">
+      {fins && <FinEdge />}
       <div className={`mx-auto flex max-w-[1440px] flex-wrap items-end justify-between gap-10 py-[clamp(72px,12vh,140px)] ${GUTTER}`}>
         <Reveal className="max-w-[40rem]">
           <p data-rise className="font-display text-[1.15rem] text-champagne italic">

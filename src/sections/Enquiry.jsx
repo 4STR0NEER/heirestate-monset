@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import FinEdge from "@/components/FinEdge";
 
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 const EASE = [0.23, 1, 0.32, 1];
@@ -45,7 +46,7 @@ function send(f, { agent, name, units }) {
 // The enquiry desk: who you are speaking to, with their licences, and one form for every reason
 // to get in touch. Anything on the page that asks for a viewing or a price list lands here with
 // its unit and reason already filled in (ask).
-export default function Enquiry({ agent, name, units = [], developer, ask }) {
+export default function Enquiry({ agent, name, units = [], developer, ask, fins }) {
   const [f, setF] = useState({ intent: "viewing", unit: "", date: "", name: "", phone: "", email: "", message: "", consent: false });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
@@ -86,7 +87,8 @@ export default function Enquiry({ agent, name, units = [], developer, ask }) {
   const button = INTENTS.find(([k]) => k === f.intent)[2];
 
   return (
-    <section id="enquiry" aria-labelledby="enquiry-title" data-tone="dark" className="bg-navy-deep text-paper">
+    <section id="enquiry" aria-labelledby="enquiry-title" data-tone="dark" className="relative bg-navy-deep text-paper">
+      {fins && <FinEdge />}
       <div className={`mx-auto grid max-w-[1440px] gap-x-20 gap-y-14 py-[clamp(88px,14vh,160px)] md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] ${GUTTER}`}>
         <div>
           <p className="font-display text-[1.15rem] text-champagne italic">Enquiries and viewings</p>
