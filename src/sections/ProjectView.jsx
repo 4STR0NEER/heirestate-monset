@@ -2,7 +2,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, stagger } from "animejs";
 import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
+import { inPlace, siteUrl } from "@/lib/links";
 import { useMedia } from "@/lib/use-media";
+import Residences from "@/sections/Residences";
+import Walkthrough from "@/sections/Walkthrough";
 import { order, projects } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
@@ -89,7 +92,53 @@ export default function ProjectView({ id, origin, onClose, onGo }) {
   );
 }
 
-function Project({ id, scroller, onClose, onGo, opened }) {
+// A project's own site (alto.<domain>, ...): the same page, scrolling the window, with the
+// collection one link away instead of a close button.
+export function ProjectPage({ id }) {
+  // arriving from the collection, the page is covered in its colour (sites.js); lift it like a blind
+  useEffect(() => {
+    const html = document.documentElement;
+    if (!("arrive" in html.dataset)) return;
+    const done = () => delete html.dataset.arrive;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return done();
+    html
+      .animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], {
+        duration: 900,
+        delay: 150,
+        easing: "cubic-bezier(0.77, 0, 0.175, 1)",
+        pseudoElement: "::before",
+        fill: "forwards",
+      })
+      .finished.then(done, done);
+  }, []);
+
+  return (
+    <main style={{ "--accent": projects[id].accent }}>
+      <div className="sticky top-0 z-20 h-0">
+        <div className={`flex items-center justify-between bg-linear-to-b from-paper/90 via-paper/50 to-transparent pt-6 pb-8 ${GUTTER}`}>
+          <a href={siteUrl()} aria-label="Heir Estate, the collection">
+            <Logo />
+          </a>
+          {/* a round arrow on phones, where the logo leaves no room for the label */}
+          <a
+            href={siteUrl()}
+            aria-label="The collection"
+            className="font-inscription grid size-12 place-items-center rounded-full border border-ink/20 bg-paper/70 text-[0.7rem] tracking-[0.26em] text-ink uppercase backdrop-blur-sm transition-colors duration-200 hover:bg-ink hover:text-paper sm:block sm:size-auto sm:px-5 sm:py-3"
+          >
+            <svg viewBox="0 0 24 10" className="w-5 sm:hidden" aria-hidden="true">
+              <path d="M24 5H2M6 1L2 5l4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
+            </svg>
+            <span className="hidden sm:inline">The collection</span>
+          </a>
+        </div>
+      </div>
+      <Project id={id} heading="h1" />
+    </main>
+  );
+}
+
+// onClose and onGo are set inside the main site's overlay; without them the links leave for the other site
+function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" }) {
   const p = projects[id];
   const nextId = order[(order.indexOf(id) + 1) % order.length];
   const film = useRef(null);
@@ -115,7 +164,7 @@ function Project({ id, scroller, onClose, onGo, opened }) {
         <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/35 to-paper/0" />
         <div className={`absolute inset-x-0 bottom-0 flex flex-col gap-8 pb-[clamp(32px,7vh,80px)] md:flex-row md:items-end md:justify-between ${GUTTER}`}>
           <div>
-            <h2 className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-ink">
+            <Title className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-ink">
               {p.name.split(" ").map((w, i) => (
                 <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
                   <motion.span
@@ -128,7 +177,7 @@ function Project({ id, scroller, onClose, onGo, opened }) {
                   </motion.span>
                 </span>
               ))}
-            </h2>
+            </Title>
             <motion.p
               className="font-inscription mt-4 text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.3em] text-gold-ink uppercase"
               initial={{ opacity: 0, filter: "blur(6px)" }}
@@ -170,11 +219,13 @@ function Project({ id, scroller, onClose, onGo, opened }) {
       </section>
 
       <Gallery id={id} items={p.spaces} scroller={scroller} />
-      {p.residences && <Residences sets={p.residences} />}
+      {p.residences && <Residences units={p.residences} name={p.name} />}
+      {p.walkthrough && <Walkthrough walk={p.walkthrough} unit={`${p.name}, one bedroom`} />}
       {p.nearby && <Nearby places={p.nearby} />}
       <Film ref={film} src={p.film} name={p.name} />
+      {p.agent && <Agent agent={p.agent} name={p.name} />}
 
-      <button type="button" onClick={() => onGo(nextId)} className="group relative block h-[62svh] w-full overflow-hidden text-left">
+      <a href={siteUrl(nextId)} onClick={onGo && inPlace(() => onGo(nextId))} className="group relative block h-[62svh] w-full overflow-hidden text-left">
         <img
           src={`${projects[nextId].hero}.jpg`}
           alt=""
@@ -193,12 +244,12 @@ function Project({ id, scroller, onClose, onGo, opened }) {
             </svg>
           </span>
         </div>
-      </button>
+      </a>
 
       <footer className={`flex items-center justify-between py-10 ${GUTTER}`}>
-        <button type="button" onClick={onClose} className="font-inscription text-[0.78rem] tracking-[0.3em] text-ink/75 uppercase hover:text-gold-ink">
+        <a href={siteUrl()} onClick={onClose && inPlace(onClose)} className="font-inscription text-[0.78rem] tracking-[0.3em] text-ink/75 uppercase hover:text-gold-ink">
           Back to the facade
-        </button>
+        </a>
         <Mark className="h-8 w-auto text-ink/70" />
       </footer>
     </>
@@ -295,6 +346,7 @@ function Gallery({ id, items, scroller }) {
           alt={s.name}
           width={w}
           height={h}
+          loading="lazy"
           decoding="async"
           className={`${wide ? "h-[min(56vh,560px)] w-auto" : "h-auto w-full"} object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]`}
           variants={{ hidden: { clipPath: "inset(0 0 100% 0)" }, shown: { clipPath: "inset(0 0 0% 0)" } }}
@@ -324,62 +376,6 @@ function Gallery({ id, items, scroller }) {
           {items.map(card)}
         </motion.div>
       </div>
-    </section>
-  );
-}
-
-function Residences({ sets }) {
-  const names = Object.keys(sets);
-  const [tab, setTab] = useState(names[0]);
-  return (
-    <section className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
-      <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Residences</h3>
-          <p className="mt-3 text-ink/65">Photographed in the dress-up units.</p>
-        </div>
-        <div role="tablist" aria-label="Unit type" className="flex rounded-full border border-ink/20 p-1">
-          {names.map((n) => (
-            <button
-              key={n}
-              type="button"
-              role="tab"
-              aria-selected={tab === n}
-              onClick={() => setTab(n)}
-              className={`font-inscription relative rounded-full px-5 py-2 text-[0.72rem] tracking-[0.24em] uppercase transition-colors duration-300 ${tab === n ? "text-paper" : "text-ink/70 hover:text-ink"}`}
-            >
-              {tab === n && (
-                <motion.span layoutId="unit-tab" className="absolute inset-0 rounded-full bg-(--accent)" transition={{ type: "spring", duration: 0.45, bounce: 0.15 }} />
-              )}
-              <span className="relative">{n}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={tab}
-          role="tabpanel"
-          className="columns-2 gap-[clamp(10px,1.4vw,20px)] md:columns-3"
-          initial={{ opacity: 0, filter: "blur(6px)" }}
-          animate={{ opacity: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, filter: "blur(6px)", transition: { duration: 0.2 } }}
-          transition={{ duration: 0.5, ease: EASE }}
-        >
-          {sets[tab].map((src, i) => (
-            <img
-              key={src}
-              src={src}
-              alt={`${tab} dress-up unit, view ${i + 1}`}
-              width={760}
-              height={802}
-              loading="lazy"
-              decoding="async"
-              className="mb-[clamp(10px,1.4vw,20px)] w-full break-inside-avoid"
-            />
-          ))}
-        </motion.div>
-      </AnimatePresence>
     </section>
   );
 }
@@ -414,6 +410,59 @@ function Nearby({ places }) {
           </li>
         ))}
       </ol>
+    </section>
+  );
+}
+
+// The agent's card, set as a quiet closing: who to speak to, and the two ways to reach them.
+function Agent({ agent, name }) {
+  const row =
+    "group flex items-center justify-between gap-6 border-b border-ink/12 py-5 text-[clamp(1.15rem,1.8vw,1.5rem)] text-ink transition-colors duration-200 hover:text-(--accent)";
+  const arrow = (
+    <svg viewBox="0 0 24 10" className="w-6 shrink-0 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
+      <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+  return (
+    <section aria-labelledby="agent" className="bg-stone">
+      <div className={`mx-auto grid max-w-[1440px] gap-12 py-[clamp(88px,14vh,160px)] md:grid-cols-[1fr_1.1fr] md:gap-20 ${GUTTER}`}>
+        <div>
+          <h3 id="agent" className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em] text-ink">
+            Speak to an agent
+          </h3>
+          <p className="mt-5 max-w-[36ch] text-ink/70">For viewings of the dress-up units, availability and pricing at {name}.</p>
+          <p className="font-display mt-10 text-[1.6rem] leading-tight text-ink">{agent.names}</p>
+          <p className="mt-1 text-ink/70">
+            {agent.role}, {agent.firm}
+          </p>
+          <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
+            {agent.licences.map(([k, v]) => (
+              <div key={k}>
+                <dt className="font-inscription text-[0.62rem] tracking-[0.24em] text-ink/55 uppercase">{k}</dt>
+                <dd className="mt-0.5 text-ink tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div className="self-end border-t border-ink/12">
+          {agent.phones.map((t) => (
+            <a key={t} href={`tel:${t.replace(/\s/g, "")}`} className={`${row} tabular-nums`}>
+              <span>
+                <span className="font-inscription mr-4 text-[0.66rem] tracking-[0.24em] text-ink/55 uppercase">Call</span>
+                {t}
+              </span>
+              {arrow}
+            </a>
+          ))}
+          <a href={`mailto:${agent.email}?subject=${encodeURIComponent(name)}`} className={row}>
+            <span className="min-w-0 break-all">
+              <span className="font-inscription mr-4 text-[0.66rem] tracking-[0.24em] text-ink/55 uppercase">Email</span>
+              {agent.email}
+            </span>
+            {arrow}
+          </a>
+        </div>
+      </div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
+import { inPlace, siteUrl } from "@/lib/links";
 import { order, projects } from "@/projects";
 
 const SPRING = { type: "spring", duration: 0.55, bounce: 0.18 };
@@ -114,12 +115,12 @@ export default function IslandNav({ section, onOpen, hidden }) {
               <ul className="grid gap-2 sm:grid-cols-3">
                 {order.map((id) => (
                   <li key={id}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
+                    <a
+                      href={siteUrl(id)}
+                      onClick={inPlace((e) => {
                         setMenu(false);
                         onOpen(id, e.currentTarget.querySelector("img").getBoundingClientRect());
-                      }}
+                      })}
                       className="group flex w-full items-center gap-3 rounded-[18px] p-1.5 text-left transition-colors duration-200 hover:bg-paper/8 sm:block"
                     >
                       <span className="relative block w-24 shrink-0 overflow-hidden rounded-[13px] sm:w-auto">
@@ -133,7 +134,7 @@ export default function IslandNav({ section, onOpen, hidden }) {
                       </span>
                       <span className="font-inscription mt-0.5 block px-1 pb-1 text-[0.6rem] tracking-[0.22em] text-champagne/75 uppercase">{projects[id].tagline}</span>
                       </span>
-                    </button>
+                    </a>
                   </li>
                 ))}
               </ul>

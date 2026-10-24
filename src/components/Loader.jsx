@@ -6,14 +6,14 @@ const SEEN = "heir-intro-seen";
 const WORD = "HEIR ESTATE";
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Resolves when fonts and the hero's tower videos can play, or after 8s so a slow
-// connection still gets in.
+// Resolves when fonts and the first frame of each hero video are in, or after 8s so a slow
+// connection still gets in. The loops buffer the rest while they play.
 function heroAssets() {
   const videos = [...document.querySelectorAll("video")].map((v) =>
-    v.readyState >= 3
+    v.readyState >= 2
       ? null
       : new Promise((r) => {
-          v.addEventListener("canplaythrough", r, { once: true });
+          v.addEventListener("loadeddata", r, { once: true });
           v.addEventListener("error", r, { once: true });
         })
   );

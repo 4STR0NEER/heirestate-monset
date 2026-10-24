@@ -10,6 +10,8 @@
   --color-gold: #c49b4c;
   --color-teal: #0a4f54;
   --color-champagne: #e2d2b4;
+  /* The Wave's own blue, sampled from its brochure: the accent on its site */
+  --color-wave: #31456a;
 
   /* the light site: warm paper, navy ink. Brand gold is too pale for type on paper
      (2.3:1), so gold text uses deeper cuts of it: display ≥3:1, small text ≥4.5:1 */
@@ -62,6 +64,21 @@ body::after {
 
 .lit-window {
   filter: drop-shadow(0 0 5px rgb(196 155 76 / 0.75));
+}
+
+/* the crawlable copy served in each site's HTML (sites.js); React replaces it on load */
+.prerender {
+  max-width: 62ch;
+  margin: 18vh auto;
+  padding: 0 16px;
+  color: var(--color-ink);
+  line-height: 1.6;
+}
+.prerender > * + * {
+  margin-top: 1rem;
+}
+.prerender h1 {
+  font: 2.6rem/1.05 var(--font-display);
 }
 
 /* the blur that turns the morphing shapes into silk (SilkBackground.jsx) */

@@ -27,4 +27,6 @@ Heir Estate showcases five property projects. Headline "Building your future, on
 
 ## Evidence on Hand
 
-Live projects: Alto Ranudo, The Wave (Towers), Pristina Town. Source renders and walkthroughs in `resources/` (gitignored); web cuts in `public/media/`. No prices, locations, dates or contact details confirmed yet; do not invent them.
+Live projects: Alto Ranudo, The Wave (Towers), Pristina Town. Source renders and walkthroughs in `resources/` (gitignored); web cuts in `public/media/`. No prices or dates confirmed yet; do not invent them. The Wave's agents (Marilyn & Percival Laranjo, Leuterio Realty) are the one confirmed contact, from their card in `resources/`, and appear on The Wave's site with the user's approval. The Wave has studio, one-, two- and three-bedroom dress-up photos and a one-bedroom walkthrough film.
+
+Each project with its own site (`site: true` in `src/projects.js`) uses its building's colour as the accent on the house palette; The Wave's is its brochure blue, #31456A.

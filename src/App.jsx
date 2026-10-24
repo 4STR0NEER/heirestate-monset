@@ -6,8 +6,12 @@ import Hero from "./sections/Hero";
 import Portfolio from "./sections/Portfolio";
 import ProjectView from "./sections/ProjectView";
 import { projects } from "./projects";
+import { leave, siteUrl } from "./lib/links";
 
 const fromHash = () => (projects[location.hash.slice(1)] ? location.hash.slice(1) : null);
+
+// an old shared link like /#wave, for a project that now has its own site, goes there
+if (projects[fromHash()]?.site) location.replace(siteUrl(fromHash()));
 
 export default function App() {
   const [ready, setReady] = useState(false); // hero entrance waits for the loader's reveal
@@ -22,6 +26,7 @@ export default function App() {
 
   // each project has its own #hash, so the browser's back button closes it
   const openProject = useCallback((id, origin) => {
+    if (projects[id].site) return leave(id, origin);
     history.pushState({ project: id }, "", `#${id}`);
     setOpen({ id, origin });
   }, []);
@@ -33,6 +38,7 @@ export default function App() {
     }
   }, []);
   const go = useCallback((id) => {
+    if (projects[id].site) return leave(id);
     history.replaceState({ project: id }, "", `#${id}`);
     setOpen({ id, origin: null });
   }, []);

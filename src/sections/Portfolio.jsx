@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import { sequence } from "@/lib/frames";
+import { inPlace, siteUrl } from "@/lib/links";
 import { order, projects } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
@@ -189,16 +190,16 @@ function Card({ id, b, x, onOpen }) {
           ))}
         </dl>
       )}
-      <button
-        type="button"
-        onClick={open}
-        className="font-inscription mt-7 flex items-center gap-3 rounded-full bg-paper px-6 py-3.5 text-[0.72rem] tracking-[0.26em] text-ink uppercase transition-[background-color,transform] duration-200 hover:bg-gold active:scale-[0.97]"
+      <a
+        href={siteUrl(id)}
+        onClick={inPlace(open)}
+        className="font-inscription mt-7 flex w-fit items-center gap-3 rounded-full bg-paper px-6 py-3.5 text-[0.72rem] tracking-[0.26em] text-ink uppercase transition-[background-color,transform] duration-200 hover:bg-gold active:scale-[0.97]"
       >
         Explore {p.name}
         <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
           <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
         </svg>
-      </button>
+      </a>
     </motion.article>
   );
 }
@@ -262,14 +263,14 @@ function Footer({ onOpen }) {
           <ul className="mt-4 space-y-2.5">
             {order.map((id) => (
               <li key={id}>
-                <button
-                  type="button"
-                  onClick={(e) => onOpen(id, e.currentTarget.getBoundingClientRect())}
+                <a
+                  href={siteUrl(id)}
+                  onClick={inPlace((e) => onOpen(id, e.currentTarget.getBoundingClientRect()))}
                   className="flex items-center gap-3 text-ink underline-offset-4 hover:underline"
                 >
                   <span className="size-2 rounded-full" style={{ background: projects[id].accent }} />
                   {projects[id].name}
-                </button>
+                </a>
               </li>
             ))}
           </ul>

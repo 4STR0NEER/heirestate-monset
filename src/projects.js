@@ -37,7 +37,10 @@ export const projects = {
 
   wave: {
     name: "The Wave",
-    accent: "var(--color-navy)",
+    // the tower's own blue, from its brochure; the rest of the page keeps the house palette
+    accent: "var(--color-wave)",
+    // has its own site at wave.<domain>: every link to it leaves for there instead of the overlay
+    site: true,
     hero: `${P}/wave-hero`,
     panel: `${P}/wave-panel`,
     film: `${P}/wave-film`,
@@ -65,9 +68,70 @@ export const projects = {
       { src: `${P}/wave-gym.jpg`, name: "Fitness Gym", area: "37th floor" },
       { src: `${P}/wave-library.jpg`, name: "Library Lounge", area: "37th floor" },
     ],
-    residences: {
-      "Two bedroom": [1, 2, 3, 4, 5, 6, 7].map((n) => `${P}/unit-${n}2BR.jpg`),
-      "Three bedroom": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `${P}/unit-${n}3BR.jpg`),
+    // every layout photographed in its dress-up unit; size is each set's native pixel size
+    residences: [
+      {
+        id: "studio",
+        name: "Studio",
+        size: [760, 704],
+        photos: [
+          { src: `${P}/unit-studio-1.jpg`, caption: "Bed and dining" },
+          { src: `${P}/unit-studio-2.jpg`, caption: "Kitchen" },
+          { src: `${P}/unit-studio-3.jpg`, caption: "Bathroom" },
+        ],
+      },
+      {
+        id: "1br",
+        name: "One bedroom",
+        size: [760, 704],
+        walkthrough: true,
+        photos: [
+          { src: `${P}/unit-1br-1.jpg`, caption: "Living and dining" },
+          { src: `${P}/unit-1br-3.jpg`, caption: "Bedroom" },
+          { src: `${P}/unit-1br-2.jpg`, caption: "Kitchen" },
+          { src: `${P}/unit-1br-4.jpg`, caption: "Bathroom" },
+          { src: `${P}/unit-1br-5.jpg`, caption: "Powder room" },
+        ],
+      },
+      {
+        id: "2br",
+        name: "Two bedroom",
+        size: [760, 802],
+        photos: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ src: `${P}/unit-${n}2BR.jpg` })),
+      },
+      {
+        id: "3br",
+        name: "Three bedroom",
+        size: [760, 802],
+        photos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ src: `${P}/unit-${n}3BR.jpg` })),
+      },
+    ],
+    // The one-bedroom film as scroll frames (public/frames/wave-1br, 8 per second; the README has
+    // the cut). Scrolling walks the unit and pauses at each stop, where a line points out what is
+    // there. at: frame number; x, y: the point in the frame, 0 to 1. Notes are ours, from the film.
+    walkthrough: {
+      frames: "/frames/wave-1br",
+      cut: 188, // the film jumps from the en-suite to the powder room here
+      stops: [
+        { at: 24, x: 0.31, y: 0.6, room: "Dining", title: "Dining for four", note: "A round table under the pendant, just inside the door." },
+        { at: 60, x: 0.5, y: 0.66, room: "Living", title: "The living room", note: "An L-shaped sofa in the corner, curtains running floor to ceiling." },
+        { at: 108, x: 0.15, y: 0.42, room: "Bedroom", title: "The bedroom", note: "A full-height wardrobe, a desk beneath the TV, and the window wall." },
+        { at: 168, x: 0.5, y: 0.72, room: "En-suite", title: "En-suite bathroom", note: "A floating vanity under a wide mirror, beside a glass-screened shower." },
+        { at: 212, x: 0.74, y: 0.76, room: "Powder room", title: "Powder room", note: "A second WC with its own basin, for guests." },
+        { at: 296, x: 0.34, y: 0.66, room: "Kitchen", title: "Galley kitchen", note: "A cooktop and under-mount sink in a grey counter, wood-grain cabinets above." },
+      ],
+    },
+    // from the agent's card in resources/
+    agent: {
+      names: "Marilyn & Percival Laranjo",
+      role: "Licensed real estate salespersons",
+      firm: "Leuterio Realty & Brokerage",
+      licences: [
+        ["PRC licence", "0026225"],
+        ["DHSUD registration", "R7-A-04/21-630"],
+      ],
+      phones: ["+63 935 662 5281", "+63 956 870 7294"],
+      email: "lenlaranjo@gmail.com",
     },
     nearby: [
       ["Ayala Central Bloc", 0.22],
