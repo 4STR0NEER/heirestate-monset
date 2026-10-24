@@ -25,6 +25,8 @@
   --font-inscription: "Marcellus", "Trajan Pro", serif;
   --font-body: "Hanken Grotesk Variable", system-ui, sans-serif;
 
+  --shadow-note: 0 24px 48px -24px rgb(12 21 38 / 0.7);
+
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 }
@@ -61,6 +63,11 @@ body::after {
   outline: 1px solid var(--color-gold-ink);
   outline-offset: 4px;
 }
+/* on the navy sections the deep gold would vanish: the ring turns champagne */
+[data-tone="dark"] :focus-visible,
+[data-tone="dark"]:focus-visible {
+  outline-color: var(--color-champagne);
+}
 
 .lit-window {
   filter: drop-shadow(0 0 5px rgb(196 155 76 / 0.75));
@@ -94,4 +101,40 @@ body::after {
     color-mix(in oklab, var(--accent) 35%, transparent) 38%,
     transparent 70%
   );
+}
+
+/* a tour's note draws in each time the camera comes to rest (TourPlayer.jsx) */
+.tour-line {
+  stroke-dashoffset: 0;
+  animation: tour-draw 600ms var(--ease-out-strong) both;
+}
+@keyframes tour-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.tour-dot {
+  animation: tour-pop 300ms var(--ease-out-strong) both;
+}
+@keyframes tour-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+.tour-card {
+  animation: tour-card 400ms var(--ease-out-strong) 350ms both;
+}
+@keyframes tour-card {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-line,
+  .tour-dot,
+  .tour-card {
+    animation: none;
+  }
 }

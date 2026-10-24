@@ -37,18 +37,25 @@ ffmpeg -ss 8.4  -t 2.9 -i "resources/The Wave Towers AVP.mp4"             -vf "f
 ffmpeg -ss 51.6 -t 5.2 -i "resources/Pristina Town_Walkthrough (1).mp4"   -vf "crop=1920:960:0:0,fps=12,scale=1024:-2"      -c:v libwebp -quality 55 public/frames/pristina/%03d.webp
 ```
 
-The Wave's one-bedroom walkthrough (`src/sections/Walkthrough.jsx`; its stops, by frame number, are in `src/projects.js`) skips 23.5–30 s, where someone crosses the shot:
+## The Wave's films
+
+The site opens on the brand film's first 11.6 s (`src/sections/FilmHero.jsx`), with its first and last frames as stills:
 
 ```
-ffmpeg -i "resources/1br-walkthrough the wave.mp4" -filter_complex "[0:v]trim=0:23.5,setpts=PTS-STARTPTS[a];[0:v]trim=30:44.5,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1:a=0,fps=8" -c:v libwebp -quality 50 public/frames/wave-1br/%03d.webp
+ffmpeg -t 11.6 -i "resources/The Wave Towers AVP.mp4" -vf scale=1920:-2 -c:v libx264 -preset slow -crf 25 -g 48 -pix_fmt yuv420p -movflags +faststart -an public/media/p/wave-intro.mp4
+ffmpeg -ss 0.4  -i "resources/The Wave Towers AVP.mp4" -frames:v 1 -vf scale=1920:-2 -q:v 4 public/media/p/wave-intro.jpg
+ffmpeg -ss 11.4 -i "resources/The Wave Towers AVP.mp4" -frames:v 1 -vf scale=1920:-2 -q:v 4 public/media/p/wave-intro-end.jpg
 ```
 
-The two- and three-bedroom films are cut whole, at 6 frames per second (the walkthrough blends between frames while it moves, so fewer frames still glide):
+The unit video tours (`src/sections/TourPlayer.jsx`; each stop's time in `src/projects.js`) are 720p with a keyframe every half second, so jumping to a room is quick. The one-bedroom film skips 23.5–30 s, where someone crosses the shot; each poster is the first frame (`-ss 0.3 -frames:v 1 -q:v 5`):
 
 ```
-ffmpeg -i "resources/2br-walkthrough the wave.mov" -vf "fps=6,scale=1024:-2" -c:v libwebp -quality 50 public/frames/wave-2br/%03d.webp
-ffmpeg -i "resources/3br-walkthrough the wave.mov" -vf "fps=6,scale=1024:-2" -c:v libwebp -quality 50 public/frames/wave-3br/%03d.webp
+ffmpeg -i "resources/1br-walkthrough the wave.mp4" -filter_complex "[0:v]trim=0:23.5,setpts=PTS-STARTPTS[a];[0:v]trim=30:44.5,setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1:a=0,scale=1280:-2" -c:v libx264 -preset slow -crf 25 -g 15 -pix_fmt yuv420p -movflags +faststart -an public/media/p/wave-tour-1br.mp4
+ffmpeg -i "resources/2br-walkthrough the wave.mov" -vf scale=1280:-2 -c:v libx264 -preset slow -crf 28 -g 15 -pix_fmt yuv420p -movflags +faststart -an public/media/p/wave-tour-2br.mp4
+ffmpeg -i "resources/3br-walkthrough the wave.mov" -vf scale=1280:-2 -c:v libx264 -preset slow -crf 28 -g 15 -pix_fmt yuv420p -movflags +faststart -an public/media/p/wave-tour-3br.mp4
 ```
+
+From the brochure (`resources/The wave.pdf`, PyMuPDF): `wave-enso.webp` is the master-plan render on page 13, laid on the brochure's navy (`#26345f`) and cropped square.
 
 The Wave's amenity photos (`public/media/p/wave-<space>.webp`, the Spaces story) are the full renders embedded in `resources/The wave.pdf`, pages 16 to 31, pulled out at their own resolution (PyMuPDF `extract_image`) and saved at 1920 wide: `ffmpeg -i <render>.jpeg -vf scale=1920:-2 -c:v libwebp -quality 74`.
 

@@ -4,9 +4,12 @@ import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTra
 import Logo, { Mark } from "@/components/Logo";
 import { inPlace, siteUrl } from "@/lib/links";
 import { useMedia } from "@/lib/use-media";
+import Reveal from "@/components/Reveal";
+import FilmHero from "@/sections/FilmHero";
+import Partnership from "@/sections/Partnership";
 import Residences from "@/sections/Residences";
 import Spaces from "@/sections/Spaces";
-import Walkthrough from "@/sections/Walkthrough";
+import TourPlayer from "@/sections/TourPlayer";
 import { order, projects } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
@@ -57,25 +60,26 @@ export default function ProjectView({ id, origin, onClose, onGo }) {
       exit={clip ? { clipPath: insetOf(origin), transition: { duration: 0.7, ease: EASE_IO } } : { opacity: 0, transition: { duration: 0.4 } }}
       transition={{ duration: clip ? 0.95 : 0.5, ease: EASE_IO }}
     >
-      <div className="sticky top-0 z-20 h-0">
-        {/* a soft fade behind the bar keeps logo and close button legible over any section */}
-        <div className={`flex items-center justify-between bg-linear-to-b from-paper/90 via-paper/50 to-transparent pt-6 pb-8 ${GUTTER}`}>
-          <button type="button" onClick={onClose} aria-label="Back to the facade">
-            <Logo />
-          </button>
-          <button
-            ref={closeBtn}
-            type="button"
-            onClick={onClose}
-            aria-label="Close project"
-            className="grid size-12 place-items-center rounded-full border border-ink/20 bg-paper/70 text-ink backdrop-blur-sm transition-[background-color,color,transform] duration-200 hover:bg-ink hover:text-paper active:scale-95"
-          >
-            <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
-              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.4" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <Bar>
+        {(dark) => (
+          <>
+            <button type="button" onClick={onClose} aria-label="Back to the facade">
+              <Logo className={`transition-colors duration-300 ${dark ? "text-paper drop-shadow-[0_1px_10px_rgb(12_21_38/0.6)]" : "text-ink"}`} />
+            </button>
+            <button
+              ref={closeBtn}
+              type="button"
+              onClick={onClose}
+              aria-label="Close project"
+              className={`grid size-12 place-items-center rounded-full border transition-[background-color,color,border-color,transform] duration-200 active:scale-95 ${ROUND[dark ? 1 : 0]}`}
+            >
+              <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+            </button>
+          </>
+        )}
+      </Bar>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -115,26 +119,62 @@ export function ProjectPage({ id }) {
 
   return (
     <main style={{ "--accent": projects[id].accent }}>
-      <div className="sticky top-0 z-20 h-0">
-        <div className={`flex items-center justify-between bg-linear-to-b from-paper/90 via-paper/50 to-transparent pt-6 pb-8 ${GUTTER}`}>
-          <a href={siteUrl()} aria-label="Heir Estate, the collection">
-            <Logo />
-          </a>
-          {/* a round arrow on phones, where the logo leaves no room for the label */}
-          <a
-            href={siteUrl()}
-            aria-label="The collection"
-            className="font-inscription grid size-12 place-items-center rounded-full border border-ink/20 bg-paper/70 text-[0.7rem] tracking-[0.26em] text-ink uppercase backdrop-blur-sm transition-colors duration-200 hover:bg-ink hover:text-paper sm:block sm:size-auto sm:px-5 sm:py-3"
-          >
-            <svg viewBox="0 0 24 10" className="w-5 sm:hidden" aria-hidden="true">
-              <path d="M24 5H2M6 1L2 5l4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
-            </svg>
-            <span className="hidden sm:inline">The collection</span>
-          </a>
-        </div>
-      </div>
+      <Bar>
+        {(dark) => (
+          <>
+            <a href={siteUrl()} aria-label="Heir Estate, the collection">
+              <Logo className={`transition-colors duration-300 ${dark ? "text-paper drop-shadow-[0_1px_10px_rgb(12_21_38/0.6)]" : "text-ink"}`} />
+            </a>
+            {/* a round arrow on phones, where the logo leaves no room for the label */}
+            <a
+              href={siteUrl()}
+              aria-label="The collection"
+              className={`font-inscription grid size-12 place-items-center rounded-full border text-[0.7rem] tracking-[0.26em] uppercase transition-[background-color,color,border-color] duration-200 sm:block sm:size-auto sm:px-5 sm:py-3 ${ROUND[dark ? 1 : 0]}`}
+            >
+              <svg viewBox="0 0 24 10" className="w-5 sm:hidden" aria-hidden="true">
+                <path d="M24 5H2M6 1L2 5l4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
+              </svg>
+              <span className="hidden sm:inline">The collection</span>
+            </a>
+          </>
+        )}
+      </Bar>
       <Project id={id} heading="h1" />
     </main>
+  );
+}
+
+// the round buttons in the top bar, on paper and over a dark section
+const ROUND = [
+  "border-ink/20 bg-paper/70 text-ink hover:bg-ink hover:text-paper",
+  "border-paper/30 bg-navy-deep/40 text-paper hover:bg-paper hover:text-ink",
+];
+
+// The bar over the page: logo and one way out, on a soft fade that keeps them legible. Over a
+// section marked data-tone="dark" (a film, the photographs) it turns light and the fade darkens.
+function Bar({ children }) {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const under = new Set();
+    // only the strip under the bar counts
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? under.add(e.target) : under.delete(e.target)));
+        setDark(under.size > 0);
+      },
+      { rootMargin: "0px 0px -92% 0px" }
+    );
+    document.querySelectorAll("[data-tone=dark]").forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div className="sticky top-0 z-20 h-0">
+      <div className={`relative flex items-center justify-between pt-6 pb-8 ${GUTTER}`}>
+        <div aria-hidden="true" className={`absolute inset-0 bg-linear-to-b from-paper/90 via-paper/50 to-transparent transition-opacity duration-300 ${dark ? "opacity-0" : ""}`} />
+        <div aria-hidden="true" className={`absolute inset-0 bg-linear-to-b from-navy-deep/85 via-navy-deep/45 via-55% to-transparent transition-opacity duration-300 ${dark ? "" : "opacity-0"}`} />
+        {children(dark)}
+      </div>
+    </div>
   );
 }
 
@@ -143,97 +183,126 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
   const p = projects[id];
   const nextId = order[(order.indexOf(id) + 1) % order.length];
   const film = useRef(null);
-  const [walk, setWalk] = useState(p.walkthroughs?.[0].id);
-  // picking a unit (here or in the residences) starts its tour at the door
-  const pickWalk = (w) => {
-    setWalk(w);
-    requestAnimationFrame(() => document.getElementById("walkthrough")?.scrollIntoView());
-  };
+  const [tour, setTour] = useState(null); // the unit whose video tour is open
+  const book = () => (setTour(null), document.getElementById("agent")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const playFilm = () => film.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const facts = p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />;
   // when the overlay grew out of a window, the title waits for the glass to finish opening
   const t0 = opened ? 0.55 : 0.15;
 
   return (
     <>
-      <section className="relative h-svh overflow-hidden">
-        <motion.video
-          src={`${p.hero}.mp4`}
-          poster={`${p.hero}.jpg`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden="true"
-          className="absolute inset-0 size-full object-cover"
-          initial={{ scale: 1.18 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.8, ease: EASE }}
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/35 to-paper/0" />
-        <div className={`absolute inset-x-0 bottom-0 flex flex-col gap-8 pb-[clamp(32px,7vh,80px)] md:flex-row md:items-end md:justify-between ${GUTTER}`}>
-          <div>
-            <Title className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-ink">
-              {p.name.split(" ").map((w, i) => (
-                <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
-                  <motion.span
-                    className="inline-block"
-                    initial={{ transform: "translateY(105%)" }}
-                    animate={{ transform: "translateY(0%)" }}
-                    transition={{ duration: 1.1, ease: EASE, delay: t0 + i * 0.08 }}
+      {p.intro ? (
+        <FilmHero p={p} Title={Title} onBook={book} onFilm={playFilm}>
+          <section className={`mx-auto grid max-w-[1440px] gap-14 pt-[clamp(56px,10vh,120px)] md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-20 ${GUTTER}`}>
+            <Reveal by="lines">
+              {p.kicker && (
+                <p data-rise className="font-display text-[1.15rem] text-gold-ink italic">
+                  {p.kicker}
+                </p>
+              )}
+              <p data-split className="font-display mt-5 max-w-[30ch] text-[clamp(1.6rem,2.9vw,2.7rem)] leading-[1.25] text-ink">
+                {p.statement}
+              </p>
+            </Reveal>
+            {facts}
+          </section>
+          {p.venture && <Partnership venture={p.venture} />}
+        </FilmHero>
+      ) : (
+        <>
+          <section className="relative h-svh overflow-hidden">
+            <motion.video
+              src={`${p.hero}.mp4`}
+              poster={`${p.hero}.jpg`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden="true"
+              className="absolute inset-0 size-full object-cover"
+              initial={{ scale: 1.18 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.8, ease: EASE }}
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/35 to-paper/0" />
+            <div className={`absolute inset-x-0 bottom-0 flex flex-col gap-8 pb-[clamp(32px,7vh,80px)] md:flex-row md:items-end md:justify-between ${GUTTER}`}>
+              <div>
+                <Title className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-ink">
+                  {p.name.split(" ").map((w, i) => (
+                    <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
+                      <motion.span
+                        className="inline-block"
+                        initial={{ transform: "translateY(105%)" }}
+                        animate={{ transform: "translateY(0%)" }}
+                        transition={{ duration: 1.1, ease: EASE, delay: t0 + i * 0.08 }}
+                      >
+                        {w}
+                      </motion.span>
+                    </span>
+                  ))}
+                </Title>
+                <motion.p
+                  className="font-inscription mt-4 text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.3em] text-gold-ink uppercase"
+                  initial={{ opacity: 0, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  transition={{ duration: 1, ease: EASE, delay: t0 + 0.35 }}
+                >
+                  {p.tagline}
+                </motion.p>
+                {p.kicker && (
+                  <motion.p
+                    className="mt-2 text-ink/70"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1, delay: t0 + 0.5 }}
                   >
-                    {w}
-                  </motion.span>
-                </span>
-              ))}
-            </Title>
-            <motion.p
-              className="font-inscription mt-4 text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.3em] text-gold-ink uppercase"
-              initial={{ opacity: 0, filter: "blur(6px)" }}
-              animate={{ opacity: 1, filter: "blur(0px)" }}
-              transition={{ duration: 1, ease: EASE, delay: t0 + 0.35 }}
-            >
-              {p.tagline}
-            </motion.p>
-            {p.kicker && (
-              <motion.p
-                className="mt-2 text-ink/70"
+                    {p.kicker}
+                  </motion.p>
+                )}
+              </div>
+              <motion.button
+                type="button"
+                onClick={playFilm}
+                className="group font-inscription flex items-center gap-4 self-start text-[0.8rem] tracking-[0.3em] text-ink uppercase md:self-auto"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: t0 + 0.5 }}
+                transition={{ duration: 1, delay: t0 + 0.6 }}
               >
-                {p.kicker}
-              </motion.p>
-            )}
-          </div>
-          <motion.button
-            type="button"
-            onClick={() => film.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-            className="group font-inscription flex items-center gap-4 self-start text-[0.8rem] tracking-[0.3em] text-ink uppercase md:self-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: t0 + 0.6 }}
-          >
-            <PlayRing className="size-14" />
-            Watch the film
-          </motion.button>
-        </div>
-      </section>
-
-      <section className={`mx-auto grid max-w-[1440px] gap-14 py-[clamp(88px,16vh,180px)] md:grid-cols-[1.35fr_1fr] md:gap-20 ${GUTTER}`}>
-        <Rise className="font-display max-w-[32ch] text-[clamp(1.45rem,2.5vw,2.35rem)] leading-[1.28] text-ink">
-          {p.statement}
-        </Rise>
-        {p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />}
-      </section>
+                <PlayRing className="size-14" />
+                Watch the film
+              </motion.button>
+            </div>
+          </section>
+    
+          <section className={`mx-auto grid max-w-[1440px] gap-14 py-[clamp(88px,16vh,180px)] md:grid-cols-[1.35fr_1fr] md:gap-20 ${GUTTER}`}>
+            <Rise className="font-display max-w-[32ch] text-[clamp(1.45rem,2.5vw,2.35rem)] leading-[1.28] text-ink">
+              {p.statement}
+            </Rise>
+            {facts}
+          </section>
+        </>
+      )}
 
       {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
       {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
-      {p.residences && <Residences units={p.residences} name={p.name} walks={p.walkthroughs?.map((w) => w.id)} onWalk={pickWalk} />}
-      {p.walkthroughs && <Walkthrough walks={p.walkthroughs} current={walk} onPick={pickWalk} name={p.name} />}
+      {p.residences && <Residences units={p.residences} name={p.name} tours={p.tours?.map((t) => t.id)} onTour={setTour} />}
       {p.nearby && <Nearby places={p.nearby} />}
       <Film ref={film} src={p.film} name={p.name} />
       {p.agent && <Agent agent={p.agent} name={p.name} />}
+      <AnimatePresence>
+        {tour && (
+          <TourPlayer
+            key={tour}
+            tour={p.tours.find((t) => t.id === tour)}
+            unit={`${p.name}, ${p.residences.find((u) => u.id === tour).name.toLowerCase()}`}
+            onClose={() => setTour(null)}
+            onBook={book}
+          />
+        )}
+      </AnimatePresence>
 
-      <a href={siteUrl(nextId)} onClick={onGo && inPlace(() => onGo(nextId))} className="group relative block h-[62svh] w-full overflow-hidden text-left">
+      <a href={siteUrl(nextId)} onClick={onGo && inPlace(() => onGo(nextId))} data-tone="dark" className="group relative block h-[62svh] w-full overflow-hidden text-left">
         <img
           src={`${projects[nextId].hero}.jpg`}
           alt=""
@@ -483,7 +552,7 @@ function Film({ ref, src, name }) {
     video.current.play().catch(() => {});
   };
   return (
-    <section ref={ref} className="bg-navy-deep text-paper">
+    <section ref={ref} data-tone="dark" className="bg-navy-deep text-paper">
       <div className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
         <h3 className="font-display mb-8 text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">The film</h3>
         <div className="relative aspect-video overflow-hidden border border-paper/15 bg-navy">

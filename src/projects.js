@@ -42,6 +42,9 @@ export const projects = {
     // has its own site at wave.<domain>: every link to it leaves for there instead of the overlay
     site: true,
     hero: `${P}/wave-hero`,
+    // the brand film's first 11.6 s (resources/The Wave Towers AVP.mp4): .mp4, its first frame
+    // as .jpg, its last as -end.jpg. Projects with an intro open on it (src/sections/FilmHero.jsx).
+    intro: `${P}/wave-intro`,
     panel: `${P}/wave-panel`,
     film: `${P}/wave-film`,
     tagline: "A New Wave of Living",
@@ -57,6 +60,46 @@ export const projects = {
       ["Hallways", "1.50 m to 1.80 m wide"],
       ["Developer", "CLNUD Ventures: Cebu Landmasters with NTT UD Asia"],
     ],
+    // From the brochure, pages 4 to 13: the joint venture behind the tower, its master plan and
+    // the two partners' own figures (src/sections/Partnership.jsx).
+    venture: {
+      name: "CLNUD Ventures",
+      line: "A partnership between the leading developer in VISMIN and a renowned Japanese global developer.",
+      image: `${P}/wave-enso.webp`,
+      imageAlt: "The Wave's residential tower at dusk, from the brochure's master plan",
+      plan: [
+        ["Tower 1, Nagomi", "Residential: 709 units, 40 storeys, 35 residential floors"],
+        ["The Podium", "Commercial, with its own parking and elevator"],
+        ["Tower 2", "For future development"],
+      ],
+      partners: [
+        {
+          name: "Cebu Landmasters",
+          about:
+            "A leading developer in Visayas and Mindanao, specializing in residential, office, hotel, resort, co-living, mixed-use and township projects. Established in 2003 by a Cebuano entrepreneur, it is driven by family values, real estate passion and a strong commitment to customers and community.",
+          figuresNote: "A diversified portfolio of real estate projects",
+          figures: [
+            ["96", "Residential"],
+            ["6", "Offices"],
+            ["10", "Hotels"],
+            ["10", "Mixed-use"],
+            ["3", "Estates"],
+          ],
+        },
+        {
+          name: "NTT UD Asia",
+          about:
+            "The venture's Japanese partner, a renowned global developer. Its projects outside Japan include 36 Wellington Street in Australia, One King William Street in London, Two Oliver Street in Boston and 1015 18th Street in Washington, DC.",
+          figuresNote: "A diversified portfolio, in Japan and around the world",
+          figures: [
+            ["15k", "Homes delivered, approx."],
+            ["560", "Business and office customers, approx."],
+            ["830", "Hotel rooms, approx."],
+            ["30", "Ongoing global projects"],
+          ],
+        },
+      ],
+    },
     // The brochure's full renders (pages 16 to 31), told as a story: each space fills the
     // screen behind its text (src/sections/Spaces.jsx). Lists are the brochure's own; notes
     // are ours, described from the renders, except the first. pos keeps the subject in a
@@ -173,53 +216,52 @@ export const projects = {
         photos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ src: `${P}/unit-${n}3BR.jpg` })),
       },
     ],
-    // Each unit's film as scroll frames (public/frames/wave-<id>; the README has the cuts), one
-    // per unit with a walkthrough, picked like the residences tabs. Scrolling walks the unit and
-    // pauses at each stop, where a line points out what is there. at: frame number; x, y: the
-    // point in the frame, 0 to 1. Notes are ours, from the films, checked against the brochure.
-    walkthroughs: [
+    // Video tours of the dress-up units (src/sections/TourPlayer.jsx; the README has the cuts),
+    // opened from the residences. The film plays from room to room and holds at each stop, where
+    // a line points out what is there. t: seconds into the film; x, y: the point in the frame,
+    // 0 to 1. Notes are ours, from the films, checked against the brochure.
+    tours: [
       {
         id: "1br",
         name: "One bedroom",
-        frames: "/frames/wave-1br",
-        cut: 188, // the film jumps from the en-suite to the powder room here
+        video: `${P}/wave-tour-1br`,
         stops: [
-          { at: 24, x: 0.31, y: 0.6, room: "Dining", title: "Dining for four", note: "A round table under the pendant, just inside the door." },
-          { at: 60, x: 0.5, y: 0.66, room: "Living", title: "The living room", note: "An L-shaped sofa in the corner, curtains running floor to ceiling." },
-          { at: 108, x: 0.15, y: 0.42, room: "Bedroom", title: "The bedroom", note: "A full-height wardrobe, a desk beneath the TV, and the window wall." },
-          { at: 168, x: 0.5, y: 0.72, room: "En-suite", title: "En-suite bathroom", note: "A floating vanity under a wide mirror, beside a glass-screened shower." },
-          { at: 212, x: 0.74, y: 0.76, room: "Powder room", title: "Powder room", note: "A second WC with its own basin, for guests." },
-          { at: 296, x: 0.34, y: 0.66, room: "Kitchen", title: "Galley kitchen", note: "A cooktop and under-mount sink in a grey counter, wood-grain cabinets above." },
+          { t: 3, x: 0.31, y: 0.6, room: "Dining", title: "Dining for four", note: "A round table under the pendant, just inside the door." },
+          { t: 7.5, x: 0.5, y: 0.66, room: "Living", title: "The living room", note: "An L-shaped sofa in the corner, curtains running floor to ceiling." },
+          { t: 13.5, x: 0.15, y: 0.42, room: "Bedroom", title: "The bedroom", note: "A full-height wardrobe, a desk beneath the TV, and the window wall." },
+          { t: 21, x: 0.5, y: 0.72, room: "En-suite", title: "En-suite bathroom", note: "A floating vanity under a wide mirror, beside a glass-screened shower." },
+          { t: 26.5, x: 0.74, y: 0.76, room: "Powder room", title: "Powder room", note: "A second WC with its own basin, for guests." },
+          { t: 37, x: 0.34, y: 0.66, room: "Kitchen", title: "Galley kitchen", note: "A cooktop and under-mount sink in a grey counter, wood-grain cabinets above." },
         ],
       },
       {
         id: "2br",
         name: "Two bedroom",
-        frames: "/frames/wave-2br",
+        video: `${P}/wave-tour-2br`,
         stops: [
-          { at: 18, x: 0.2, y: 0.62, room: "Kitchen", title: "The kitchen", note: "A double sink in a stone counter, cabinets above and below." },
-          { at: 42, x: 0.7, y: 0.62, room: "Dining", title: "Dining", note: "A long table under a paper lantern, the living room just beyond." },
-          { at: 84, x: 0.3, y: 0.7, room: "Den", title: "The den", note: "A lit desk running the length of the wall, behind louvred doors." },
-          { at: 192, x: 0.55, y: 0.58, room: "Living", title: "The living room", note: "An L-shaped sofa by the window; sliding Japanese doors open onto the second bedroom." },
-          { at: 234, x: 0.4, y: 0.6, room: "Bedroom", title: "Second bedroom", note: "A bed and a lit shelf behind the sliding screens." },
-          { at: 270, x: 0.45, y: 0.55, room: "Bathroom", title: "Bathroom", note: "A stone vanity beside a glass-enclosed shower." },
-          { at: 306, x: 0.4, y: 0.62, room: "Master", title: "Master bedroom", note: "A wardrobe at the door, the bed set against a timber headboard." },
-          { at: 366, x: 0.8, y: 0.5, room: "En-suite", title: "Master bath", note: "A wide mirror over the vanity, the shower behind glass." },
+          { t: 3, x: 0.2, y: 0.62, room: "Kitchen", title: "The kitchen", note: "A double sink in a stone counter, cabinets above and below." },
+          { t: 7, x: 0.7, y: 0.62, room: "Dining", title: "Dining", note: "A long table under a paper lantern, the living room just beyond." },
+          { t: 14, x: 0.3, y: 0.7, room: "Den", title: "The den", note: "A lit desk running the length of the wall, behind louvred doors." },
+          { t: 32, x: 0.55, y: 0.58, room: "Living", title: "The living room", note: "An L-shaped sofa by the window; sliding Japanese doors open onto the second bedroom." },
+          { t: 39, x: 0.4, y: 0.6, room: "Bedroom", title: "Second bedroom", note: "A bed and a lit shelf behind the sliding screens." },
+          { t: 45, x: 0.45, y: 0.55, room: "Bathroom", title: "Bathroom", note: "A stone vanity beside a glass-enclosed shower." },
+          { t: 51, x: 0.4, y: 0.62, room: "Master", title: "Master bedroom", note: "A wardrobe at the door, the bed set against a timber headboard." },
+          { t: 61, x: 0.8, y: 0.5, room: "En-suite", title: "Master bath", note: "A wide mirror over the vanity, the shower behind glass." },
         ],
       },
       {
         id: "3br",
         name: "Three bedroom",
-        frames: "/frames/wave-3br",
+        video: `${P}/wave-tour-3br`,
         stops: [
-          { at: 30, x: 0.45, y: 0.7, room: "Dining", title: "The island", note: "The dining table runs on from a stone island counter." },
-          { at: 54, x: 0.55, y: 0.55, room: "Living", title: "The living room", note: "A leather sofa behind a glass-paned Japanese screen." },
-          { at: 120, x: 0.85, y: 0.45, room: "Kitchen", title: "The kitchen", note: "A cooktop under the rangehood, facing the island." },
-          { at: 156, x: 0.6, y: 0.5, room: "Bunk room", title: "Third bedroom", note: "Bunk beds behind louvred doors." },
-          { at: 264, x: 0.75, y: 0.62, room: "Bedroom", title: "Second bedroom", note: "A bed beside a long desk, curtains floor to ceiling." },
-          { at: 318, x: 0.5, y: 0.45, room: "Bathroom", title: "Bathroom", note: "A glass-enclosed shower and a stone vanity." },
-          { at: 348, x: 0.3, y: 0.35, room: "Master", title: "Master bedroom", note: "A desk set into the window, the city beyond." },
-          { at: 390, x: 0.5, y: 0.72, room: "En-suite", title: "Master bath", note: "A bathtub with a separate shower, behind glass." },
+          { t: 5, x: 0.45, y: 0.7, room: "Dining", title: "The island", note: "The dining table runs on from a stone island counter." },
+          { t: 9, x: 0.55, y: 0.55, room: "Living", title: "The living room", note: "A leather sofa behind a glass-paned Japanese screen." },
+          { t: 20, x: 0.85, y: 0.45, room: "Kitchen", title: "The kitchen", note: "A cooktop under the rangehood, facing the island." },
+          { t: 26, x: 0.6, y: 0.5, room: "Bunk room", title: "Third bedroom", note: "Bunk beds behind louvred doors." },
+          { t: 44, x: 0.75, y: 0.62, room: "Bedroom", title: "Second bedroom", note: "A bed beside a long desk, curtains floor to ceiling." },
+          { t: 53, x: 0.5, y: 0.45, room: "Bathroom", title: "Bathroom", note: "A glass-enclosed shower and a stone vanity." },
+          { t: 58, x: 0.3, y: 0.35, room: "Master", title: "Master bedroom", note: "A desk set into the window, the city beyond." },
+          { t: 65, x: 0.5, y: 0.72, room: "En-suite", title: "Master bath", note: "A bathtub with a separate shower, behind glass." },
         ],
       },
     ],

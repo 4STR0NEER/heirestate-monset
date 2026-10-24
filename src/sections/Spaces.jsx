@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { animate, splitText, stagger, utils } from "animejs";
-import { AnimatePresence, motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import Reveal from "@/components/Reveal";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
@@ -44,7 +44,7 @@ export default function Spaces({ items, name }) {
   let k = 0; // card index, for the observer
 
   return (
-    <section aria-labelledby="spaces" className="relative bg-navy-deep text-paper">
+    <section aria-labelledby="spaces" data-tone="dark" className="relative bg-navy-deep text-paper">
       <div className="sticky top-0 h-svh overflow-hidden">
         {items.map(
           (s, i) =>
@@ -113,7 +113,7 @@ export default function Spaces({ items, name }) {
       {/* the text rides over the pinned photos; only the words take the pointer, so the rail stays clickable */}
       <div className="pointer-events-none relative -mt-[100svh]">
         <div ref={card(k++)} data-bg={0} className={`flex min-h-svh items-end pb-[16svh] md:items-center md:pb-0 ${GUTTER}`}>
-          <Reveal className="max-w-[36rem]">
+          <Reveal className="pointer-events-auto max-w-[36rem]">
             <p data-rise className="font-inscription text-[0.72rem] tracking-[0.3em] text-champagne uppercase">
               {name}
             </p>
@@ -130,7 +130,7 @@ export default function Spaces({ items, name }) {
           <div key={f.key}>
             {f.key !== "Arrival" && (
               <div ref={card(k++)} data-bg={f.first} className={`flex min-h-[70svh] items-center ${GUTTER}`}>
-                <Reveal>
+                <Reveal className="pointer-events-auto">
                   <p data-rise className="font-inscription text-[0.72rem] tracking-[0.3em] text-champagne uppercase">
                     Amenities
                   </p>
@@ -144,7 +144,7 @@ export default function Spaces({ items, name }) {
               const s = items[i];
               return (
                 <article key={s.src} id={`space-${i}`} ref={card(k++)} data-bg={i} className={`flex min-h-svh items-end pb-[14svh] md:items-center md:pb-0 ${GUTTER}`}>
-                  <Reveal className="max-w-[34rem]">
+                  <Reveal className="pointer-events-auto max-w-[34rem]">
                     <p data-rise className="font-inscription flex items-center gap-3 text-[0.68rem] tracking-[0.28em] text-champagne uppercase tabular-nums">
                       <span>{String(i + 1).padStart(2, "0")}</span>
                       <span className="h-px w-8 bg-gold" />
@@ -176,43 +176,5 @@ export default function Spaces({ items, name }) {
         ))}
       </div>
     </section>
-  );
-}
-
-// Text that arrives with its photo: anime.js splits the [data-split] heading into words that
-// rise out of their own clipped lines, then the [data-rise] lines follow one after another.
-function Reveal({ children, className = "" }) {
-  const root = useRef(null);
-  const split = useRef(null);
-  const inView = useInView(root, { once: true, amount: 0.4 });
-
-  // hidden before first paint, so nothing flashes in place and then animates
-  useLayoutEffect(() => {
-    if (reduced()) return;
-    const head = root.current.querySelector("[data-split]");
-    split.current = head && splitText(head, { words: { wrap: "clip" } });
-    if (split.current) utils.set(split.current.words, { y: "110%" });
-    utils.set(root.current.querySelectorAll("[data-rise]"), { opacity: 0, y: 14 });
-    return () => split.current?.revert();
-  }, []);
-
-  useEffect(() => {
-    if (!inView || reduced()) return;
-    const words = split.current?.words ?? [];
-    const a = animate(words, { y: "0%", duration: 1000, ease: "out(4)", delay: stagger(60) });
-    const b = animate(root.current.querySelectorAll("[data-rise]"), {
-      opacity: 1,
-      y: 0,
-      duration: 800,
-      ease: "out(4)",
-      delay: stagger(70, { start: 180 + words.length * 40 }),
-    });
-    return () => (a.pause(), b.pause());
-  }, [inView]);
-
-  return (
-    <div ref={root} className={`pointer-events-auto ${className}`}>
-      {children}
-    </div>
   );
 }
