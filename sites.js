@@ -4,7 +4,7 @@
 // robots.txt and sitemap.xml, and, for a project, only that project's media.
 import { readdirSync, readFileSync } from "node:fs";
 import { order, projects } from "./src/projects.js";
-import { devPort, siteUrl } from "./src/lib/links.js";
+import { DOMAIN, devPort, siteUrl } from "./src/lib/links.js";
 
 const BRAND = "Heir Estate";
 const HEADLINE = "Building your future, one property at a time";
@@ -16,23 +16,30 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const clip = (s, n = 158) => (s.length <= n ? s : `${s.slice(0, s.lastIndexOf(" ", n - 1))}…`);
 const names = new Intl.ListFormat("en").format(order.map((id) => projects[id].name));
 const nextOf = (id) => order[(order.indexOf(id) + 1) % order.length];
-const ORG = { "@type": "Organization", "@id": `${siteUrl()}#org`, name: BRAND, url: siteUrl() };
+// Search engines and link previews need full addresses. Before a domain is set, the sites share
+// the deployment's own address (Vercel provides it to the build), each project under its path.
+const HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL || "localhost";
+const absolute = (u) => (u.startsWith("http") ? u : `https://${HOST}${u}`);
+const urlOf = (id) => absolute(siteUrl(id));
+// where a site's files are served from: its subdomain, or the shared address (media is at the root either way)
+const originOf = (id) => `${new URL(urlOf(id)).origin}/`;
+const ORG = { "@type": "Organization", "@id": `${urlOf()}#org`, name: BRAND, url: urlOf() };
 
 function page(site) {
   if (site === "main") {
-    const url = siteUrl();
+    const url = urlOf();
     return {
       url,
       title: `${BRAND} · ${HEADLINE}`,
       description: `${BRAND}. ${SUB}. ${names}.`,
-      image: `${url}media/p/${order[0]}-hero.jpg`,
+      image: `${originOf()}media/p/${order[0]}-hero.jpg`,
       graph: [
         ORG,
         { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, publisher: { "@id": ORG["@id"] } },
         {
           "@type": "ItemList",
           name: `${BRAND} projects`,
-          itemListElement: order.map((id, i) => ({ "@type": "ListItem", position: i + 1, url: siteUrl(id), name: projects[id].name })),
+          itemListElement: order.map((id, i) => ({ "@type": "ListItem", position: i + 1, url: urlOf(id), name: projects[id].name })),
         },
       ],
       body: `<h1>${esc(HEADLINE)}</h1><p>${esc(SUB)}</p><ul>${order
@@ -42,8 +49,8 @@ function page(site) {
   }
 
   const p = projects[site];
-  const url = siteUrl(site);
-  const abs = (path) => `${url}${path.slice(1)}`;
+  const url = urlOf(site);
+  const abs = (path) => `${originOf(site)}${path.slice(1)}`;
   const next = nextOf(site);
   const location = p.facts.find(([label]) => label === "Location")?.[1];
   return {
@@ -135,10 +142,12 @@ export default function sites() {
     generateBundle() {
       const { url } = page(site);
       const emit = (fileName, source) => this.emitFile({ type: "asset", fileName, source });
+      // on one shared address (no domain yet) the collection's sitemap lists every project's page too
+      const urls = site === "main" && !DOMAIN ? [url, ...order.map(urlOf)] : [url];
       emit("robots.txt", `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`);
       emit(
         "sitemap.xml",
-        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${url}</loc></url></urlset>\n`
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((u) => `<url><loc>${u}</loc></url>`).join("")}</urlset>\n`
       );
       if (site !== "main") for (const f of mediaFor(site)) emit(f.slice(1), readFileSync(new URL(f.slice(1), PUBLIC)));
     },

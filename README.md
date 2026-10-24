@@ -11,13 +11,16 @@ npm run build                # every site, into dist/<site>/
 
 ## Sites and SEO
 
-One codebase, one site per domain: the collection on the bare domain, each project on its own subdomain (`alto.`, `wave.`, `pristina.`). The domain is set once in `src/lib/links.js`.
+One codebase, one site per project: the collection, and each project's own page with its own title, description, canonical URL, Open Graph tags, JSON-LD, robots.txt and sitemap.xml (`sites.js`), its text written into the HTML so crawlers read it without running JavaScript.
 
-`sites.js` gives every site its own title, description, canonical URL, Open Graph tags, JSON-LD, robots.txt and sitemap.xml, and writes the page's text into the HTML so crawlers read it without running JavaScript. A project's build carries only that project's media. Deploy `dist/main/` to the bare domain and `dist/<id>/` to `<id>.<domain>`.
+`npm run build` builds every site into `dist/<site>/` and puts them together in `dist/all/`, which is what Vercel serves (`vercel.json`): the collection at `/`, each project at `/<id>/`, all sharing one set of media and assets.
+
+- **Now, on a `*.vercel.app` address** (which cannot have subdomains): projects live at `/wave/` and so on, and links between the sites are paths.
+- **With a domain:** add `<domain>` and `wave.<domain>` (and the other projects) to the Vercel project, set the environment variable `VITE_DOMAIN=<domain>`, and redeploy. Links and SEO tags switch to the subdomains, and `vercel.json` serves `/wave/` to anyone arriving on `wave.<domain>`.
 
 On the main site, project links are real links to the subdomains (crawlers and new tabs follow them); a plain click still opens the project in place over the facade.
 
-A new project needs an entry in `src/projects.js` (and `order`), its media in `public/media/p/`, and a DNS record for its subdomain.
+A new project needs an entry in `src/projects.js` (and `order`), its media in `public/media/p/`, its id added to the host rule in `vercel.json` (the build stops if it is missing), and, once there is a domain, its subdomain added in Vercel.
 
 - `src/projects.js`: the five facade windows and each project's page content.
 - `resources/` (not in git) holds the client's raw files; web cuts live in `public/media/`.

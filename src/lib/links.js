@@ -1,14 +1,22 @@
 import { order, projects } from "../projects.js";
 
-// The collection lives on the bare domain, each project on its own subdomain (alto.<domain>, ...).
-// Placeholder until the client confirms the domain; this is the only place it is set.
-export const DOMAIN = "heirestate.com";
+// Read by the page (import.meta.env) and by the build in Node (process.env).
+const env = import.meta.env ?? process.env;
 
-// In development each site runs its own server (`vite --mode wave`), one port up per project.
+// The domain the sites live on: the collection on the bare domain, each project on its own
+// subdomain (wave.<domain>, ...). Set VITE_DOMAIN in the host's environment once the domain is
+// connected. Until then every site is served from one address, each project under its own path
+// (/wave/), which is how a *.vercel.app address works: it cannot have subdomains.
+export const DOMAIN = env.VITE_DOMAIN || "";
+
+// In development each site runs its own server (`npm run dev`), one port up per project.
 export const devPort = (id) => 5173 + (id ? order.indexOf(id) + 1 : 0);
 
-export const siteUrl = (id) =>
-  import.meta.env?.DEV ? `http://localhost:${devPort(id)}/` : `https://${id ? `${id}.` : ""}${DOMAIN}/`;
+export const siteUrl = (id) => {
+  if (env.DEV) return `http://localhost:${devPort(id)}/`;
+  if (DOMAIN) return `https://${id ? `${id}.` : ""}${DOMAIN}/`;
+  return id ? `/${id}/` : "/";
+};
 
 // For real links that open in place on a plain click: crawlers, new tabs and middle clicks
 // still follow the href to the project's own site.
