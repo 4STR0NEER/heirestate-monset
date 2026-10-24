@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
 import { inPlace, siteUrl } from "@/lib/links";
-import { useMedia } from "@/lib/use-media";
+import Contours from "@/components/Contours";
 import Reveal from "@/components/Reveal";
 import Enquiry from "@/sections/Enquiry";
 import FilmHero from "@/sections/FilmHero";
@@ -12,14 +12,13 @@ import Partnership from "@/sections/Partnership";
 import Profile from "@/sections/Profile";
 import Residences from "@/sections/Residences";
 import Spaces from "@/sections/Spaces";
+import Terms from "@/sections/Terms";
 import TourPlayer from "@/sections/TourPlayer";
 import { order, projects } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
 const EASE_IO = [0.77, 0, 0.175, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
-// the stills keep their native proportions so the horizontal track can be measured before they load
-const SIZES = { pristina: [1600, 800] };
 
 const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px)`;
 const FULL = "inset(0px 0px 0px 0px)";
@@ -93,7 +92,7 @@ export default function ProjectView({ id, origin, onClose, onGo }) {
           transition={{ duration: 0.4 }}
           style={{ "--accent": projects[id].accent }}
         >
-          <Project id={id} scroller={scroller} onClose={onClose} onGo={onGo} opened={clip} />
+          <Project id={id} onClose={onClose} onGo={onGo} opened={clip} />
         </motion.div>
       </AnimatePresence>
     </motion.div>
@@ -182,7 +181,7 @@ function Bar({ children }) {
 }
 
 // onClose and onGo are set inside the main site's overlay; without them the links leave for the other site
-function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" }) {
+function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
   const p = projects[id];
   const nextId = order[(order.indexOf(id) + 1) % order.length];
   const film = useRef(null);
@@ -205,7 +204,8 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
     <>
       {p.intro ? (
         <FilmHero p={p} Title={Title} onBook={() => book()} onFilm={playFilm}>
-          <section className={`mx-auto grid max-w-[1440px] gap-14 pt-[clamp(56px,10vh,120px)] md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-20 ${GUTTER}`}>
+          <section className={`relative isolate mx-auto grid max-w-[1440px] gap-14 pt-[clamp(56px,10vh,120px)] md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-20 ${GUTTER}`}>
+            {p.motif === "contours" && <Contours seed={7} cx={0.8} cy={0.55} className="-z-10" />}
             <Reveal by="lines">
               {p.kicker && (
                 <p data-rise className="font-display text-[1.15rem] text-gold-ink italic">
@@ -296,13 +296,13 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
         </>
       )}
 
-      {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
-      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} intro={p.spacesIntro} deck={p.deck} amenities={p.amenities} motif={p.motif} onBook={() => book()} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
-      {p.tower && <FloorStack tower={p.tower} name={p.name} />}
+      <Spaces items={p.spaces} name={p.name} intro={p.spacesIntro} place={p.place} deck={p.deck} amenities={p.amenities} motif={p.motif} onBook={() => book()} />
+      {p.tower && <FloorStack tower={p.tower} name={p.name} motif={p.motif} />}
       {p.residences && <Residences units={p.residences} name={p.name} features={p.unitFeatures} tours={p.tours?.map((t) => t.id)} onTour={setTour} onBook={book} />}
+      {p.terms && <Terms terms={p.terms} onBook={p.agent && book} />}
       {p.nearby && <Nearby places={p.nearby} name={p.name} line={p.locationLine} onBook={p.agent && (() => book())} />}
       {!p.intro && <Film ref={film} src={p.film} name={p.name} />}
-      {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} fins={p.motif === "fins"} />}
+      {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} motif={p.motif} />}
       {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour || filming} />}
       <AnimatePresence>{filming && <FilmPlayer src={p.film} name={p.name} onClose={() => setFilming(false)} />}</AnimatePresence>
       <AnimatePresence>
@@ -390,85 +390,6 @@ function TitleBlock({ name, facts }) {
         </motion.div>
       ))}
     </motion.dl>
-  );
-}
-
-// Desktop: the section pins and vertical scroll pans the renders sideways.
-// Phones: a plain swipeable row with snap points.
-function Gallery({ id, items, scroller }) {
-  const wide = useMedia("(min-width: 768px)");
-  const section = useRef(null);
-  const track = useRef(null);
-  const [dist, setDist] = useState(0);
-  const [w, h] = SIZES[id];
-
-  useLayoutEffect(() => {
-    if (!wide) return;
-    const measure = () => setDist(Math.max(0, track.current.scrollWidth - innerWidth));
-    const ro = new ResizeObserver(measure);
-    ro.observe(track.current);
-    return () => ro.disconnect();
-  }, [wide, id]);
-
-  const { scrollYProgress } = useScroll({ container: scroller, target: section, offset: ["start start", "end end"] });
-  const x = useTransform(scrollYProgress, [0, 1], [0, -dist]);
-
-  const heading = (
-    <div className={`mb-8 flex items-end justify-between gap-6 ${GUTTER}`}>
-      <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Spaces</h3>
-      {wide && (
-        <div className="mb-2 h-px w-[min(240px,30vw)] bg-ink/10">
-          <motion.div className="h-px origin-left bg-(--accent)" style={{ scaleX: scrollYProgress }} />
-        </div>
-      )}
-    </div>
-  );
-
-  const card = (s, i) => (
-    <figure key={s.src} className={wide ? "shrink-0" : "w-[86vw] shrink-0 snap-center"}>
-      {/* the wrapper is what gets observed: a clipped element has no visible area, so it never "enters" */}
-      <motion.div
-        className="group overflow-hidden bg-stone"
-        initial="hidden"
-        whileInView="shown"
-        viewport={{ once: true, amount: 0.2 }}
-      >
-        <motion.img
-          src={s.src}
-          alt={s.name}
-          width={w}
-          height={h}
-          loading="lazy"
-          decoding="async"
-          className={`${wide ? "h-[min(56vh,560px)] w-auto" : "h-auto w-full"} object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]`}
-          variants={{ hidden: { clipPath: "inset(0 0 100% 0)" }, shown: { clipPath: "inset(0 0 0% 0)" } }}
-          transition={{ duration: 1.1, ease: EASE_IO, delay: wide ? 0 : 0.05 * i }}
-        />
-      </motion.div>
-      <figcaption className="mt-4 flex items-baseline justify-between gap-6">
-        <span className="font-display text-[clamp(1.05rem,1.4vw,1.35rem)]">{s.name}</span>
-        {s.area && <span className="font-inscription text-[0.72rem] tracking-[0.24em] text-ink/60 uppercase tabular-nums">{s.area}</span>}
-      </figcaption>
-    </figure>
-  );
-
-  if (!wide)
-    return (
-      <section ref={section} className="pb-24">
-        {heading}
-        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">{items.map(card)}</div>
-      </section>
-    );
-
-  return (
-    <section ref={section} style={{ height: `calc(100svh + ${dist}px)` }} className="relative">
-      <div className="sticky top-0 flex h-svh flex-col justify-center overflow-hidden">
-        {heading}
-        <motion.div ref={track} style={{ x }} className={`flex w-max gap-[clamp(20px,2.4vw,40px)] ${GUTTER}`}>
-          {items.map(card)}
-        </motion.div>
-      </div>
-    </section>
   );
 }
 

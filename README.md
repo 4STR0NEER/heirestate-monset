@@ -71,3 +71,9 @@ Green and geometric where The Wave is navy and ink: its `theme` in `src/projects
 - Renders (`alto-<space>.webp`, `alto-ext-*`, `alto-podium`), floor plates (`alto-floor-<level>.webp`) and unit plans (`alto-plan-*`): the deck PDF's own images at full size, each joined to its transparency mask and laid on `#e2e1dc`, plates and plans at most 1600 wide.
 - Unit photos: frames of the extended film at 138, 144, 147 and 152 s, cropped clear of its caption tag (`crop=1214:850:353:0,scale=1000:700`), and the deck's bare-unit renders; the unit banners are the same frames at 1920 by 823.
 
+## North Grove at Pristina Town's site
+
+The project id stays `pristina` (it is in every address and in `vercel.json`); the site leads with North Grove, as its plans do. Its hand is the land, `motif: "contours"`: topographic rings that draw themselves in behind sections (`Contours.jsx`), a ridgeline of hills on the edge of every dark section (`Edge.jsx`), spaces that open in a widening ring, and the plans' plumeria (`Plumeria.jsx`), all drawn from seeds in `src/lib/topo.js`. Its palette is the plans' own paper, olive and unit colours (`--color-grove-*`, `--color-unit-*`).
+
+From `resources/pristina town/`: `grove-intro.mp4` is the town film's first 6.3 s; the floor plates (`grove-lumina-*`, `grove-terra-*`) and unit sheets (`grove-sheet-*`) are the developer's own sheets as webp, the unit photographs cropped from the sheets (`crop=630:542:0:0`). The payment terms are the shape of the sample term sheet's scheme, without its figures.
+

@@ -47,6 +47,20 @@
   --color-bronze-ink: #6f5434;
   --color-alto-paper: #f1f0ec;
   --color-alto-stone: #e2e1dc;
+  /* North Grove's plans: their paper, olive band and unit colours, and a deep olive for its
+     few dark bands */
+  --color-grove: #34362a;
+  --color-grove-raised: #44473a;
+  --color-grove-mid: #5f5b45;
+  --color-olive: #8b8064;
+  --color-olive-light: #d8d0b5;
+  --color-olive-ink: #5d5640;
+  --color-grove-paper: #f4f3ee;
+  --color-grove-stone: #e8e6dc;
+  --color-unit-sand: #d5d1b8;
+  --color-unit-sage: #bcc8b1;
+  --color-unit-rose: #d9b6a9;
+  --color-unit-sea: #89ae9f;
 }
 
 html {
@@ -242,5 +256,17 @@ body::after {
   .glow {
     animation: none;
     opacity: 0.6;
+  }
+}
+
+/* a line that draws itself in: set strokeDashoffset from 1 to 0 (Contours.jsx, Edge.jsx) */
+.draw {
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset 2400ms var(--ease-in-out-strong);
+}
+@media (prefers-reduced-motion: reduce) {
+  .draw {
+    stroke-dashoffset: 0 !important;
+    transition: none;
   }
 }

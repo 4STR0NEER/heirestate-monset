@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { FINS } from "@/lib/fins";
+import Plumeria from "@/components/Plumeria";
 import { brushEdge } from "@/lib/ink";
+import { ridge } from "@/lib/topo";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
@@ -20,7 +22,8 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
   const [titled, setTitled] = useState(false);
   const [ended, setEnded] = useState(false);
   const fins = p.motif === "fins";
-  const edge = useMemo(() => !fins && [brushEdge(7), brushEdge(19)], [fins]);
+  const hills = p.motif === "contours";
+  const edge = useMemo(() => (hills ? ridge(9) : !fins && [brushEdge(7), brushEdge(19)]), [fins, hills]);
 
   // the film pushes back and dims as the paper covers it
   const { scrollYProgress } = useScroll({ target: top, offset: ["start start", "end start"] });
@@ -122,6 +125,22 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
               <rect key={i} x={f.x} y={60 - f.h} width="5" height={f.h} className="fill-paper" />
             ))}
           </motion.svg>
+        ) : hills ? (
+          <>
+            <motion.svg
+              viewBox="0 0 1000 60"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(40px,7vw,110px)] w-full origin-bottom"
+              style={{ transform: reduce ? "none" : rise }}
+            >
+              {edge.contours.map((d, i) => (
+                <path key={i} d={d} fill="none" vectorEffect="non-scaling-stroke" strokeWidth="1" className="stroke-paper/60" />
+              ))}
+              <path d={edge.fill} className="fill-paper" />
+            </motion.svg>
+            <Plumeria className="absolute right-[8%] bottom-[calc(100%-18px)] w-[clamp(64px,8vw,120px)] -rotate-12" />
+          </>
         ) : (
           <svg viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true" className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(28px,5vw,80px)] w-full">
             <path d={edge[1]} className="fill-paper/50" transform="translate(0 -6)" />

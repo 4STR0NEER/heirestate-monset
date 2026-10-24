@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import FinEdge from "@/components/FinEdge";
+import Edge from "@/components/Edge";
 import Lightbox from "@/components/Lightbox";
 import Reveal from "@/components/Reveal";
 
@@ -12,17 +12,17 @@ const GUTTER = "px-[clamp(16px,4vw,64px)]";
 // is the brochure's plan to explore and the thirty-seventh a window that opens onto it. Where the
 // spaces mark which are the arrival (Alto Ranudo), the rest are laid out as a grid. The geometric
 // motif turns the arrival's crossfade into a louvre wipe.
-export default function Spaces({ items, name, intro, deck, amenities, motif, onBook }) {
+export default function Spaces({ items, name, intro, place, deck, amenities, motif, onBook }) {
   const marked = items.some((s) => "arrival" in s);
   const story = marked ? items.filter((s) => s.arrival) : deck ? items.filter((s) => !s.area) : items;
   const sky = deck ? items.filter((s) => s.area?.startsWith("37")) : [];
   return (
     <>
-      <Story items={story} name={name} intro={intro} slats={motif === "fins"} />
+      <Story items={story} name={name} intro={intro} place={place} motif={motif} />
       {deck && <Deck deck={deck} items={items} />}
       {sky.length > 0 && <Sky items={sky} />}
       {marked && <Mosaic items={items.filter((s) => !s.arrival)} name={name} amenities={amenities} />}
-      <Onward onBook={onBook} fins={motif === "fins"} />
+      <Onward onBook={onBook} motif={motif} />
     </>
   );
 }
@@ -30,7 +30,9 @@ export default function Spaces({ items, name, intro, deck, amenities, motif, onB
 // Each space fills the screen and its text scrolls over it, so you read about the place while
 // standing in it. The photos sit in one pinned layer and crossfade as each note crosses the
 // middle of the screen.
-function Story({ items, name, intro, slats }) {
+// Alto Ranudo's spaces change through louvres, North Grove's open out in a widening ring.
+function Story({ items, name, intro, place, motif }) {
+  const Wipe = { fins: Slats, contours: Ring }[motif];
   // the space on screen, and the one it replaced (a louvre wipe opens over it)
   const [[active, prev], setPair] = useState([0, -1]);
   const setActive = (n) => setPair(([a, b]) => (n === a ? [a, b] : [n, a]));
@@ -56,13 +58,13 @@ function Story({ items, name, intro, slats }) {
 
   return (
     <section aria-labelledby="spaces" data-tone="dark" className="relative bg-navy-deep text-paper">
-      {slats && <FinEdge />}
+      <Edge motif={motif} />
       <div className="sticky top-0 h-svh overflow-hidden">
         {items.map(
           (s, i) =>
             i <= reach &&
-            (slats ? (
-              <Slats key={s.src} s={s} state={i === active ? "on" : i === prev ? "under" : "off"} />
+            (Wipe ? (
+              <Wipe key={s.src} s={s} state={i === active ? "on" : i === prev ? "under" : "off"} />
             ) : (
               <img
                 key={s.src}
@@ -100,7 +102,7 @@ function Story({ items, name, intro, slats }) {
           <article key={s.src} ref={card(i + 1)} data-bg={i} className={`flex min-h-svh items-end pb-[14svh] md:items-center md:pb-0 ${GUTTER}`}>
             <Reveal className="max-w-[34rem]">
               <p data-rise className="font-display text-[1.1rem] text-champagne italic">
-                {s.arrival ? ["Arrival", s.area].filter(Boolean).join(", ") : (s.area ?? "Arrival")}
+                {s.arrival ? ["Arrival", s.area].filter(Boolean).join(", ") : (s.area ?? place ?? "Arrival")}
               </p>
               <h4 data-split className="font-display mt-3 text-[clamp(2.6rem,6vw,5.6rem)] leading-[0.95] tracking-[-0.02em]">
                 {s.name}
@@ -147,6 +149,23 @@ function Slats({ s, state }) {
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+// A space opening out from the middle of the screen in a widening ring, like a contour line
+// spreading from the top of a hill, over the space it replaces.
+function Ring({ s, state }) {
+  return (
+    <div
+      className="absolute inset-0 transition-[clip-path] ease-(--ease-in-out-strong) motion-reduce:transition-none"
+      style={{
+        zIndex: { on: 2, under: 1, off: 0 }[state],
+        clipPath: state === "off" ? "circle(0% at 50% 55%)" : "circle(75% at 50% 55%)",
+        transitionDuration: state === "on" ? "1300ms" : "0ms",
+      }}
+    >
+      <img src={s.src} alt="" loading="lazy" decoding="async" className="size-full object-cover" style={{ objectPosition: s.pos }} />
     </div>
   );
 }
@@ -429,10 +448,10 @@ function Sky({ items }) {
 }
 
 // the top of the tower: on to the homes in it
-function Onward({ onBook, fins }) {
+function Onward({ onBook, motif }) {
   return (
     <section data-tone="dark" className="relative bg-navy-deep text-paper">
-      {fins && <FinEdge />}
+      {motif === "fins" && <Edge motif={motif} />}
       <div className={`mx-auto flex max-w-[1440px] flex-wrap items-end justify-between gap-10 py-[clamp(72px,12vh,140px)] ${GUTTER}`}>
         <Reveal className="max-w-[40rem]">
           <p data-rise className="font-display text-[1.15rem] text-champagne italic">

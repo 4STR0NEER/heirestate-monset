@@ -8,6 +8,7 @@ const PLAN = [1165, 805]; // The Wave's plans are all cut to one frame; a unit c
 const sqm = (n) => `${n.toFixed(2).replace(/\.?0+$/, "")} sqm`;
 const range = (plans) => {
   const a = plans.map((p) => p[2]);
+  if (a.length === 1) return sqm(a[0]);
   const lo = Math.floor(Math.min(...a));
   const hi = Math.ceil(Math.max(...a));
   return lo === hi ? `${lo} sqm` : `${lo} to ${hi} sqm`;
@@ -111,7 +112,16 @@ function Unit({ unit, name, tour, onTour, onBook }) {
 
   return (
     <div className="mt-8">
-      {/* the brochure's render of the type, with its name, its sizes and the tour */}
+      {/* the brochure's render of the type, with its name, its sizes and the tour; without one,
+          the name and sizes stand on their own */}
+      {!unit.render ? (
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-ink/12 pb-6">
+          <p className="font-display text-[clamp(2.2rem,4.5vw,4rem)] leading-none tracking-[-0.02em] text-ink">{unit.name}</p>
+          <p className="text-ink/70 tabular-nums">
+            {range(unit.plans)}, {unit.plans.length} {unit.plans.length === 1 ? "layout" : "layouts"}
+          </p>
+        </div>
+      ) : (
       <div className="relative aspect-[4/3] overflow-hidden bg-stone sm:aspect-[21/9]">
         <img src={unit.render} alt={`${name}, ${unit.name.toLowerCase()}: architect's perspective`} loading="lazy" decoding="async" className="size-full object-cover" />
         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-navy-deep/80 via-navy-deep/15 via-50% to-transparent" />
@@ -137,12 +147,13 @@ function Unit({ unit, name, tour, onTour, onBook }) {
           )}
         </div>
       </div>
+      )}
 
       <div className="mt-12 grid gap-x-16 gap-y-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div>
           <div role="group" aria-label="Show" className="inline-flex rounded-full border border-ink/15 p-1">
             {[
-              ["plans", "Floor plans"],
+              ["plans", unit.planTab ?? "Floor plans"],
               ["photos", `Photographs (${unit.photos.length})`],
             ].map(([k, label]) => (
               <button

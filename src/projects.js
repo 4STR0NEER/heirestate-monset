@@ -583,26 +583,133 @@ export const projects = {
   },
 
   pristina: {
-    name: "Pristina Town",
-    accent: "var(--color-burgundy)",
+    // The residences of Pristina Town, named as its own plans name them. The id stays
+    // "pristina": it is in every address and in the host rule (vercel.json).
+    name: "North Grove",
+    accent: "var(--color-grove-mid)",
+    site: true,
+    // the plans' own palette: warm paper, olive, a deep olive for the few dark bands
+    theme: {
+      "--color-navy-deep": "var(--color-grove)",
+      "--color-navy": "var(--color-grove-raised)",
+      "--color-champagne": "var(--color-olive-light)",
+      "--color-gold": "var(--color-olive)",
+      "--color-gold-ink": "var(--color-olive-ink)",
+      "--color-paper": "var(--color-grove-paper)",
+      "--color-stone": "var(--color-grove-stone)",
+      "--color-plan": "var(--color-grove-paper)",
+      "--color-ink": "var(--color-grove)",
+    },
+    // the land's hand: contours, ridgelines and the plumeria (Contours, Edge, Plumeria)
+    motif: "contours",
+    place: "Pristina Town",
     hero: `${P}/pristina-hero`,
     panel: `${P}/pristina-panel`,
     film: `${P}/pristina-film`,
-    tagline: "Welcome to Pristina Town",
-    // ours: described from the walkthrough
+    // the town film's first 6.3 s: "Welcome to Pristina Town" over the hills
+    intro: `${P}/grove-intro`,
+    introAt: 5.4,
+    // From resources/pristina town: the floor-plan sheets, the two unit sheets, a sample term
+    // sheet and the town film. Lines marked "ours" are descriptive, written from the film.
+    tagline: "At Pristina Town",
+    kicker: "Welcome to Pristina Town",
+    // ours
     statement:
-      "A town planned around a garden roundabout: mid-rise residences with planted rooftops, palm-lined avenues, shaded walks and a retail promenade, all set against green hills.",
-    facts: [],
-    spaces: [
-      { src: `${P}/pristina-8.jpg`, name: "The roundabout park" },
-      { src: `${P}/pristina-30.jpg`, name: "Residences over the plaza" },
-      { src: `${P}/pristina-12.jpg`, name: "Palm-lined avenue" },
-      { src: `${P}/pristina-18.jpg`, name: "Garden walk" },
-      { src: `${P}/pristina-38.jpg`, name: "Retail promenade" },
-      { src: `${P}/pristina-44.jpg`, name: "Park path" },
-      { src: `${P}/pristina-47.jpg`, name: "From above" },
-      { src: `${P}/pristina-54.jpg`, name: "The town in the hills" },
+      "A town planned around a garden roundabout: residences with planted rooftops, palm-lined avenues, shaded walks and a retail promenade, all set against green hills.",
+    facts: [
+      ["Towers", "Lumina (Tower 1) and Terra (Tower 2)"],
+      ["Residences", "Studio and one-bedroom"],
+      ["Typical studio", "22.75 sqm, Terra"],
+      ["Typical one-bedroom", "34.41 sqm, Lumina"],
+      ["Developer", "Cebu Landmasters, a joint venture under Cebu Homegrown Developers, Inc."],
     ],
+    // the town, from its film; notes are ours
+    spacesIntro: "A walk through the town around it.",
+    spaces: [
+      { src: `${P}/pristina-54.jpg`, name: "The town in the hills", note: "Mid-rise towers with planted terraces, set into green hills." },
+      { src: `${P}/pristina-8.jpg`, name: "The roundabout park", note: "A garden at the centre of the town, ringed by its avenues." },
+      { src: `${P}/pristina-12.jpg`, name: "Palm-lined avenue", note: "Wide streets shaded by palms, with shops along the ground floors." },
+      { src: `${P}/pristina-30.jpg`, name: "Residences over the plaza", note: "Homes above an open plaza, close to everything at street level." },
+      { src: `${P}/pristina-38.jpg`, name: "Retail promenade", note: "A shaded walk past shopfronts and cafés." },
+      { src: `${P}/pristina-18.jpg`, name: "Garden walk", note: "Paths through planting, between the buildings and the street." },
+      { src: `${P}/pristina-47.jpg`, name: "From above", note: "The town seen whole, its green spaces threaded through it." },
+    ],
+    // the floor-plan sheets, tower by tower; size is the sheets' pixel size
+    tower: {
+      note: "Two towers on one site: Lumina and Terra, each a long block of studios and one-bedrooms looking out to the mountains, the city or the amenities.",
+      legend: [
+        ["Studio", "var(--color-unit-sand)"],
+        ["Studio with balcony", "var(--color-unit-sage)"],
+        ["One-bedroom", "var(--color-unit-rose)"],
+        ["One-bedroom with balcony", "var(--color-unit-sea)"],
+      ],
+      towers: [
+        {
+          id: "lumina",
+          name: "Lumina",
+          levels: [
+            { id: "2", label: "2nd floor", short: "2", plate: `${P}/grove-lumina-2.webp`, size: [1280, 720] },
+            { id: "3", label: "3rd floor", short: "3", plate: `${P}/grove-lumina-3.webp`, size: [1280, 720] },
+            { id: "4", label: "4th floor", short: "4", plate: `${P}/grove-lumina-4.webp`, size: [1280, 720] },
+            { id: "5", label: "5th floor", short: "5", plate: `${P}/grove-lumina-5.webp`, size: [1280, 720] },
+            { id: "6", label: "6th to 9th floor", short: "6–9", floors: 4, plate: `${P}/grove-lumina-6.webp`, size: [1280, 720] },
+            { id: "10", label: "10th floor", short: "10", plate: `${P}/grove-lumina-10.webp`, size: [1280, 720] },
+            { id: "11", label: "11th floor", short: "11", plate: `${P}/grove-lumina-11.webp`, size: [1280, 720] },
+          ],
+        },
+        {
+          id: "terra",
+          name: "Terra",
+          levels: [
+            { id: "2", label: "2nd floor", short: "2", plate: `${P}/grove-terra-2.webp`, size: [1280, 720] },
+            { id: "3", label: "3rd to 5th floor", short: "3–5", floors: 3, plate: `${P}/grove-terra-3.webp`, size: [1280, 720] },
+            { id: "6", label: "6th to 12th floor", short: "6–12", floors: 7, plate: `${P}/grove-terra-6.webp`, size: [1280, 720] },
+            { id: "14", label: "14th floor", short: "14", plate: `${P}/grove-terra-14.webp`, size: [1280, 720] },
+            { id: "15", label: "15th to 16th floor", short: "15–16", floors: 2, plate: `${P}/grove-terra-15.webp`, size: [1280, 720] },
+          ],
+        },
+      ],
+    },
+    // the two unit sheets: the developer's own photograph and area tabulation of each type
+    residences: [
+      {
+        id: "studio",
+        name: "Studio",
+        size: [630, 542],
+        about: "Living, dining and sleeping in one room, with a kitchen along the way in and its own toilet and bath. In Terra, Tower 2.",
+        planTab: "Unit sheet",
+        planSize: [1080, 542],
+        plans: [["Typical", `${P}/grove-sheet-studio.webp`, 22.75, [], [["Living, dining and bedroom", 12.6], ["Kitchen", 6.41], ["Toilet and bath", 4.22]]]],
+        photos: [{ src: `${P}/grove-studio-1.webp`, caption: "Deliverable unit" }],
+      },
+      {
+        id: "1br",
+        name: "One bedroom",
+        size: [630, 542],
+        about: "A bedroom of its own beside the living and dining room, a kitchen, and a balcony. In Lumina, Tower 1.",
+        planTab: "Unit sheet",
+        planSize: [1080, 542],
+        plans: [["Typical", `${P}/grove-sheet-1br.webp`, 34.41, ["Balcony"], [["Living and dining", 11.76], ["Kitchen", 4.48], ["Toilet and bath", 6.07], ["Bedroom", 8.6], ["Balcony", 3.5]]]],
+        photos: [{ src: `${P}/grove-1br-1.webp`, caption: "Furnished showroom unit" }],
+      },
+    ],
+    // the shape of the payment scheme on the developer's sample term sheet, without figures
+    terms: {
+      caption: "Payment terms",
+      title: "Ten percent down, over five years",
+      steps: [
+        ["Reserve", "A reservation fee holds the unit. It is non-refundable and non-transferable."],
+        ["Downpayment", "Ten percent of the total contract price, net of the reservation fee, spread over 60 months at 0% interest."],
+        ["Balance", "The remaining ninety percent, settled on the date in your term sheet."],
+      ],
+      notes: [
+        "From the developer's sample term sheet. Prices are VAT-inclusive where applicable and subject to change without notice.",
+        "Move-in charges, utility connections and related charges are not included.",
+      ],
+    },
+    agent: LARANJO,
+    disclaimer:
+      "North Grove at Pristina Town is developed and managed by Cebu Landmasters, a joint venture under Cebu Homegrown Developers, Inc. Pictures are the developer's renders and showroom units; areas and terms are from its sheets and may change.",
   },
 };
 
