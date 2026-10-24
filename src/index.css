@@ -156,3 +156,24 @@ body::after {
     animation: none;
   }
 }
+
+/* a ripple leaving the tower now and then, in the distance rings (Nearby.jsx) */
+.ripple {
+  opacity: 0;
+  animation: ripple 4.8s var(--ease-out-strong) 1.6s infinite;
+}
+@keyframes ripple {
+  0% {
+    opacity: 0.8;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ripple {
+    animation: none;
+  }
+}

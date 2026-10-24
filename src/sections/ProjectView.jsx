@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { animate, stagger } from "animejs";
-import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
 import { inPlace, siteUrl } from "@/lib/links";
 import { useMedia } from "@/lib/use-media";
 import Reveal from "@/components/Reveal";
 import Enquiry from "@/sections/Enquiry";
 import FilmHero from "@/sections/FilmHero";
+import Nearby from "@/sections/Nearby";
 import Partnership from "@/sections/Partnership";
 import Residences from "@/sections/Residences";
 import Spaces from "@/sections/Spaces";
@@ -192,7 +192,9 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
     setAsk({ intent, unit, n: Date.now() });
     requestAnimationFrame(() => document.getElementById("enquiry")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
-  const playFilm = () => film.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const [filming, setFilming] = useState(false);
+  // a project that opens on its film plays the whole of it over the page; the others scroll to it
+  const playFilm = p.intro ? () => setFilming(true) : () => film.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   const facts = p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />;
   // when the overlay grew out of a window, the title waits for the glass to finish opening
   const t0 = opened ? 0.55 : 0.15;
@@ -294,10 +296,11 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
       {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
       {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} deck={p.deck} onBook={() => book()} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
       {p.residences && <Residences units={p.residences} name={p.name} features={p.unitFeatures} tours={p.tours?.map((t) => t.id)} onTour={setTour} onBook={book} />}
-      {p.nearby && <Nearby places={p.nearby} name={p.name} onBook={p.agent && (() => book())} />}
-      <Film ref={film} src={p.film} name={p.name} />
+      {p.nearby && <Nearby places={p.nearby} name={p.name} line={p.locationLine} onBook={p.agent && (() => book())} />}
+      {!p.intro && <Film ref={film} src={p.film} name={p.name} />}
       {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} />}
-      {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour} />}
+      {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour || filming} />}
+      <AnimatePresence>{filming && <FilmPlayer src={p.film} name={p.name} onClose={() => setFilming(false)} />}</AnimatePresence>
       <AnimatePresence>
         {tour && (
           <TourPlayer
@@ -465,52 +468,6 @@ function Gallery({ id, items, scroller }) {
   );
 }
 
-// A measured scale, not a list: each bar is the real distance on one linear kilometre axis.
-// anime.js draws the bars out in order once the section is on screen.
-function Nearby({ places, name, onBook }) {
-  const root = useRef(null);
-  const inView = useInView(root, { once: true, margin: "-120px" });
-  const max = Math.ceil(Math.max(...places.map(([, km]) => km)));
-
-  useEffect(() => {
-    if (!inView) return;
-    const bars = root.current.querySelectorAll("[data-bar]");
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return void bars.forEach((b) => (b.style.transform = "none"));
-    const a = animate(bars, { scaleX: [0, 1], duration: 1200, delay: stagger(70), ease: "outExpo" });
-    return () => a.pause();
-  }, [inView]);
-
-  return (
-    <section ref={root} className={`mx-auto max-w-[1200px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
-      <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Within reach</h3>
-      <p className="mt-3 text-ink/65">Distances from {name}, in kilometres.</p>
-      <ol className="mt-12">
-        {places.map(([name, km]) => (
-          <li key={name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-x-4 border-b border-ink/10 py-3 md:grid-cols-[18rem_minmax(0,1fr)_4rem]">
-            <span className="text-ink">{name}</span>
-            <span className="order-last col-span-2 mt-2 h-px bg-ink/10 md:order-none md:col-span-1 md:mt-0">
-              <span data-bar className="block h-px origin-left bg-gold" style={{ width: `${(km / max) * 100}%`, transform: "scaleX(0)" }} />
-            </span>
-            <span className="font-inscription text-right text-[0.8rem] tracking-[0.12em] text-gold-ink tabular-nums">{km} km</span>
-          </li>
-        ))}
-      </ol>
-      {onBook && (
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-6 border-t border-ink/15 pt-8">
-          <p className="font-display max-w-[30ch] text-[clamp(1.3rem,2vw,1.7rem)] leading-snug text-ink">See the neighbourhood, and the dress-up units, for yourself.</p>
-          <button
-            type="button"
-            onClick={onBook}
-            className="rounded-full bg-(--accent) px-6 py-3.5 text-paper transition-[background-color,transform] duration-200 hover:bg-ink active:scale-[0.97] motion-reduce:transform-none"
-          >
-            Arrange a visit
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
-
 // The way to the enquiry desk, kept in reach once the film is behind you: a pill in the corner,
 // a bar along the foot of a phone with a call button beside it. It stands aside from the desk
 // onwards and while a tour is open.
@@ -585,6 +542,50 @@ function Film({ ref, src, name }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// The whole film, full screen over the page, with its own controls; Escape or the button closes it.
+function FilmPlayer({ src, name, onClose }) {
+  const closeBtn = useRef(null);
+  useEffect(() => {
+    const before = document.activeElement;
+    const html = document.documentElement;
+    html.style.overflow = "hidden";
+    closeBtn.current?.focus({ preventScroll: true });
+    const onKey = (e) => e.key === "Escape" && onClose();
+    addEventListener("keydown", onKey);
+    return () => {
+      removeEventListener("keydown", onKey);
+      html.style.overflow = "";
+      before?.focus?.({ preventScroll: true });
+    };
+  }, [onClose]);
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${name}, the film`}
+      data-tone="dark"
+      className="fixed inset-0 z-50 grid place-items-center bg-navy-deep p-[clamp(12px,4vw,64px)]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+      transition={{ duration: 0.3, ease: EASE }}
+    >
+      <video src={`${src}.mp4`} poster={`${src}.jpg`} controls autoPlay playsInline className="aspect-video max-h-full w-full max-w-[1600px] bg-navy" />
+      <button
+        ref={closeBtn}
+        type="button"
+        onClick={onClose}
+        aria-label="Close the film"
+        className="absolute top-4 right-4 grid size-12 place-items-center rounded-full border border-paper/30 bg-navy-deep/60 text-paper transition-[background-color,color,transform] duration-200 hover:bg-paper hover:text-ink active:scale-95 motion-reduce:transform-none"
+      >
+        <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
+          <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </button>
+    </motion.div>
   );
 }
 
