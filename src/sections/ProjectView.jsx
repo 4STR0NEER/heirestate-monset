@@ -5,6 +5,7 @@ import Logo, { Mark } from "@/components/Logo";
 import { inPlace, siteUrl } from "@/lib/links";
 import { useMedia } from "@/lib/use-media";
 import Reveal from "@/components/Reveal";
+import Enquiry from "@/sections/Enquiry";
 import FilmHero from "@/sections/FilmHero";
 import Partnership from "@/sections/Partnership";
 import Residences from "@/sections/Residences";
@@ -184,7 +185,13 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
   const nextId = order[(order.indexOf(id) + 1) % order.length];
   const film = useRef(null);
   const [tour, setTour] = useState(null); // the unit whose video tour is open
-  const book = () => (setTour(null), document.getElementById("agent")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const [ask, setAsk] = useState(null); // what the last "book" or "price list" button asked for
+  // every call to action lands on the enquiry desk, its reason and unit filled in
+  const book = (intent = "viewing", unit) => {
+    setTour(null);
+    setAsk({ intent, unit, n: Date.now() });
+    requestAnimationFrame(() => document.getElementById("enquiry")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
   const playFilm = () => film.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   const facts = p.facts.length > 0 && <TitleBlock name={p.name} facts={p.facts} />;
   // when the overlay grew out of a window, the title waits for the glass to finish opening
@@ -193,7 +200,7 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
   return (
     <>
       {p.intro ? (
-        <FilmHero p={p} Title={Title} onBook={book} onFilm={playFilm}>
+        <FilmHero p={p} Title={Title} onBook={() => book()} onFilm={playFilm}>
           <section className={`mx-auto grid max-w-[1440px] gap-14 pt-[clamp(56px,10vh,120px)] md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-20 ${GUTTER}`}>
             <Reveal by="lines">
               {p.kicker && (
@@ -285,11 +292,12 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
       )}
 
       {/* a project whose spaces come with their own words tells them as a story; the rest keep the gallery */}
-      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
-      {p.residences && <Residences units={p.residences} name={p.name} tours={p.tours?.map((t) => t.id)} onTour={setTour} />}
-      {p.nearby && <Nearby places={p.nearby} />}
+      {p.spaces[0].note ? <Spaces items={p.spaces} name={p.name} deck={p.deck} onBook={() => book()} /> : <Gallery id={id} items={p.spaces} scroller={scroller} />}
+      {p.residences && <Residences units={p.residences} name={p.name} features={p.unitFeatures} tours={p.tours?.map((t) => t.id)} onTour={setTour} onBook={book} />}
+      {p.nearby && <Nearby places={p.nearby} name={p.name} onBook={p.agent && (() => book())} />}
       <Film ref={film} src={p.film} name={p.name} />
-      {p.agent && <Agent agent={p.agent} name={p.name} />}
+      {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} />}
+      {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour} />}
       <AnimatePresence>
         {tour && (
           <TourPlayer
@@ -297,7 +305,7 @@ function Project({ id, scroller, onClose, onGo, opened, heading: Title = "h2" })
             tour={p.tours.find((t) => t.id === tour)}
             unit={`${p.name}, ${p.residences.find((u) => u.id === tour).name.toLowerCase()}`}
             onClose={() => setTour(null)}
-            onBook={book}
+            onBook={() => book("viewing", tour)}
           />
         )}
       </AnimatePresence>
@@ -459,7 +467,7 @@ function Gallery({ id, items, scroller }) {
 
 // A measured scale, not a list: each bar is the real distance on one linear kilometre axis.
 // anime.js draws the bars out in order once the section is on screen.
-function Nearby({ places }) {
+function Nearby({ places, name, onBook }) {
   const root = useRef(null);
   const inView = useInView(root, { once: true, margin: "-120px" });
   const max = Math.ceil(Math.max(...places.map(([, km]) => km)));
@@ -475,7 +483,7 @@ function Nearby({ places }) {
   return (
     <section ref={root} className={`mx-auto max-w-[1200px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
       <h3 className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em]">Within reach</h3>
-      <p className="mt-3 text-ink/65">Distances from The Wave, in kilometres.</p>
+      <p className="mt-3 text-ink/65">Distances from {name}, in kilometres.</p>
       <ol className="mt-12">
         {places.map(([name, km]) => (
           <li key={name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-x-4 border-b border-ink/10 py-3 md:grid-cols-[18rem_minmax(0,1fr)_4rem]">
@@ -487,60 +495,61 @@ function Nearby({ places }) {
           </li>
         ))}
       </ol>
+      {onBook && (
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-6 border-t border-ink/15 pt-8">
+          <p className="font-display max-w-[30ch] text-[clamp(1.3rem,2vw,1.7rem)] leading-snug text-ink">See the neighbourhood, and the dress-up units, for yourself.</p>
+          <button
+            type="button"
+            onClick={onBook}
+            className="rounded-full bg-(--accent) px-6 py-3.5 text-paper transition-[background-color,transform] duration-200 hover:bg-ink active:scale-[0.97] motion-reduce:transform-none"
+          >
+            Arrange a visit
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
-// The agent's card, set as a quiet closing: who to speak to, and the two ways to reach them.
-function Agent({ agent, name }) {
-  const row =
-    "group flex items-center justify-between gap-6 border-b border-ink/12 py-5 text-[clamp(1.15rem,1.8vw,1.5rem)] text-ink transition-colors duration-200 hover:text-(--accent)";
-  const arrow = (
-    <svg viewBox="0 0 24 10" className="w-6 shrink-0 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
-      <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  );
+// The way to the enquiry desk, kept in reach once the film is behind you: a pill in the corner,
+// a bar along the foot of a phone with a call button beside it. It stands aside from the desk
+// onwards and while a tour is open.
+function BookBar({ onBook, phone, hidden }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const desk = document.getElementById("enquiry");
+    // between the film and the desk; from the desk on, the desk itself is the way to book
+    const update = () => {
+      raf = 0;
+      setShown(scrollY > innerHeight * 0.9 && (desk?.getBoundingClientRect().top ?? Infinity) > innerHeight);
+    };
+    const onScroll = () => raf || (raf = requestAnimationFrame(update));
+    addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => (removeEventListener("scroll", onScroll), cancelAnimationFrame(raf));
+  }, []);
+  const on = shown && !hidden;
   return (
-    <section aria-labelledby="agent" className="bg-stone">
-      <div className={`mx-auto grid max-w-[1440px] gap-12 py-[clamp(88px,14vh,160px)] md:grid-cols-[1fr_1.1fr] md:gap-20 ${GUTTER}`}>
-        <div>
-          <h3 id="agent" className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em] text-ink">
-            Speak to an agent
-          </h3>
-          <p className="mt-5 max-w-[36ch] text-ink/70">For viewings of the dress-up units, availability and pricing at {name}.</p>
-          <p className="font-display mt-10 text-[1.6rem] leading-tight text-ink">{agent.names}</p>
-          <p className="mt-1 text-ink/70">
-            {agent.role}, {agent.firm}
-          </p>
-          <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
-            {agent.licences.map(([k, v]) => (
-              <div key={k}>
-                <dt className="font-inscription text-[0.62rem] tracking-[0.24em] text-ink/55 uppercase">{k}</dt>
-                <dd className="mt-0.5 text-ink tabular-nums">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <div className="self-end border-t border-ink/12">
-          {agent.phones.map((t) => (
-            <a key={t} href={`tel:${t.replace(/\s/g, "")}`} className={`${row} tabular-nums`}>
-              <span>
-                <span className="font-inscription mr-4 text-[0.66rem] tracking-[0.24em] text-ink/55 uppercase">Call</span>
-                {t}
-              </span>
-              {arrow}
-            </a>
-          ))}
-          <a href={`mailto:${agent.email}?subject=${encodeURIComponent(name)}`} className={row}>
-            <span className="min-w-0 break-all">
-              <span className="font-inscription mr-4 text-[0.66rem] tracking-[0.24em] text-ink/55 uppercase">Email</span>
-              {agent.email}
-            </span>
-            {arrow}
-          </a>
-        </div>
-      </div>
-    </section>
+    <div
+      inert={!on}
+      className={`fixed inset-x-3 bottom-3 z-30 flex gap-2 transition-[opacity,transform] duration-300 ease-(--ease-out-strong) motion-reduce:transition-opacity sm:inset-x-auto sm:right-6 sm:bottom-6 ${
+        on ? "" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <a href={`tel:${phone.replace(/\s/g, "")}`} aria-label="Call an agent" className="grid size-14 shrink-0 place-items-center rounded-full bg-navy-deep text-paper shadow-note sm:hidden">
+        <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
+          <path d="M6.6 3.5l2.6 3.3-1.6 2.1a12 12 0 006.5 6.5l2.1-1.6 3.3 2.6-1.4 3.1c-.3.6-1 1-1.7.9C9.7 19.6 4.4 14.3 3.6 7.6c-.1-.7.3-1.4.9-1.7z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </a>
+      <button
+        type="button"
+        onClick={() => onBook("viewing")}
+        className="flex-1 rounded-full bg-(--accent) px-7 py-4 text-paper shadow-note transition-[background-color,transform] duration-200 hover:bg-ink active:scale-[0.97] motion-reduce:transform-none"
+      >
+        Book a viewing
+      </button>
+    </div>
   );
 }
 

@@ -57,6 +57,8 @@ ffmpeg -i "resources/3br-walkthrough the wave.mov" -vf scale=1280:-2 -c:v libx26
 
 From the brochure (`resources/The wave.pdf`, PyMuPDF): `wave-enso.webp` is the master-plan render on page 13, laid on the brochure's navy (`#26345f`) and cropped square.
 
+The residences (`src/sections/Residences.jsx`) use the brochure's unit renders (`wave-unit-<type>.webp`, pages 44, 50, 60 and 73, saved 1920 wide) and its 35 floor plans (`wave-plan-<layout>.webp`, pages 46 to 86): each plan page rendered at 130 dpi, cropped to the drawing and its area table (`Rect(300, 66, 945, 512)`), with the page title and "Tower 1" painted over in the page colour. Every layout's total area, transcribed from those tables, is in `src/projects.js`. The sixth-floor plan in Spaces (`wave-amenity-plan.webp`, page 19) is the brochure's landscape image joined to its own transparency mask (it is stored as two images) and laid on the plan pages' colour.
+
 The Wave's amenity photos (`public/media/p/wave-<space>.webp`, the Spaces story) are the full renders embedded in `resources/The wave.pdf`, pages 16 to 31, pulled out at their own resolution (PyMuPDF `extract_image`) and saved at 1920 wide: `ffmpeg -i <render>.jpeg -vf scale=1920:-2 -c:v libwebp -quality 74`.
 
 Unit photos in `public/media/p/unit-studio-*` and `unit-1br-*` are the brochure squares with their label bar cropped off: `-vf "crop=1080:1000:0:0,scale=760:-2"`.

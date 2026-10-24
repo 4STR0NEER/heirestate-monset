@@ -100,6 +100,27 @@ export const projects = {
         },
       ],
     },
+    // The sixth floor as the brochure draws it (page 19): the amenity plan, 1200 by 1294, with a
+    // marker on each amenity at x, y (0 to 1) and the render of it from spaces, where there is one.
+    // Areas are the plan's key; notes without a space are ours, read from the plan.
+    deck: {
+      plan: `${P}/wave-amenity-plan.webp`,
+      size: [1200, 1294],
+      spots: [
+        { name: "Lap and lounge pool", x: 0.535, y: 0.274, space: "Swimming Pool", area: "385 sqm" },
+        { name: "Kid's pool", x: 0.2, y: 0.097, space: "Swimming Pool", area: "26 sqm" },
+        { name: "Indoor sauna", x: 0.465, y: 0.19, space: "Spa Pavilion" },
+        { name: "Spa pavilion", x: 0.665, y: 0.153, space: "Spa Pavilion" },
+        { name: "Kid's play", x: 0.095, y: 0.515, area: "45 sqm", note: "An outdoor playground at the edge of the pool deck." },
+        { name: "Kids room", x: 0.1, y: 0.612, space: "Kids Room" },
+        { name: "Theater room", x: 0.45, y: 0.482, space: "Theater Room" },
+        { name: "Resident's lounge", x: 0.6, y: 0.482, note: "A lounge for residents, opening onto the pool deck." },
+        { name: "Lounge hall", x: 0.655, y: 0.617, space: "Lounge Hall" },
+        { name: "Function hall", x: 0.82, y: 0.617, space: "Function Hall" },
+        { name: "Japanese garden", x: 0.75, y: 0.77, space: "Japanese Garden" },
+        { name: "Prayer pavilion", x: 0.87, y: 0.77, space: "Japanese Garden" },
+      ],
+    },
     // The brochure's full renders (pages 16 to 31), told as a story: each space fills the
     // screen behind its text (src/sections/Spaces.jsx). Lists are the brochure's own; notes
     // are ours, described from the renders, except the first. pos keeps the subject in a
@@ -179,22 +200,52 @@ export const projects = {
         note: "Shelves around a long reading table, and armchairs set by the light.",
       },
     ],
-    // every layout photographed in its dress-up unit; size is each set's native pixel size
+    // In every unit, from the brochure's unit features (page 42).
+    unitFeatures: [
+      "Tiled living areas, luxury vinyl tile in the bedrooms",
+      "Toilet and bath fully fitted, with a glass shower enclosure",
+      "Kitchen sink with top and base cabinets and a built-in shoe cabinet",
+      "Wardrobe in every unit of one bedroom and above",
+      "Rangehood, intercom and smart lockset",
+      "Split-type air conditioning, fire detection and suppression",
+      "Provisions for washer-dryer, water heater, CATV and data",
+    ],
+    // Each unit type: its dress-up photographs (size is their native pixel size), the brochure's
+    // render of it (pages 44, 50, 60, 73), every layout the brochure draws with its total area
+    // and what sets it apart (pages 46 to 86; plans are 1165 by 805), and its finishes (pages 45,
+    // 51, 61, 74). about is ours, read from the plans.
     residences: [
       {
         id: "studio",
         name: "Studio",
         size: [760, 704],
+        render: `${P}/wave-unit-studio.webp`,
+        about: "One room for living, sleeping and dining, with its own kitchen and bath. Two of the four layouts open onto a balcony.",
         photos: [
           { src: `${P}/unit-studio-1.jpg`, caption: "Bed and dining" },
           { src: `${P}/unit-studio-2.jpg`, caption: "Kitchen" },
           { src: `${P}/unit-studio-3.jpg`, caption: "Bathroom" },
+        ],
+        plans: [
+          ["Type A", `${P}/wave-plan-studio-a.webp`, 27.37, ["Balcony"]],
+          ["Type B", `${P}/wave-plan-studio-b.webp`, 30.47, ["Balcony"]],
+          ["Type C", `${P}/wave-plan-studio-c.webp`, 24.08, []],
+          ["Type D", `${P}/wave-plan-studio-d.webp`, 24.31, []],
+        ],
+        finishes: [
+          ["Entrance", "Solid door with an electronic smart lockset"],
+          ["Living and dining", "Porcelain tile floor, painted walls and ceiling, split-type air conditioning"],
+          ["Bathroom", "Non-skid porcelain tiles, stone vanity top, glass enclosure, Toto fixtures or equivalent"],
+          ["Kitchen", "Stone counter and backsplash, top and base cabinets with a shoe cabinet, rangehood, stainless steel sink"],
+          ["Balcony", "Swing glass door and non-skid tiles, where the layout has one"],
         ],
       },
       {
         id: "1br",
         name: "One bedroom",
         size: [760, 704],
+        render: `${P}/wave-unit-1br.webp`,
+        about: "A bedroom of its own off the living room. Most layouts add a powder room for guests, and every one has a balcony.",
         photos: [
           { src: `${P}/unit-1br-1.jpg`, caption: "Living and dining" },
           { src: `${P}/unit-1br-3.jpg`, caption: "Bedroom" },
@@ -202,18 +253,83 @@ export const projects = {
           { src: `${P}/unit-1br-4.jpg`, caption: "Bathroom" },
           { src: `${P}/unit-1br-5.jpg`, caption: "Powder room" },
         ],
+        plans: [
+          ["Junior", `${P}/wave-plan-1brj.webp`, 38.15, ["Balcony"]],
+          ["Type A", `${P}/wave-plan-1br-a.webp`, 58.54, ["Powder room", "Balcony"]],
+          ["Type B", `${P}/wave-plan-1br-b.webp`, 55.16, ["Powder room", "Balcony"]],
+          ["Type C", `${P}/wave-plan-1br-c.webp`, 50.79, ["Powder room", "Balcony"]],
+          ["Type D", `${P}/wave-plan-1br-d.webp`, 48.94, ["Balcony"]],
+          ["Type E", `${P}/wave-plan-1br-e.webp`, 55.12, ["Powder room", "Balcony"]],
+          ["Type F", `${P}/wave-plan-1br-f.webp`, 54.08, ["Powder room", "Balcony"]],
+          ["Type G", `${P}/wave-plan-1br-g.webp`, 57.91, ["Powder room", "Balcony"]],
+        ],
+        finishes: [
+          ["Entrance", "Solid door with an electronic smart lockset"],
+          ["Living and dining", "Porcelain tile floor, painted walls and ceiling, split-type air conditioning"],
+          ["Bedroom", "Luxury vinyl tile floor, wardrobe closet, split-type air conditioning"],
+          ["Bathroom and powder room", "Non-skid porcelain tiles, stone vanity top, glass enclosure, Toto fixtures or equivalent, a hand basin in the powder room"],
+          ["Kitchen", "Stone counter and backsplash, top and base cabinets with a shoe cabinet, rangehood, stainless steel sink"],
+          ["Balcony", "Swing glass door and non-skid tiles"],
+        ],
       },
       {
         id: "2br",
         name: "Two bedroom",
         size: [760, 802],
+        render: `${P}/wave-unit-2br.webp`,
+        about: "The juniors keep two bedrooms close around one bath. The larger layouts add an en-suite master, a den or flexi room and a utility room; two have a private terrace.",
         photos: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ src: `${P}/unit-${n}2BR.jpg` })),
+        plans: [
+          ["Junior A", `${P}/wave-plan-2brj-a.webp`, 71.5, ["Balcony"]],
+          ["Junior B", `${P}/wave-plan-2brj-b.webp`, 67.0, ["Balcony"]],
+          ["Junior C", `${P}/wave-plan-2brj-c.webp`, 67.73, ["Master bath", "Balcony"]],
+          ["Junior D", `${P}/wave-plan-2brj-d.webp`, 68.78, ["Powder room", "Balcony"]],
+          ["Type A", `${P}/wave-plan-2br-a.webp`, 76.78, ["Den", "Utility room", "Balcony"]],
+          ["Type B", `${P}/wave-plan-2br-b.webp`, 82.0, ["Den", "Utility room", "Balcony"]],
+          ["Type C", `${P}/wave-plan-2br-c.webp`, 96.74, ["Den", "Utility room", "Balcony"]],
+          ["Type D", `${P}/wave-plan-2br-d.webp`, 95.93, ["Den", "Utility room", "Private terrace"]],
+          ["Type E", `${P}/wave-plan-2br-e.webp`, 82.74, ["Den", "Utility room", "Balcony"]],
+          ["Type F", `${P}/wave-plan-2br-f.webp`, 97.22, ["Flexi room", "Utility room", "Balcony"]],
+          ["Type G", `${P}/wave-plan-2br-g.webp`, 94.76, ["Den", "Utility room", "Private terrace"]],
+        ],
+        finishes: [
+          ["Entrance", "Solid door with an electronic smart lockset"],
+          ["Living and dining", "Porcelain tile floor, painted walls and ceiling, split-type air conditioning, intercom"],
+          ["Bedrooms", "Luxury vinyl tile floor, wardrobe closets, split-type air conditioning, a sliding Japanese door to the bedroom or den"],
+          ["Bathrooms", "Non-skid porcelain tiles, stone vanity tops, glass enclosures, Toto fixtures or equivalent"],
+          ["Kitchen", "Stone counter and backsplash, top and base cabinets with a shoe cabinet, rangehood, double stainless steel sink"],
+          ["Balcony", "Swing glass door and non-skid tiles"],
+        ],
       },
       {
         id: "3br",
         name: "Three bedroom",
         size: [760, 802],
+        render: `${P}/wave-unit-3br.webp`,
+        about: "Family-sized, from 103 to 182 sqm. Nearly every layout has an en-suite master, and each has a utility room with its own toilet; the largest add a family hall, a home office and a private terrace.",
         photos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ src: `${P}/unit-${n}3BR.jpg` })),
+        plans: [
+          ["Type A", `${P}/wave-plan-3br-a.webp`, 119.61, ["Den", "Utility room", "Balcony"]],
+          ["Type A.1", `${P}/wave-plan-3br-a1.webp`, 119.85, ["Den", "Utility room", "Balcony"]],
+          ["Type B", `${P}/wave-plan-3br-b.webp`, 103.59, ["Den", "Powder room", "Utility room"]],
+          ["Type C", `${P}/wave-plan-3br-c.webp`, 106.28, ["Den", "Utility room", "Balcony"]],
+          ["Type D", `${P}/wave-plan-3br-d.webp`, 110.05, ["Den", "Utility room", "Private terrace"]],
+          ["Type E", `${P}/wave-plan-3br-e.webp`, 123.84, ["Den", "Utility room", "Private terrace"]],
+          ["Type F", `${P}/wave-plan-3br-f.webp`, 182.08, ["Family hall", "Home office", "Private terrace"]],
+          ["Type G", `${P}/wave-plan-3br-g.webp`, 155.06, ["Family hall", "Home office", "Powder room"]],
+          ["Type H", `${P}/wave-plan-3br-h.webp`, 163.97, ["Powder room", "Storage", "Private terrace"]],
+          ["Type I", `${P}/wave-plan-3br-i.webp`, 137.31, ["Powder room", "Utility room", "Balcony"]],
+          ["Type J", `${P}/wave-plan-3br-j.webp`, 125.88, ["Den", "Utility room", "Private terrace"]],
+          ["Type K", `${P}/wave-plan-3br-k.webp`, 103.72, ["Den", "Utility room", "Balcony"]],
+        ],
+        finishes: [
+          ["Entrance", "Solid door with an electronic smart lockset"],
+          ["Living and dining", "Porcelain tile floor, painted walls and ceiling, split-type air conditioning, intercom"],
+          ["Bedrooms", "Luxury vinyl tile floor, wardrobe closets, split-type air conditioning, a sliding Japanese door to the bedroom or den"],
+          ["Bathrooms", "Non-skid porcelain tiles, stone vanity tops, glass enclosure and partition, Toto fixtures or equivalent, a bathtub with a separate shower"],
+          ["Kitchen", "Island counter, stone counter and backsplash, top and base cabinets with a shoe cabinet, rangehood, double stainless steel sink"],
+          ["Balcony", "Swing glass door and non-skid tiles"],
+        ],
       },
     ],
     // Video tours of the dress-up units (src/sections/TourPlayer.jsx; the README has the cuts),
@@ -265,6 +381,9 @@ export const projects = {
         ],
       },
     ],
+    // under the enquiry desk: who builds it, and where the pictures and figures come from
+    disclaimer:
+      "The Wave Towers is developed by CLNUD Ventures, a joint venture of Cebu Landmasters and NTT UD Asia. Renders are architect's perspectives; layouts and areas are from the developer's brochure and may change.",
     // from the agent's card in resources/
     agent: {
       names: "Marilyn & Percival Laranjo",

@@ -20,6 +20,8 @@
   --color-ink: #14213a;
   --color-gold-display: #9a7633;
   --color-gold-ink: #7d5d22;
+  /* the brochure's floor-plan pages, behind their drawings */
+  --color-plan: #f0e8e6;
 
   --font-display: "Bodoni Moda Variable", "Bodoni 72", Didot, serif;
   --font-inscription: "Marcellus", "Trajan Pro", serif;
@@ -135,6 +137,22 @@ body::after {
   .tour-line,
   .tour-dot,
   .tour-card {
+    animation: none;
+  }
+}
+
+/* the chosen place on the amenity plan breathes, like a ripple on water (Spaces.jsx) */
+.spot-on {
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-gold) 55%, transparent);
+  animation: spot-ripple 2.4s var(--ease-out-strong) infinite;
+}
+@keyframes spot-ripple {
+  to {
+    box-shadow: 0 0 0 14px color-mix(in oklab, var(--color-gold) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spot-on {
     animation: none;
   }
 }

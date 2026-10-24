@@ -2,13 +2,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { animate } from "animejs";
 import { useInView } from "motion/react";
 import Reveal from "@/components/Reveal";
-import { blotMask, blotPath } from "@/lib/ink";
+import { blotMask, swashPath } from "@/lib/ink";
 
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Who is building it, told on paper the way the brochure's film paints: each fact arrives as a
-// drop of ink that lands and spreads, and what it carries shows through as the ink opens.
+// Who is building it, told on paper the way the brochure's film paints: the tower opens out of a
+// drop of ink, and each partner's figures are laid on strokes of the brush.
 export default function Partnership({ venture }) {
   return (
     <section aria-labelledby="venture" className={`mx-auto max-w-[1440px] pt-[clamp(72px,12vh,140px)] pb-[clamp(88px,14vh,160px)] ${GUTTER}`}>
@@ -47,13 +47,13 @@ export default function Partnership({ venture }) {
             <p data-rise className="font-display mt-8 text-[1.05rem] text-gold-ink italic">
               {pt.figuresNote}
             </p>
-            <ul className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(6.25rem,1fr))] gap-x-4 gap-y-6">
+            <ul className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(6.25rem,1fr))] gap-x-3 gap-y-7">
               {pt.figures.map(([num, label], i) => (
-                <li key={label} className="flex flex-col items-center text-center">
-                  <Drop seed={31 + n * 17 + i * 5} delay={i * 140}>
-                    <span className="font-display text-[clamp(1.7rem,2.6vw,2.3rem)] leading-none text-paper tabular-nums">{num}</span>
-                  </Drop>
-                  <span className="mt-2 text-[0.92rem] leading-snug text-ink/75">{label}</span>
+                <li key={label}>
+                  <Swash seed={31 + n * 17 + i * 5} delay={i * 140}>
+                    <span className="font-display text-[clamp(1.25rem,1.8vw,1.6rem)] leading-none text-paper tabular-nums">{num}</span>
+                  </Swash>
+                  <span className="mt-2 block text-[0.92rem] leading-snug text-ink/75">{label}</span>
                 </li>
               ))}
             </ul>
@@ -64,38 +64,34 @@ export default function Partnership({ venture }) {
   );
 }
 
-// A drop of ink carrying a figure: a pale wash runs out ahead of the ink, the ink follows and
-// slows as it spreads, then the figure surfaces in it.
-function Drop({ seed, delay = 0, children }) {
+// A figure laid on one stroke of the brush: the stroke sweeps in from the left, quick at first and
+// slowing as the brush lifts, then the figure surfaces on it.
+function Swash({ seed, delay = 0, children }) {
   const root = useRef(null);
   const inView = useInView(root, { once: true, amount: 0.6 });
-  const [body, wash] = useMemo(() => [blotPath(seed, 38), blotPath(seed + 1, 45)], [seed]);
+  const d = useMemo(() => swashPath(seed), [seed]);
 
   useLayoutEffect(() => {
     if (reduced()) return;
-    const [w, b, c] = root.current.children;
-    w.style.transform = b.style.transform = "scale(0.05)";
-    w.style.opacity = c.style.opacity = 0;
+    const [stroke, figure] = root.current.children;
+    stroke.style.clipPath = "inset(0 100% 0 0)";
+    figure.style.opacity = 0;
   }, []);
 
   useEffect(() => {
     if (!inView || reduced()) return;
-    const [w, b, c] = root.current.children;
+    const [stroke, figure] = root.current.children;
     const runs = [
-      animate(w, { scale: [0.2, 1.05], opacity: [0, 0.16, 0.12], duration: 1800, delay, ease: "out(3)" }),
-      animate(b, { scale: [0.05, 1], duration: 1500, delay: delay + 80, ease: "out(4)" }),
-      animate(c, { opacity: [0, 1], duration: 600, delay: delay + 650, ease: "out(2)" }),
+      animate(stroke, { clipPath: ["inset(0 100% 0 0)", "inset(0 0% 0 0)"], duration: 900, delay, ease: "out(3)" }),
+      animate(figure, { opacity: [0, 1], y: [6, 0], duration: 600, delay: delay + 450, ease: "out(3)" }),
     ];
     return () => runs.forEach((r) => r.pause());
   }, [inView, delay]);
 
   return (
-    <div ref={root} className="relative grid aspect-square w-[min(8.5rem,100%)] place-items-center">
-      <svg viewBox="0 0 100 100" aria-hidden="true" className="absolute inset-0 size-full fill-navy opacity-[0.12]">
-        <path d={wash} />
-      </svg>
-      <svg viewBox="0 0 100 100" aria-hidden="true" className="absolute inset-0 size-full fill-navy">
-        <path d={body} />
+    <div ref={root} className="relative flex aspect-[10/3] w-full items-center pl-[16%]">
+      <svg viewBox="0 0 200 60" aria-hidden="true" className="absolute inset-0 size-full fill-navy">
+        <path d={d} fillRule="evenodd" />
       </svg>
       <span className="relative">{children}</span>
     </div>

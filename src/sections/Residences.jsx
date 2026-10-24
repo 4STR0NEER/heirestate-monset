@@ -4,27 +4,22 @@ import Lightbox from "@/components/Lightbox";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
-const word = { 3: "Three", 5: "Five", 7: "Seven", 10: "Ten" };
+const PLAN = [1165, 805]; // every plan is cut to the same frame from the brochure
+const sqm = (n) => `${n.toFixed(2).replace(/\.?0+$/, "")} sqm`;
+const range = (plans) => {
+  const a = plans.map((p) => p[2]);
+  const lo = Math.floor(Math.min(...a));
+  const hi = Math.ceil(Math.max(...a));
+  return lo === hi ? `${lo} sqm` : `${lo} to ${hi} sqm`;
+};
 
-// Where each photo sits in the six-column mosaic: the first is the room you walk into, large,
-// with two beside it; the rest fill rows of three, or two wider ones so no row is left ragged.
-function spans(n) {
-  const out = ["md:col-span-4 md:row-span-2", "md:col-span-2", "md:col-span-2"].slice(0, n);
-  let rest = n - out.length;
-  while (rest > 0) {
-    const row = rest === 4 || rest === 2 ? 2 : 3;
-    out.push(...Array(row).fill(row === 2 ? "md:col-span-3" : "md:col-span-2"));
-    rest -= row;
-  }
-  return out;
-}
-
-// Every layout, photographed in its dress-up unit. Pick a unit; any photo opens out of its
-// tile into a full view you can swipe through.
-export default function Residences({ units, name, tours = [], onTour }) {
+// The homes, one type at a time: the brochure's render of it, every layout drawn with its area,
+// the dress-up unit's photographs, what it is finished in, and the ways to take it further.
+export default function Residences({ units, name, features = [], tours = [], onTour, onBook }) {
   const [current, setCurrent] = useState(units[0].id);
   const tabs = useRef([]);
   const unit = units.find((u) => u.id === current);
+  const layouts = units.reduce((n, u) => n + (u.plans?.length ?? 0), 0);
 
   // arrow keys move along the tabs, as a tablist should
   const onKey = (e, i) => {
@@ -36,15 +31,39 @@ export default function Residences({ units, name, tours = [], onTour }) {
   };
 
   return (
-    <section aria-labelledby="residences" className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
-      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
-        <h3 id="residences" className="font-display text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-[-0.02em] text-ink">
-          Residences
-        </h3>
-        <p className="max-w-[38ch] text-ink/65">Four layouts, each photographed in its dress-up unit. Open any photo to see it whole, or take a video tour of the larger three.</p>
+    <section id="residences" aria-labelledby="residences-title" className={`mx-auto max-w-[1440px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
+      <div className="grid gap-x-20 gap-y-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
+        <div>
+          {layouts > 0 && (
+            <p className="font-display text-[1.15rem] text-gold-ink italic">
+              {layouts} layouts in {units.length} types
+            </p>
+          )}
+          <h2 id="residences-title" className="font-display mt-3 text-[clamp(2.6rem,5vw,4.6rem)] leading-none tracking-[-0.02em] text-ink">
+            Residences
+          </h2>
+        </div>
+        {features.length > 0 && (
+          <details className="group border-t border-ink/15 md:mb-1">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-ink [&::-webkit-details-marker]:hidden">
+              <span>In every unit at {name}</span>
+              <svg viewBox="0 0 16 16" className="size-4 transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none" aria-hidden="true">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.3" />
+              </svg>
+            </summary>
+            <ul className="grid gap-x-8 gap-y-2 pb-5 text-[0.95rem] text-ink/75 sm:grid-cols-2">
+              {features.map((f) => (
+                <li key={f} className="flex gap-3">
+                  <span className="mt-[0.6em] size-1 shrink-0 rounded-full bg-gold" aria-hidden="true" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
 
-      <div role="tablist" aria-label="Unit type" className="mt-12 flex gap-x-[clamp(20px,3vw,48px)] gap-y-3 overflow-x-auto border-b border-ink/12 [scrollbar-width:none] max-md:pr-10 max-md:[mask-image:linear-gradient(to_right,black_80%,transparent)]">
+      <div role="tablist" aria-label="Unit type" className="mt-12 flex gap-x-[clamp(20px,3vw,48px)] overflow-x-auto border-b border-ink/12 [scrollbar-width:none] max-md:pr-10 max-md:[mask-image:linear-gradient(to_right,black_80%,transparent)]">
         {units.map((u, i) => {
           const on = u.id === current;
           return (
@@ -59,9 +78,10 @@ export default function Residences({ units, name, tours = [], onTour }) {
               tabIndex={on ? 0 : -1}
               onClick={() => setCurrent(u.id)}
               onKeyDown={(e) => onKey(e, i)}
-              className={`font-display relative shrink-0 pb-4 text-[clamp(1.25rem,2vw,1.75rem)] whitespace-nowrap transition-colors duration-200 ${on ? "text-ink" : "text-ink/40 hover:text-ink/70"}`}
+              className={`relative shrink-0 pb-4 text-left transition-colors duration-200 ${on ? "text-ink" : "text-ink/45 hover:text-ink/75"}`}
             >
-              {u.name}
+              <span className="font-display block text-[clamp(1.25rem,2vw,1.75rem)] whitespace-nowrap">{u.name}</span>
+              {u.plans && <span className="block text-[0.85rem] whitespace-nowrap tabular-nums">{range(u.plans)}</span>}
               {on && <motion.span layoutId="unit-rule" className="absolute inset-x-0 -bottom-px h-[2px] bg-(--accent)" transition={{ type: "spring", duration: 0.45, bounce: 0 }} />}
             </button>
           );
@@ -78,32 +98,166 @@ export default function Residences({ units, name, tours = [], onTour }) {
           animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.35, ease: EASE } }}
           exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 0.18 } }}
         >
-          <div className="mt-6 mb-8 flex flex-wrap items-baseline justify-between gap-4">
-            <p className="font-inscription text-[0.72rem] tracking-[0.26em] text-ink/60 uppercase">
-              {word[unit.photos.length] ?? unit.photos.length} photographs
-            </p>
-            {tours.includes(unit.id) && (
-              <button
-                type="button"
-                onClick={() => onTour(unit.id)}
-                className="flex items-center gap-3 rounded-full bg-(--accent) py-2.5 pr-5 pl-3 text-[0.95rem] text-paper transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97] motion-reduce:transform-none"
-              >
-                <svg viewBox="0 0 24 24" className="size-6" aria-hidden="true">
-                  <circle cx="12" cy="12" r="11.5" fill="none" stroke="currentColor" strokeOpacity="0.6" />
-                  <path d="M10 8v8l6.5-4z" fill="currentColor" />
-                </svg>
-                Take the video tour
-              </button>
-            )}
-          </div>
-          <Mosaic unit={unit} name={name} />
+          {unit.plans ? <Unit unit={unit} name={name} tour={tours.includes(unit.id)} onTour={onTour} onBook={onBook} /> : <Photos unit={unit} name={name} />}
         </motion.div>
       </AnimatePresence>
     </section>
   );
 }
 
-function Mosaic({ unit, name }) {
+function Unit({ unit, name, tour, onTour, onBook }) {
+  const [view, setView] = useState("plans");
+  const ask = "rounded-full px-6 py-3.5 text-[0.95rem] transition-[background-color,color,transform] duration-200 active:scale-[0.97] motion-reduce:transform-none";
+
+  return (
+    <div className="mt-8">
+      {/* the brochure's render of the type, with its name, its sizes and the tour */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-stone sm:aspect-[21/9]">
+        <img src={unit.render} alt={`${name}, ${unit.name.toLowerCase()}: architect's perspective`} loading="lazy" decoding="async" className="size-full object-cover" />
+        <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-navy-deep/80 via-navy-deep/15 via-50% to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-x-8 gap-y-5 p-[clamp(20px,3vw,40px)] text-paper">
+          <div>
+            <p className="font-display text-[clamp(2.2rem,4.5vw,4rem)] leading-none tracking-[-0.02em]">{unit.name}</p>
+            <p className="mt-2 text-paper/85 tabular-nums">
+              {range(unit.plans)}, {unit.plans.length} {unit.plans.length === 1 ? "layout" : "layouts"}
+            </p>
+          </div>
+          {tour && (
+            <button
+              type="button"
+              onClick={() => onTour(unit.id)}
+              className="flex items-center gap-3 rounded-full bg-paper/95 py-2.5 pr-5 pl-3 text-[0.95rem] text-ink transition-[background-color,transform] duration-150 hover:bg-paper active:scale-[0.97] motion-reduce:transform-none"
+            >
+              <svg viewBox="0 0 24 24" className="size-6 text-(--accent)" aria-hidden="true">
+                <circle cx="12" cy="12" r="11.5" fill="none" stroke="currentColor" strokeOpacity="0.6" />
+                <path d="M10 8v8l6.5-4z" fill="currentColor" />
+              </svg>
+              Take the video tour
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-12 grid gap-x-16 gap-y-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div>
+          <div role="group" aria-label="Show" className="inline-flex rounded-full border border-ink/15 p-1">
+            {[
+              ["plans", "Floor plans"],
+              ["photos", `Photographs (${unit.photos.length})`],
+            ].map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={view === k}
+                onClick={() => setView(k)}
+                className={`relative rounded-full px-4 py-2 text-[0.92rem] transition-colors duration-200 ${view === k ? "text-paper" : "text-ink/70 hover:text-ink"}`}
+              >
+                {view === k && <motion.span layoutId={`view-${unit.id}`} className="absolute inset-0 rounded-full bg-ink" transition={{ type: "spring", duration: 0.4, bounce: 0 }} />}
+                <span className="relative">{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-6">{view === "plans" ? <Plans unit={unit} name={name} /> : <Photos unit={unit} name={name} strip />}</div>
+        </div>
+
+        <div>
+          <p className="font-display text-[clamp(1.3rem,1.8vw,1.6rem)] leading-snug text-ink">{unit.about}</p>
+          <h3 className="font-display mt-10 text-[1.15rem] text-gold-ink italic">Finishes</h3>
+          <dl className="mt-3 border-t border-ink/12">
+            {unit.finishes.map(([k, v]) => (
+              <div key={k} className="grid gap-1 border-b border-ink/10 py-3.5 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4">
+                <dt className="text-ink">{k}</dt>
+                <dd className="text-[0.95rem] leading-relaxed text-ink/70">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {/* the type's own next step */}
+          <div className="mt-10 bg-stone p-6">
+            <p className="font-display text-[1.35rem] leading-tight text-ink">Interested in the {unit.name.toLowerCase()}?</p>
+            <p className="mt-2 text-[0.95rem] text-ink/70">Get its current price list and the layouts still open, or see the dress-up unit in person.</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" onClick={() => onBook("prices", unit.id)} className={`${ask} bg-(--accent) text-paper hover:bg-ink`}>
+                Request the price list
+              </button>
+              <button type="button" onClick={() => onBook("viewing", unit.id)} className={`${ask} border border-ink/25 text-ink hover:bg-ink hover:text-paper`}>
+                Book a viewing
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// every layout of the type, picked by name; the open plan grows into a full view to read its areas
+function Plans({ unit, name }) {
+  const [at, setAt] = useState(0);
+  const images = useMemo(
+    () =>
+      unit.plans.map(([type, src, area]) => ({
+        src,
+        width: PLAN[0],
+        height: PLAN[1],
+        caption: `${unit.name}, ${type}: ${sqm(area)}`,
+        alt: `${name}, ${unit.name.toLowerCase()} ${type}: floor plan with room areas, ${sqm(area)} in total`,
+      })),
+    [unit, name]
+  );
+  const [type, , area, has] = unit.plans[at];
+
+  return (
+    <Lightbox images={images}>
+      {({ open, thumb, active }) => (
+        <div>
+          <div role="group" aria-label="Layout" className="flex flex-wrap gap-2">
+            {unit.plans.map(([t, , a], i) => (
+              <button
+                key={t}
+                type="button"
+                aria-pressed={i === at}
+                onClick={() => setAt(i)}
+                className={`rounded-full border px-3.5 py-1.5 text-[0.88rem] tabular-nums transition-colors duration-200 ${
+                  i === at ? "border-ink bg-ink text-paper" : "border-ink/15 text-ink/75 hover:border-ink/40 hover:text-ink"
+                }`}
+              >
+                {t} <span className={i === at ? "text-paper/70" : "text-ink/50"}>{Math.round(a)}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            ref={thumb(at)}
+            type="button"
+            onClick={() => open(at)}
+            aria-label={`Open the ${type} plan`}
+            className="group mt-5 block w-full overflow-hidden border border-ink/10 bg-plan"
+            style={{ opacity: active === at ? 0 : 1 }}
+          >
+            <img
+              key={images[at].src}
+              src={images[at].src}
+              alt={images[at].alt}
+              width={PLAN[0]}
+              height={PLAN[1]}
+              decoding="async"
+              className="h-auto w-full"
+            />
+          </button>
+          <p className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-ink">
+            <span className="font-display text-[1.3rem]">
+              {type}, {sqm(area)}
+            </span>
+            {has.length > 0 && <span className="text-[0.92rem] text-ink/65">{has.join(", ")}</span>}
+          </p>
+        </div>
+      )}
+    </Lightbox>
+  );
+}
+
+// the dress-up unit: one photograph large, the rest in a strip beneath to choose from
+function Photos({ unit, name, strip }) {
+  const [at, setAt] = useState(0);
   const [w, h] = unit.size;
   const images = useMemo(
     () =>
@@ -116,48 +270,46 @@ function Mosaic({ unit, name }) {
       })),
     [unit, name, w, h]
   );
-  const layout = spans(images.length);
 
   return (
     <Lightbox images={images}>
       {({ open, thumb, active }) => (
-        <ul className="grid auto-rows-[44vw] grid-cols-2 gap-[clamp(8px,1vw,16px)] md:auto-rows-[clamp(200px,21vw,330px)] md:grid-cols-6">
-          {images.map((img, i) => (
-            <motion.li
-              key={img.src}
-              className={`${i === 0 || (i === images.length - 1 && images.length % 2 === 0) ? "col-span-2" : ""} ${layout[i]}`}
-              initial={{ opacity: 0, transform: "translateY(12px)" }}
-              animate={{ opacity: 1, transform: "translateY(0px)" }}
-              transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 6) * 0.04 }}
-            >
-              <button
-                ref={thumb(i)}
-                type="button"
-                onClick={() => open(i)}
-                aria-label={`Open ${img.caption ?? `view ${i + 1}`}`}
-                className="group relative block size-full overflow-hidden bg-stone"
-                // the open photo has left its tile; the tile stays empty until it flies back
-                style={{ opacity: active === i ? 0 : 1 }}
-              >
-                <img
-                  src={img.src}
-                  alt=""
-                  width={w}
-                  height={h}
-                  loading="lazy"
-                  decoding="async"
-                  draggable={false}
-                  className="size-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.23,1,0.32,1)] [@media(hover:hover)]:group-hover:scale-[1.035]"
-                />
-                {img.caption && (
-                  <span className="font-inscription absolute inset-x-0 bottom-0 bg-linear-to-t from-ink/60 to-transparent px-4 pt-12 pb-3.5 text-left text-[0.68rem] tracking-[0.26em] text-paper uppercase">
-                    {img.caption}
-                  </span>
-                )}
-              </button>
-            </motion.li>
-          ))}
-        </ul>
+        <div className={strip ? "" : "mt-8 max-w-[960px]"}>
+          <button
+            ref={thumb(at)}
+            type="button"
+            onClick={() => open(at)}
+            aria-label={`Open ${images[at].caption ?? `photograph ${at + 1}`}`}
+            className="group relative block aspect-[4/3] w-full overflow-hidden bg-stone"
+            style={{ opacity: active === at ? 0 : 1 }}
+          >
+            <img
+              key={images[at].src}
+              src={images[at].src}
+              alt={images[at].alt}
+              decoding="async"
+              className="size-full object-cover"
+            />
+            {images[at].caption && (
+              <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-ink/60 to-transparent px-4 pt-12 pb-3.5 text-left text-[0.92rem] text-paper">{images[at].caption}</span>
+            )}
+          </button>
+          <ul className="mt-3 flex gap-2 overflow-x-auto p-1 [scrollbar-width:none]">
+            {images.map((img, i) => (
+              <li key={img.src} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setAt(i)}
+                  aria-label={`Show ${img.caption ?? `photograph ${i + 1}`}`}
+                  aria-current={i === at || undefined}
+                  className={`block size-16 overflow-hidden transition-opacity duration-200 sm:size-20 ${i === at ? "ring-2 ring-(--accent) ring-offset-2 ring-offset-paper" : "opacity-60 hover:opacity-100"}`}
+                >
+                  <img src={img.src} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </Lightbox>
   );

@@ -54,6 +54,42 @@ export function blotPath(seed, reach = 40) {
 export const blotMask = (seed, reach) =>
   `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='${blotPath(seed, reach)}'/></svg>`)}")`;
 
+// One stroke of a loaded brush, 200 wide and 60 deep: pressed down at the start, swelling, then
+// lifting away so the tail thins and runs dry into separate bristle streaks. Its dry slits are
+// holes, so fill it with fill-rule evenodd.
+export function swashPath(seed) {
+  const r = rng(seed);
+  const bend = (r() - 0.5) * 6;
+  const tilt = (r() - 0.5) * 5;
+  const N = 90;
+  const mid = (u) => 30 + bend * Math.sin(Math.PI * u) + tilt * (u - 0.5);
+  const half = (u) => 23 * Math.sin(Math.PI * Math.min(1, u * 1.1 + 0.05)) ** 0.45 * (1.1 - 0.4 * u);
+  const top = [];
+  const bot = [];
+  for (let i = 0; i <= N; i++) {
+    const u = i / N;
+    const x = 6 + u * 188;
+    top.push([x, mid(u) - half(u) + (r() - 0.5) * 1.6]);
+    bot.push([x, mid(u) + half(u) + (r() - 0.5) * 2.4]);
+  }
+  let d = `M${top.map(([x, y]) => `${f(x)} ${f(y)}`).join("L")}`;
+  d += `L${bot.reverse().map(([x, y]) => `${f(x)} ${f(y)}`).join("L")}Z`;
+  // where the brush ran dry: thin slits along the back half, longer towards the tail
+  for (let i = 0; i < 9; i++) {
+    const u0 = 0.45 + r() * 0.4;
+    const len = 0.08 + r() * 0.22 * (u0 + 0.2);
+    const across = (r() - 0.5) * 1.5;
+    const pts = [];
+    for (let k = 0; k <= 8; k++) {
+      const u = Math.min(0.99, u0 + (len * k) / 8);
+      pts.push([6 + u * 188, mid(u) + across * half(u)]);
+    }
+    const w = 0.35 + r() * 0.7;
+    d += `M${pts.map(([x, y]) => `${f(x)} ${f(y - w)}`).join("L")}L${pts.reverse().map(([x, y]) => `${f(x)} ${f(y + w)}`).join("L")}Z`;
+  }
+  return d;
+}
+
 // The leading edge of a broad brush pulled across the page, 1000 wide and 60 deep: the paint is
 // below the line, and where the brush ran dry it leaves streaks and gaps along the top.
 export function brushEdge(seed) {
