@@ -48,7 +48,7 @@ export default function Hero({ ready = true, onOpen, paused, onSection }) {
           initial={{ opacity: 0, filter: "blur(6px)" }}
           animate={ready ? { opacity: 1, filter: "blur(0px)" } : undefined}
           transition={{ duration: 1, ease: EASE, delay: 0.9 }}
-          className="font-inscription mt-5 flex items-center justify-center gap-4 text-[clamp(0.7rem,1vw,0.9rem)] tracking-[0.32em] text-balance text-charcoal/80 uppercase"
+          className="font-display mt-4 flex items-center justify-center gap-4 text-[clamp(1.1rem,1.7vw,1.5rem)] text-balance text-charcoal/80 italic"
         >
           <span aria-hidden="true" className="hidden h-px w-10 bg-gold sm:block" />
           Securing wealth, creating your legacy
@@ -132,7 +132,7 @@ function Panel({ id, wide, isActive, playing, onHover, onActivate, onOpen }) {
       onFocus={(e) => e.currentTarget.matches(":focus-visible") && onActivate()}
       aria-label={p ? (isActive ? `Enter ${p.name}` : `Show ${p.name}`) : "Forthcoming project"}
       aria-expanded={isActive}
-      className="group relative min-h-0 min-w-0 overflow-hidden rounded-[6px] text-left focus-visible:outline-offset-2"
+      className="group relative min-h-0 min-w-0 overflow-hidden rounded-[6px] text-left shadow-lift ring-1 ring-ink/10 focus-visible:outline-offset-2"
       style={{ flexBasis: 0, "--accent": p?.accent ?? "var(--color-gold)" }}
       animate={{ flexGrow: isActive ? (wide ? 5.4 : 4) : 1 }}
       transition={OPEN}
@@ -172,7 +172,7 @@ function Panel({ id, wide, isActive, playing, onHover, onActivate, onOpen }) {
       >
         <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ring-1 ${p ? "bg-(--accent) ring-paper/80" : "bg-gold ring-gold"}`} />
         <span
-          className={`font-inscription text-[0.68rem] tracking-[0.3em] whitespace-nowrap uppercase ${p ? "text-paper" : "text-charcoal/70"} ${
+          className={`font-display text-[1rem] whitespace-nowrap italic ${p ? "text-paper" : "text-charcoal/70"} ${
             wide ? "rotate-180 [writing-mode:vertical-rl]" : ""
           }`}
         >
@@ -193,9 +193,9 @@ function Panel({ id, wide, isActive, playing, onHover, onActivate, onOpen }) {
               <>
                 <div className="min-w-0">
                   <p className="font-display text-[clamp(1.7rem,2.8vw,2.9rem)] leading-none tracking-[-0.02em] whitespace-nowrap text-paper">{p.name}</p>
-                  <p className="font-inscription mt-2 text-[0.7rem] tracking-[0.28em] whitespace-nowrap text-champagne uppercase">{p.tagline}</p>
+                  <p className="font-display mt-2 text-[1.05rem] whitespace-nowrap text-champagne italic">{p.tagline}</p>
                 </div>
-                <span className="font-inscription flex items-center gap-3 rounded-full bg-paper px-5 py-3 text-[0.7rem] tracking-[0.26em] whitespace-nowrap text-ink uppercase ring-1 ring-paper transition-colors duration-200 group-hover:bg-(--accent) group-hover:text-paper">
+                <span className="flex items-center gap-3 rounded-full bg-paper px-5 py-3 text-[0.95rem] whitespace-nowrap text-ink ring-1 ring-paper transition-colors duration-200 group-hover:bg-(--accent) group-hover:text-paper">
                   Enter
                   <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
                     <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />

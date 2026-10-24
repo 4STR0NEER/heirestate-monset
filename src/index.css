@@ -28,6 +28,8 @@
   --font-body: "Hanken Grotesk Variable", system-ui, sans-serif;
 
   --shadow-note: 0 24px 48px -24px rgb(12 21 38 / 0.7);
+  /* something standing off the page: a contact shadow, a near one and a long soft one */
+  --shadow-lift: 0 1px 2px rgb(12 21 38 / 0.12), 0 14px 28px -10px rgb(12 21 38 / 0.3), 0 44px 80px -36px rgb(12 21 38 / 0.45);
 
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
@@ -223,4 +225,22 @@ body::after {
     linear-gradient(to bottom, color-mix(in oklab, var(--color-ink) 6%, transparent) 1px, transparent 1px);
   background-size: 96px 96px;
   background-position: center top;
+}
+
+/* the Lit Window behind a shuttered window, breathing slowly (Portfolio.jsx, Forthcoming) */
+.glow {
+  opacity: 0.35;
+  filter: blur(14px);
+  animation: glow 6.8s ease-in-out infinite;
+}
+@keyframes glow {
+  50% {
+    opacity: 0.85;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none;
+    opacity: 0.6;
+  }
 }

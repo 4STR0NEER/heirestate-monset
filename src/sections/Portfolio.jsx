@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
+import Reveal from "@/components/Reveal";
+import { FINS } from "@/lib/fins";
 import { sequence } from "@/lib/frames";
+import { brushEdge } from "@/lib/ink";
 import { inPlace, siteUrl } from "@/lib/links";
-import { order, projects } from "@/projects";
+import { order, projects, showcase } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
@@ -17,7 +20,7 @@ export default function Portfolio({ onOpen, onSection }) {
   return (
     <>
       <Descent onOpen={onOpen} onSection={onSection} />
-      <Forthcoming onSection={onSection} />
+      <Forthcoming onSection={onSection} onOpen={onOpen} />
       <Footer onOpen={onOpen} />
     </>
   );
@@ -125,7 +128,7 @@ function Descent({ onOpen, onSection }) {
 
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-paper bg-[radial-gradient(80%_60%_at_50%_100%,rgb(196_155_76/0.22),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-paper bg-[radial-gradient(80%_60%_at_50%_100%,color-mix(in_oklab,var(--color-gold)_22%,transparent),transparent_70%)]"
           style={{ opacity: veil }}
         />
 
@@ -152,13 +155,16 @@ function BuildingName({ id, b, x }) {
       <div>
         <span className="mx-auto mb-6 block size-2.5 rounded-full" style={{ background: p.accent }} />
         <p className="font-display text-[clamp(3rem,10vw,9rem)] leading-[0.92] tracking-[-0.03em] text-ink">{p.name}</p>
-        <p className="font-inscription mt-5 text-[clamp(0.7rem,1vw,0.9rem)] tracking-[0.32em] text-gold-ink uppercase">{p.tagline}</p>
+        <p className="font-display mt-4 text-[clamp(1.1rem,1.8vw,1.6rem)] text-gold-ink italic">{p.tagline}</p>
       </div>
     </motion.div>
   );
 }
 
-// the project card rises in the project's colour once its building has arrived
+// The project card rises in the project's colour once its building has arrived, carrying the
+// edge its own site is drawn with (The Wave's brush, Alto Ranudo's fins), so the card reads as a
+// leaf of that site rather than a label laid over the film. It stands off the footage on a
+// stack of shadows.
 function Card({ id, b, x, onOpen }) {
   const p = projects[id];
   const self = useRef(null);
@@ -166,40 +172,49 @@ function Card({ id, b, x, onOpen }) {
   const y = useTransform(x, [b + 0.56, b + 0.66], [40, 0]);
   const pointerEvents = useTransform(opacity, (o) => (o > 0.5 ? "auto" : "none"));
   const open = () => onOpen(id, self.current.getBoundingClientRect());
+  const edge = useMemo(() => (p.motif === "fins" ? null : brushEdge(11 + b * 7)), [p.motif, b]);
 
   return (
     <motion.article
       ref={self}
       aria-label={p.name}
-      className="absolute inset-x-3 bottom-3 rounded-[8px] p-[clamp(20px,2.6vw,36px)] text-paper shadow-[0_30px_60px_-30px_rgb(12_21_38/0.6)] sm:inset-x-auto sm:bottom-[clamp(24px,6vh,64px)] sm:left-[clamp(16px,4vw,64px)] sm:w-[min(520px,46vw)]"
-      style={{ opacity, y, pointerEvents, background: p.accent }}
+      className="absolute inset-x-3 bottom-3 text-paper sm:inset-x-auto sm:bottom-[clamp(24px,6vh,64px)] sm:left-[clamp(16px,4vw,64px)] sm:w-[min(540px,46vw)]"
+      style={{ opacity, y, pointerEvents, "--accent": p.accent }}
     >
-      <p className="font-inscription flex items-center gap-3 text-[0.68rem] tracking-[0.3em] text-champagne uppercase">
-        <span className="h-px w-8 bg-gold" />
-        {p.tagline}
-      </p>
-      <h3 className="font-display mt-4 text-[clamp(2.2rem,4vw,3.6rem)] leading-[0.95] tracking-[-0.03em]">{p.name}</h3>
-      <p className="mt-4 hidden max-w-[46ch] leading-relaxed text-paper/85 sm:block">{p.statement.split(/(?<=\.)\s/)[0]}</p>
-      {p.facts.length > 0 && (
-        <dl className="mt-6 grid grid-cols-2 border-t border-champagne/30">
-          {p.facts.slice(0, 4).map(([label, value]) => (
-            <div key={label} className="border-b border-champagne/30 py-2.5 pr-4">
-              <dt className="font-inscription text-[0.58rem] tracking-[0.24em] text-champagne/75 uppercase">{label}</dt>
-              <dd className="mt-0.5 text-[0.95rem] tabular-nums">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      <a
-        href={siteUrl(id)}
-        onClick={inPlace(open)}
-        className="font-inscription mt-7 flex w-fit items-center gap-3 rounded-full bg-paper px-6 py-3.5 text-[0.72rem] tracking-[0.26em] text-ink uppercase transition-[background-color,transform] duration-200 hover:bg-gold active:scale-[0.97]"
-      >
-        Explore {p.name}
-        <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
-          <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
-        </svg>
-      </a>
+      {/* the edge of the project's own site, in its colour */}
+      <svg viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true" className="absolute bottom-[calc(100%-1px)] left-0 h-[clamp(18px,2.4vw,30px)] w-full fill-(--accent)">
+        {p.motif === "fins" ? FINS.map((f, i) => <rect key={i} x={f.x} y={60 - f.h} width="5" height={f.h} />) : <path d={edge} />}
+      </svg>
+      <div className="relative bg-(--accent) p-[clamp(20px,2.6vw,36px)] shadow-lift">
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="font-display text-[1.05rem] text-champagne italic">{p.tagline}</p>
+          <p className="text-[0.85rem] text-paper/60 tabular-nums">
+            {String(b + 1).padStart(2, "0")} / {String(order.length).padStart(2, "0")}
+          </p>
+        </div>
+        <h3 className="font-display mt-3 text-[clamp(2.2rem,4vw,3.6rem)] leading-[0.95] tracking-[-0.03em]">{p.name}</h3>
+        <p className="mt-4 hidden max-w-[46ch] leading-relaxed text-paper/85 sm:block">{p.statement.split(/(?<=\.)\s/)[0]}</p>
+        {p.facts.length > 0 && (
+          <dl className="mt-6 grid grid-cols-2 border-t border-paper/20">
+            {p.facts.slice(0, 4).map(([label, value]) => (
+              <div key={label} className="border-b border-paper/20 py-2.5 pr-4">
+                <dt className="text-[0.82rem] text-paper/60">{label}</dt>
+                <dd className="mt-0.5 text-[0.95rem] tabular-nums">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        <a
+          href={siteUrl(id)}
+          onClick={inPlace(open)}
+          className="mt-7 flex w-fit items-center gap-3 rounded-full bg-paper px-6 py-3.5 text-ink transition-[background-color,transform] duration-200 hover:bg-champagne active:scale-[0.97] motion-reduce:transform-none"
+        >
+          Visit {p.name}
+          <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
+            <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
+          </svg>
+        </a>
+      </div>
     </motion.article>
   );
 }
@@ -221,70 +236,127 @@ function Altimeter({ x }) {
   );
 }
 
-function Forthcoming({ onSection }) {
+// The two projects not yet announced, as two windows still shuttered on a night facade: behind
+// the louvres the Lit Window glows and slowly breathes, the way the mark lights its tower. Until
+// they open, the way to an agent is through the projects already here.
+function Forthcoming({ onSection, onOpen }) {
   const self = useRef(null);
   const active = useInView(self, { amount: 0.55 });
   useEffect(() => {
     if (active) onSection("soon");
   }, [active, onSection]);
+  const shut = showcase.filter((s) => s === "soon").length;
+  const withAgents = order.filter((id) => projects[id].agent);
+
   return (
-    <article ref={self} aria-label="Forthcoming" className="relative grid min-h-svh place-items-center overflow-hidden bg-champagne">
-      <div className={`text-center ${GUTTER}`}>
-        <Rise delay={0}>
-          <Mark className="mx-auto h-16 w-auto text-ink" />
-        </Rise>
-        <Rise delay={0.1}>
-          <h3 className="font-display mt-8 text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.95] tracking-[-0.03em] text-ink">
-            Two more, <span className="text-gold-ink">forthcoming</span>
+    <article ref={self} aria-labelledby="soon-title" className="relative overflow-hidden bg-navy-deep text-paper">
+      <div className={`mx-auto grid min-h-svh max-w-[1480px] items-center gap-x-20 gap-y-14 py-[clamp(88px,14vh,160px)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] ${GUTTER}`}>
+        <div aria-hidden="true" className="flex justify-center gap-[clamp(16px,3vw,40px)]">
+          {Array.from({ length: shut }, (_, i) => (
+            <div key={i} className="relative aspect-[5/11] w-[clamp(110px,15vw,190px)] overflow-hidden border border-gold/40 bg-navy shadow-lift">
+              <span className="glow absolute inset-[18%_14%] rounded-[2px] bg-gold" style={{ animationDelay: `${i * 1.7}s` }} />
+              {/* the louvres, slat over slat */}
+              <span className="absolute inset-0 bg-[repeating-linear-gradient(to_bottom,var(--color-navy-deep)_0_9px,transparent_9px_13px)] opacity-90" />
+              <span className="absolute inset-0 border-[6px] border-navy-deep" />
+            </div>
+          ))}
+        </div>
+        <Reveal>
+          <Mark className="h-14 w-auto text-paper" />
+          <p data-rise className="font-display mt-8 text-[1.15rem] text-champagne italic">
+            Forthcoming
+          </p>
+          <h3 id="soon-title" data-split className="font-display mt-3 text-[clamp(2.6rem,5.5vw,5rem)] leading-[0.95] tracking-[-0.03em]">
+            Two more windows, still shuttered
           </h3>
-        </Rise>
-        <Rise delay={0.2}>
-          <p className="mx-auto mt-6 max-w-[40ch] text-[1.05rem] text-charcoal">
+          <p data-rise className="mt-6 max-w-[40ch] text-[1.05rem] text-paper/75">
             The fourth and fifth Heir Estate projects are still on the drawing board. They will be unveiled here first.
           </p>
-        </Rise>
+          {withAgents.length > 0 && (
+            <div data-rise className="mt-9 flex flex-wrap gap-3">
+              {withAgents.map((id) => (
+                <a
+                  key={id}
+                  href={siteUrl(id)}
+                  onClick={inPlace((e) => onOpen(id, e.currentTarget.getBoundingClientRect()))}
+                  className="rounded-full border border-paper/30 px-5 py-3 transition-[background-color,color,border-color] duration-200 hover:border-champagne hover:bg-champagne hover:text-ink"
+                >
+                  Enquire about {projects[id].name}
+                </a>
+              ))}
+            </div>
+          )}
+        </Reveal>
       </div>
     </article>
   );
 }
 
+// The foot of the collection: the house's name set huge in outline, each project with its
+// picture and line, who to speak to, and the way back up.
 function Footer({ onOpen }) {
+  const agent = order.map((id) => projects[id].agent).find(Boolean);
+  const sold = order.filter((id) => projects[id].agent).map((id) => projects[id].name);
   return (
-    <footer className="relative bg-paper">
-      <div className={`mx-auto grid max-w-[1480px] gap-12 py-[clamp(64px,12vh,120px)] md:grid-cols-[1.4fr_1fr_1fr] ${GUTTER}`}>
+    <footer className="relative overflow-hidden bg-paper">
+      <div className={`mx-auto grid max-w-[1480px] gap-x-16 gap-y-12 pt-[clamp(72px,12vh,128px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] ${GUTTER}`}>
         <div>
           <Mark className="h-12 w-auto text-ink" />
-          <p className="font-display mt-6 max-w-[18ch] text-[clamp(1.6rem,2.6vw,2.4rem)] leading-[1.1] text-ink">
-            Securing wealth, creating your <span className="text-gold-display">legacy</span>.
-          </p>
+          <p className="font-display mt-6 max-w-[18ch] text-[clamp(1.8rem,3vw,2.6rem)] leading-[1.08] text-ink">Securing wealth, creating your legacy.</p>
+          {agent && (
+            <div className="mt-8 border-t border-ink/12 pt-5 text-[0.95rem] text-ink/75">
+              <p>
+                Enquiries for {sold.join(" and ")}: {agent.names}, {agent.role.toLowerCase()}, {agent.firm}.
+              </p>
+              <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+                {agent.phones.map((t) => (
+                  <a key={t} href={`tel:${t.replace(/\s/g, "")}`} className="text-ink tabular-nums underline-offset-4 hover:underline">
+                    {t}
+                  </a>
+                ))}
+                <a href={`mailto:${agent.email}`} className="text-ink underline-offset-4 hover:underline">
+                  {agent.email}
+                </a>
+              </p>
+            </div>
+          )}
         </div>
         <nav aria-label="Projects">
-          <p className="font-inscription text-[0.66rem] tracking-[0.28em] text-charcoal/70 uppercase">Projects</p>
-          <ul className="mt-4 space-y-2.5">
+          <ul className="grid gap-4 sm:grid-cols-3">
             {order.map((id) => (
               <li key={id}>
                 <a
                   href={siteUrl(id)}
                   onClick={inPlace((e) => onOpen(id, e.currentTarget.getBoundingClientRect()))}
-                  className="flex items-center gap-3 text-ink underline-offset-4 hover:underline"
+                  className="group block"
+                  style={{ "--accent": projects[id].accent }}
                 >
-                  <span className="size-2 rounded-full" style={{ background: projects[id].accent }} />
-                  {projects[id].name}
+                  <span className="relative block overflow-hidden rounded-[4px] shadow-lift">
+                    <img src={`${projects[id].panel}.jpg`} alt="" loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                    <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-(--accent) transition-transform duration-500 ease-(--ease-out-strong) group-hover:scale-x-100" />
+                  </span>
+                  <span className="mt-3 flex items-center gap-2">
+                    <span aria-hidden="true" className="size-2 rounded-full bg-(--accent)" />
+                    <span className="font-display text-[1.25rem] text-ink">{projects[id].name}</span>
+                  </span>
+                  <span className="font-display mt-0.5 block text-gold-ink italic">{projects[id].tagline}</span>
                 </a>
               </li>
             ))}
           </ul>
         </nav>
-        <div>
-          <p className="font-inscription text-[0.66rem] tracking-[0.28em] text-charcoal/70 uppercase">Heir Estate</p>
-          <a href="#top" className="mt-4 inline-block text-ink underline-offset-4 hover:underline">
-            Back to the top
-          </a>
-        </div>
       </div>
-      <div className={`mx-auto flex max-w-[1480px] flex-wrap justify-between gap-4 border-t border-ink/10 py-6 text-[0.8rem] text-charcoal/70 ${GUTTER}`}>
+
+      {/* the house's name, set across the foot in outline */}
+      <p aria-hidden="true" className="outline-word font-display mt-[clamp(48px,8vh,96px)] text-center text-[clamp(4rem,15vw,15rem)] leading-[0.8] whitespace-nowrap select-none">
+        Heir Estate
+      </p>
+      <div className={`mx-auto flex max-w-[1480px] flex-wrap justify-between gap-4 border-t border-ink/10 py-6 text-[0.85rem] text-charcoal/70 ${GUTTER}`}>
         <span>© {new Date().getFullYear()} Heir Estate</span>
-        <span>Renders and films by each project's developer.</span>
+        <span>Renders and films by each project’s developer.</span>
+        <a href="#top" className="text-ink underline-offset-4 hover:underline">
+          Back to the top
+        </a>
       </div>
     </footer>
   );

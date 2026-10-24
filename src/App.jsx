@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import IslandNav from "./components/IslandNav";
 import Loader from "./components/Loader";
+import Collection from "./sections/Collection";
 import Hero from "./sections/Hero";
 import Portfolio from "./sections/Portfolio";
 import ProjectView from "./sections/ProjectView";
@@ -58,6 +59,7 @@ export default function App() {
     <main>
       <IslandNav section={section} onOpen={openProject} hidden={!ready || !!open} />
       <Hero ready={ready} onOpen={openProject} paused={!!open} onSection={setSection} />
+      <Collection onOpen={openProject} onSection={setSection} />
       <Portfolio onOpen={openProject} onSection={setSection} />
       <AnimatePresence>
         {open && <ProjectView key="project" id={open.id} origin={open.origin} onClose={close} onGo={go} />}
