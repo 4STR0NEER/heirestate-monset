@@ -131,6 +131,9 @@ export default function sites() {
         // arriving from the collection (links.js leave()): open out of the project's colour, not a blank page
         site !== "main" &&
           `<style>html[data-arrive]::before{content:"";position:fixed;inset:0;z-index:80;background:${projects[site].accent}}</style>`,
+        // a project with a palette of its own paints the house tokens before the page draws
+        projects[site]?.theme &&
+          `<style>html:root{${Object.entries(projects[site].theme).map(([k, v]) => `${k}:${v}`).join(";")}}</style>`,
         site !== "main" &&
           `<script>if(location.hash==="#arrive"){document.documentElement.dataset.arrive="";history.replaceState(null,"",location.pathname)}</script>`,
         `<script type="application/ld+json">${ld}</script>`,
