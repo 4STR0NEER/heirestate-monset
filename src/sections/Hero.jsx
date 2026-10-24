@@ -91,7 +91,7 @@ function Panels({ ready, playing, onOpen }) {
           id={id}
           wide={wide}
           isActive={active === i}
-          playing={playing}
+          playing={playing && active === i}
           onHover={wide ? () => hoverStart(i) : undefined}
           onActivate={() => setActive(i)}
           onOpen={onOpen}
@@ -106,8 +106,9 @@ function Panel({ id, wide, isActive, playing, onHover, onActivate, onOpen }) {
   const self = useRef(null);
   const video = useRef(null);
 
-  // the three loops run together and never pause on hover (that restart is what stuttered);
-  // they only stop while the hero is off screen or a project page covers it
+  // Only the open panel's film plays: three films decoding at once halved the frame rate. A
+  // closed panel holds the frame it stopped on and picks up from there when it opens again, so
+  // nothing restarts (a restart is what used to stutter); all stop while the hero is off screen.
   useEffect(() => {
     const v = video.current;
     if (!v) return;

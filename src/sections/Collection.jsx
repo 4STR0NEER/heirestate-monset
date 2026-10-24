@@ -1,25 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { AnimatePresence, motion, useInView, useSpring } from "motion/react";
+import { useInView } from "motion/react";
 import Reveal from "@/components/Reveal";
 import { inPlace, siteUrl } from "@/lib/links";
 import { order, projects, showcase } from "@/projects";
 
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
-const EASE = [0.23, 1, 0.32, 1];
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const fact = (p, label) => p.facts.find(([k]) => k === label)?.[1];
 
 // The collection as an index, like the contents page of a prospectus: a row to each project with
-// where it is and how many homes, its picture held up beside the pointer as you run down the
-// list (after VengeanceUI's ImageRevealList, here following the pointer on a spring), and a few
-// figures across the foot that count up from the projects' own facts.
+// where it is and how many homes. The row you point at, or reach by keyboard, fills with the
+// project's colour from the left, and choosing it carries that colour on into the project's own
+// site (links.js leave()). A few figures across the foot count up from the projects' own facts.
 export default function Collection({ onOpen, onSection }) {
   const root = useRef(null);
   const figures = useRef(null);
-  const [hover, setHover] = useState(null);
-  const x = useSpring(0, { stiffness: 220, damping: 26, mass: 0.6 });
-  const y = useSpring(0, { stiffness: 220, damping: 26, mass: 0.6 });
   const inView = useInView(root, { amount: 0.3 });
   const counted = useInView(figures, { once: true, amount: 0.6 });
 
@@ -47,11 +43,6 @@ export default function Collection({ onOpen, onSection }) {
     return () => (runs.forEach((r) => r.pause()), lines.pause());
   }, [counted]);
 
-  const move = (e) => {
-    x.set(e.clientX);
-    y.set(e.clientY);
-  };
-
   return (
     <section ref={root} aria-labelledby="collection-title" className="relative">
       <div className={`mx-auto max-w-[1480px] py-[clamp(88px,14vh,160px)] ${GUTTER}`}>
@@ -69,7 +60,7 @@ export default function Collection({ onOpen, onSection }) {
           </p>
         </div>
 
-        <ol className="mt-12 border-t border-ink/15" onPointerMove={move} onPointerLeave={() => setHover(null)}>
+        <ol className="mt-12 border-t border-ink/15">
           {order.map((id, i) => {
             const p = projects[id];
             const place = fact(p, "Location");
@@ -79,24 +70,29 @@ export default function Collection({ onOpen, onSection }) {
                 <a
                   href={siteUrl(id)}
                   onClick={inPlace((e) => onOpen(id, e.currentTarget.getBoundingClientRect()))}
-                  onPointerEnter={(e) => (move(e), setHover(id))}
-                  onFocus={() => setHover(null)}
-                  className="group relative grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 border-b border-ink/15 py-[clamp(20px,3vw,36px)] md:grid-cols-[4rem_minmax(0,1.2fr)_minmax(0,1fr)_9rem_3rem]"
+                  className="group relative grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 overflow-hidden border-b border-ink/15 px-[clamp(8px,1.6vw,24px)] py-[clamp(20px,3vw,36px)] md:grid-cols-[4rem_minmax(0,1.2fr)_minmax(0,1fr)_9rem_3rem]"
                   style={{ "--accent": p.accent }}
                 >
-                  {/* a rule in the project's colour draws across under the row it is on */}
-                  <span aria-hidden="true" className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-(--accent) transition-transform duration-500 ease-(--ease-out-strong) group-hover:scale-x-100 group-focus-visible:scale-x-100" />
-                  <span className="text-[0.9rem] text-ink/50 tabular-nums">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="min-w-0 transition-transform duration-500 ease-(--ease-out-strong) group-hover:translate-x-2 motion-reduce:transform-none">
-                    <span className="flex items-center gap-3">
-                      <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full bg-(--accent)" />
-                      <span className="font-display text-[clamp(2rem,4.4vw,4rem)] leading-none tracking-[-0.02em] text-ink">{p.name}</span>
-                    </span>
-                    <span className="font-display mt-2 block text-[1.05rem] text-gold-ink italic">{p.tagline}</span>
+                  {/* the project's colour swipes in from the left under the row being picked */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 origin-left scale-x-0 bg-(--accent) transition-transform duration-500 ease-(--ease-in-out-strong) group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
+                  />
+                  <span className="relative text-[0.9rem] text-ink/50 tabular-nums transition-colors duration-300 group-hover:text-paper/70 group-focus-visible:text-paper/70">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="col-span-3 col-start-2 text-ink/70 md:col-span-1 md:col-start-auto">{place ?? ""}</span>
-                  <span className="hidden text-ink/70 tabular-nums md:block">{homesHere ?? ""}</span>
-                  <span className="col-start-3 row-start-1 grid size-11 place-items-center justify-self-end rounded-full border border-ink/20 text-ink transition-[background-color,color,border-color] duration-300 group-hover:border-(--accent) group-hover:bg-(--accent) group-hover:text-paper md:col-start-auto md:row-start-auto">
+                  <span className="relative min-w-0">
+                    <span className="flex items-center gap-3">
+                      <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full bg-(--accent) ring-1 ring-paper/0 transition-shadow duration-300 group-hover:ring-paper/80 group-focus-visible:ring-paper/80" />
+                      <span className="font-display text-[clamp(2rem,4.4vw,4rem)] leading-none tracking-[-0.02em] text-ink transition-colors duration-300 group-hover:text-paper group-focus-visible:text-paper">
+                        {p.name}
+                      </span>
+                    </span>
+                    <span className="font-display mt-2 block text-[1.05rem] text-gold-ink italic transition-colors duration-300 group-hover:text-champagne group-focus-visible:text-champagne">{p.tagline}</span>
+                  </span>
+                  <span className="relative col-span-3 col-start-2 text-ink/70 transition-colors duration-300 group-hover:text-paper/85 group-focus-visible:text-paper/85 md:col-span-1 md:col-start-auto">{place ?? ""}</span>
+                  <span className="relative hidden text-ink/70 tabular-nums transition-colors duration-300 group-hover:text-paper/85 group-focus-visible:text-paper/85 md:block">{homesHere ?? ""}</span>
+                  <span className="relative col-start-3 row-start-1 grid size-11 place-items-center justify-self-end rounded-full border border-ink/20 text-ink transition-[background-color,color,border-color] duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink group-focus-visible:border-paper md:col-start-auto md:row-start-auto">
                     <svg viewBox="0 0 24 10" className="w-5" aria-hidden="true">
                       <path d="M0 5h22M18 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
                     </svg>
@@ -124,36 +120,6 @@ export default function Collection({ onOpen, onSection }) {
         </dl>
       </div>
 
-      {/* the picture of the row under the pointer, held up beside it */}
-      <AnimatePresence>
-        {hover && (
-          <motion.div
-            key="peek"
-            aria-hidden="true"
-            className="pointer-events-none fixed top-0 left-0 z-30 hidden [@media(hover:hover)_and_(pointer:fine)]:block"
-            style={{ x, y }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.3, ease: EASE }}
-          >
-            <div className="-translate-x-1/2 -translate-y-[115%] overflow-hidden rounded-[6px] shadow-[var(--shadow-lift)]">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.img
-                  key={hover}
-                  src={`${projects[hover].hero}.jpg`}
-                  alt=""
-                  className="block h-[13rem] w-[19rem] object-cover"
-                  initial={{ opacity: 0, transform: "scale(1.08)" }}
-                  animate={{ opacity: 1, transform: "scale(1)" }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: EASE }}
-                />
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

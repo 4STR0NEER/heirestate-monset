@@ -6,6 +6,10 @@
     <meta name="theme-color" content="#f6f1e8" />
     <!--seo-->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- the page's text is written into the HTML for search engines and readers without scripts;
+         with scripts on, the page draws it, so keep it out of sight until it does (no flash of text) -->
+    <script>document.documentElement.classList.add("js")</script>
+    <style>.js .prerender{visibility:hidden}</style>
   </head>
   <body>
     <div id="root"><!--prerender--></div>

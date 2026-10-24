@@ -23,13 +23,13 @@ const LABELS = { name: "Full name", phone: "Mobile number", email: "Email", cons
 
 // ponytail: opens the visitor's mail app with the enquiry written out, addressed to the agents.
 // Swap for a POST to /api/enquiry (Resend) once it exists; the form and its states stay as they are.
-function send(f, { agent, name, units }) {
-  const unit = units.find((u) => u.id === f.unit)?.name ?? "Any unit type";
+function send(f, { agent, name, units, pick }) {
+  const unit = units.find((u) => u.id === f.unit)?.name ?? "Not decided yet";
   const intent = INTENTS.find(([k]) => k === f.intent)[1];
   const body = [
     `${intent}, ${name}`,
     "",
-    `Unit: ${unit}`,
+    `${pick}: ${unit}`,
     f.intent === "viewing" && f.date ? `Preferred date: ${f.date}` : "",
     `Name: ${f.name.trim()}`,
     `Mobile: ${f.phone.trim()}`,
@@ -46,7 +46,9 @@ function send(f, { agent, name, units }) {
 // The enquiry desk: who you are speaking to, with their licences, and one form for every reason
 // to get in touch. Anything on the page that asks for a viewing or a price list lands here with
 // its unit and reason already filled in (ask).
-export default function Enquiry({ agent, name, units = [], developer, ask, fins }) {
+// units are the choices in the second field and pick its name: a project's unit types on its own
+// site, the projects themselves on the collection.
+export default function Enquiry({ agent, name, units = [], pick = "Unit type", developer, ask, fins }) {
   const [f, setF] = useState({ intent: "viewing", unit: "", date: "", name: "", phone: "", email: "", message: "", consent: false });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
@@ -71,7 +73,7 @@ export default function Enquiry({ agent, name, units = [], developer, ask, fins 
     const found = Object.fromEntries(Object.entries(CHECKS).map(([k, c]) => [k, c(f[k])]));
     setErrors(found);
     if (Object.values(found).some(Boolean)) return requestAnimationFrame(() => summary.current?.focus());
-    send(f, { agent, name, units });
+    send(f, { agent, name, units, pick });
     setSent(true);
   };
 
@@ -200,7 +202,7 @@ export default function Enquiry({ agent, name, units = [], developer, ask, fins 
 
                 <div className="mt-7 grid gap-x-5 gap-y-6 sm:grid-cols-2">
                   <label className="block">
-                    <span>Unit type</span>
+                    <span>{pick}</span>
                     <select name="unit" value={f.unit} onChange={set("unit")} className={`${field} border-ink/20`}>
                       <option value="">Any, or not sure yet</option>
                       {units.map((u) => (

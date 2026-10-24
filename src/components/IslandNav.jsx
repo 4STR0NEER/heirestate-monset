@@ -96,8 +96,11 @@ export default function IslandNav({ section, onOpen, hidden }) {
                 <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
               </svg>
             </button>
-            <a href="#portfolio" className={`${link} hidden sm:block ${island ? "bg-gold text-ink hover:bg-champagne" : "bg-ink text-paper hover:bg-charcoal"}`}>
+            <a href="#portfolio" className={`${link} hidden md:block ${island ? "hover:bg-paper/10" : "hover:bg-ink/5"}`}>
               Portfolio
+            </a>
+            <a href="#enquiry" className={`${link} ${island ? "bg-gold text-ink hover:bg-champagne" : "bg-ink text-paper hover:bg-charcoal"}`}>
+              Enquire
             </a>
           </motion.div>
         </motion.div>

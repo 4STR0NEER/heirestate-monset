@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
+import Enquiry from "@/sections/Enquiry";
 import { FINS } from "@/lib/fins";
 import { sequence } from "@/lib/frames";
 import { brushEdge } from "@/lib/ink";
@@ -17,10 +18,27 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 export default function Portfolio({ onOpen, onSection }) {
+  // the projects the agents handle, and what a button further up asked the desk for
+  const sold = order.filter((id) => projects[id].agent);
+  const [ask, setAsk] = useState(null);
+  const book = (unit) => {
+    setAsk({ intent: "viewing", unit, n: Date.now() });
+    requestAnimationFrame(() => document.getElementById("enquiry")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
   return (
     <>
       <Descent onOpen={onOpen} onSection={onSection} />
-      <Forthcoming onSection={onSection} onOpen={onOpen} />
+      <Forthcoming onSection={onSection} sold={sold} onBook={book} />
+      {sold.length > 0 && (
+        <Enquiry
+          agent={projects[sold[0]].agent}
+          name={sold.map((id) => projects[id].name).join(" and ")}
+          units={sold.map((id) => ({ id, name: projects[id].name }))}
+          pick="Project"
+          developer="Renders and films are each project's developer's; layouts, areas and prices are confirmed by the agents."
+          ask={ask}
+        />
+      )}
       <Footer onOpen={onOpen} />
     </>
   );
@@ -239,14 +257,13 @@ function Altimeter({ x }) {
 // The two projects not yet announced, as two windows still shuttered on a night facade: behind
 // the louvres the Lit Window glows and slowly breathes, the way the mark lights its tower. Until
 // they open, the way to an agent is through the projects already here.
-function Forthcoming({ onSection, onOpen }) {
+function Forthcoming({ onSection, sold, onBook }) {
   const self = useRef(null);
   const active = useInView(self, { amount: 0.55 });
   useEffect(() => {
     if (active) onSection("soon");
   }, [active, onSection]);
   const shut = showcase.filter((s) => s === "soon").length;
-  const withAgents = order.filter((id) => projects[id].agent);
 
   return (
     <article ref={self} aria-labelledby="soon-title" className="relative overflow-hidden bg-navy-deep text-paper">
@@ -272,17 +289,17 @@ function Forthcoming({ onSection, onOpen }) {
           <p data-rise className="mt-6 max-w-[40ch] text-[1.05rem] text-paper/75">
             The fourth and fifth Heir Estate projects are still on the drawing board. They will be unveiled here first.
           </p>
-          {withAgents.length > 0 && (
+          {sold.length > 0 && (
             <div data-rise className="mt-9 flex flex-wrap gap-3">
-              {withAgents.map((id) => (
-                <a
+              {sold.map((id) => (
+                <button
                   key={id}
-                  href={siteUrl(id)}
-                  onClick={inPlace((e) => onOpen(id, e.currentTarget.getBoundingClientRect()))}
-                  className="rounded-full border border-paper/30 px-5 py-3 transition-[background-color,color,border-color] duration-200 hover:border-champagne hover:bg-champagne hover:text-ink"
+                  type="button"
+                  onClick={() => onBook(id)}
+                  className="rounded-full border border-paper/30 px-5 py-3 transition-[background-color,color,border-color,transform] duration-200 hover:border-champagne hover:bg-champagne hover:text-ink active:scale-[0.97] motion-reduce:transform-none"
                 >
                   Enquire about {projects[id].name}
-                </a>
+                </button>
               ))}
             </div>
           )}
@@ -304,21 +321,9 @@ function Footer({ onOpen }) {
           <Mark className="h-12 w-auto text-ink" />
           <p className="font-display mt-6 max-w-[18ch] text-[clamp(1.8rem,3vw,2.6rem)] leading-[1.08] text-ink">Securing wealth, creating your legacy.</p>
           {agent && (
-            <div className="mt-8 border-t border-ink/12 pt-5 text-[0.95rem] text-ink/75">
-              <p>
-                Enquiries for {sold.join(" and ")}: {agent.names}, {agent.role.toLowerCase()}, {agent.firm}.
-              </p>
-              <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
-                {agent.phones.map((t) => (
-                  <a key={t} href={`tel:${t.replace(/\s/g, "")}`} className="text-ink tabular-nums underline-offset-4 hover:underline">
-                    {t}
-                  </a>
-                ))}
-                <a href={`mailto:${agent.email}`} className="text-ink underline-offset-4 hover:underline">
-                  {agent.email}
-                </a>
-              </p>
-            </div>
+            <p className="mt-8 border-t border-ink/12 pt-5 text-[0.95rem] text-ink/75">
+              Enquiries for {sold.join(" and ")}: <a href="#enquiry" className="text-ink underline underline-offset-4">{agent.names}, {agent.firm}</a>.
+            </p>
           )}
         </div>
         <nav aria-label="Projects">
