@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { animate, splitText, stagger } from "animejs";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import SilkBackground from "@/components/SilkBackground";
@@ -9,7 +9,9 @@ const EASE = [0.23, 1, 0.32, 1];
 const OPEN = { duration: 0.75, ease: [0.77, 0, 0.175, 1] };
 const HOVER_INTENT = 90; // ms the pointer must rest before a panel opens, so sweeping across never flickers
 
-export default function Hero({ ready = true, onOpen, paused, onSection }) {
+// memo: the nav's section label changes as you scroll and re-renders the page around it;
+// this section's own props never change with it, so it sits that render out
+export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
   const reduce = useReducedMotion();
   const section = useRef(null);
   const heading = useRef(null);
@@ -59,7 +61,7 @@ export default function Hero({ ready = true, onOpen, paused, onSection }) {
       <Panels ready={ready} playing={ready && inView && !paused && !reduce} onOpen={onOpen} />
     </section>
   );
-}
+});
 
 // Five projects side by side as tall panels; the active one widens and its name and way in appear.
 // The expand-on-hover interaction follows Skiper UI's HoverExpand (skiper52); on phones

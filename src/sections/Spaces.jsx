@@ -125,15 +125,17 @@ function Story({ items, name, intro, place, motif }) {
 // Coming on, they open one after another across the screen over the space it replaces.
 const SLATS = 7;
 function Slats({ s, state }) {
+  // each slat paints the whole photo; a phone gets four, so opening one stays cheap
+  const n = typeof innerWidth !== "undefined" && innerWidth < 768 ? 4 : SLATS;
   return (
     <div className="absolute inset-0" style={{ zIndex: { on: 2, under: 1, off: 0 }[state] }}>
-      {Array.from({ length: SLATS }, (_, i) => (
+      {Array.from({ length: n }, (_, i) => (
         <div
           key={i}
           className="absolute inset-y-0 overflow-hidden transition-[clip-path] ease-(--ease-in-out-strong) motion-reduce:transition-none"
           style={{
-            left: `${(i * 100) / SLATS}%`,
-            width: `calc(${100 / SLATS}% + 1px)`,
+            left: `${(i * 100) / n}%`,
+            width: `calc(${100 / n}% + 1px)`,
             clipPath: state === "off" ? "inset(0 0 0 100%)" : "inset(0 0 0 0)",
             transitionDuration: state === "on" ? "900ms" : "0ms",
             transitionDelay: state === "on" ? `${i * 60}ms` : "0ms",
@@ -145,7 +147,7 @@ function Slats({ s, state }) {
             loading="lazy"
             decoding="async"
             className="absolute inset-y-0 h-full max-w-none object-cover"
-            style={{ left: `${-i * 100}%`, width: `${SLATS * 100}%`, objectPosition: s.pos }}
+            style={{ left: `${-i * 100}%`, width: `${n * 100}%`, objectPosition: s.pos }}
           />
         </div>
       ))}

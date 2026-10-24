@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import { useInView } from "motion/react";
 import Reveal from "@/components/Reveal";
@@ -13,7 +13,9 @@ const fact = (p, label) => p.facts.find(([k]) => k === label)?.[1];
 // where it is and how many homes. The row you point at, or reach by keyboard, fills with the
 // project's colour from the left, and choosing it carries that colour on into the project's own
 // site (links.js leave()). A few figures across the foot count up from the projects' own facts.
-export default function Collection({ onOpen, onSection }) {
+// memo: the nav's section label changes as you scroll and re-renders the page around it;
+// this section's own props never change with it, so it sits that render out
+export default memo(function Collection({ onOpen, onSection }) {
   const root = useRef(null);
   const figures = useRef(null);
   const inView = useInView(root, { amount: 0.3 });
@@ -122,4 +124,4 @@ export default function Collection({ onOpen, onSection }) {
 
     </section>
   );
-}
+});

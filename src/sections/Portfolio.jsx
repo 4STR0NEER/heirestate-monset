@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
@@ -17,7 +17,9 @@ const FOCUS = { alto: 0.5, wave: 0.42, pristina: 0.5 };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
-export default function Portfolio({ onOpen, onSection }) {
+// memo: the nav's section label changes as you scroll and re-renders the page around it;
+// this section's own props never change with it, so it sits that render out
+export default memo(function Portfolio({ onOpen, onSection }) {
   // the projects the agents handle, and what a button further up asked the desk for
   const sold = order.filter((id) => projects[id].agent);
   const [ask, setAsk] = useState(null);
@@ -42,7 +44,7 @@ export default function Portfolio({ onOpen, onSection }) {
       <Footer onOpen={onOpen} />
     </>
   );
-}
+});
 
 // From the sky down onto each building in turn, the way the Kalea Heights tour scrubs its film.
 // One sticky canvas holds the screen; scroll drives each project's footage frame by frame, so the
@@ -104,7 +106,8 @@ function Descent({ onOpen, onSection }) {
       if (!queued) (queued = true), requestAnimationFrame(draw);
     };
     const size = () => {
-      const dpr = Math.min(devicePixelRatio, 1.5);
+      // the footage is 1024 wide: on a phone or tablet a denser canvas only adds work, not detail
+      const dpr = innerWidth < 1024 ? 1 : Math.min(devicePixelRatio, 1.5);
       w = innerWidth;
       h = innerHeight;
       c.width = Math.round(w * dpr);

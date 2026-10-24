@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { FINS } from "@/lib/fins";
 import Plumeria from "@/components/Plumeria";
 import { brushEdge } from "@/lib/ink";
@@ -31,6 +31,19 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
   const dim = useTransform(scrollYProgress, [0, 1], [0, 0.6]);
   // the fins grow to full height as the sheet comes up
   const rise = useTransform(scrollYProgress, [0, 0.7], ["scaleY(0.3)", "scaleY(1)"]);
+
+  // Once the sheet has covered it the film stops, and starts again (where it was) if you scroll
+  // back to it: a film decoding behind the page halved the frame rate of everything over it.
+  const covered = useRef(false);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const v0 = video.current;
+    if (!v0 || reduce || v0.ended) return;
+    const now = v > 0.92;
+    if (now === covered.current) return;
+    covered.current = now;
+    if (now) v0.pause();
+    else v0.play().catch(() => {});
+  });
 
   useEffect(() => {
     const v = video.current;
