@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
-import { inPlace, siteUrl } from "@/lib/links";
+import { inPlace, leave, siteUrl } from "@/lib/links";
 import Contours from "@/components/Contours";
 import Reveal from "@/components/Reveal";
 import Enquiry from "@/sections/Enquiry";
@@ -102,7 +102,7 @@ export default function ProjectView({ id, origin, onClose, onGo }) {
 // A project's own site (alto.<domain>, ...): the same page, scrolling the window, with the
 // collection one link away instead of a close button.
 export function ProjectPage({ id }) {
-  // arriving from the collection, the page is covered in its colour (sites.js); lift it like a blind
+  // the page opens covered in its colour (sites.js), arriving from another site or not; lift it like a blind
   useEffect(() => {
     const html = document.documentElement;
     if (!("arrive" in html.dataset)) return;
@@ -124,12 +124,13 @@ export function ProjectPage({ id }) {
       <Bar>
         {(dark) => (
           <>
-            <a href={siteUrl()} aria-label="Heir Estate, the collection">
+            <a href={siteUrl()} onClick={toCollection} aria-label="Heir Estate, the collection">
               <Logo className={`transition-colors duration-300 ${dark ? "text-paper drop-shadow-[0_1px_10px_rgb(12_21_38/0.6)]" : "text-ink"}`} />
             </a>
             {/* a round arrow on phones, where the logo leaves no room for the label */}
             <a
               href={siteUrl()}
+              onClick={toCollection}
               aria-label="The collection"
               className={`font-inscription grid size-12 place-items-center rounded-full border text-[0.7rem] tracking-[0.26em] uppercase transition-[background-color,color,border-color] duration-200 sm:block sm:size-auto sm:px-5 sm:py-3 ${ROUND[dark ? 1 : 0]}`}
             >
@@ -145,6 +146,8 @@ export function ProjectPage({ id }) {
     </main>
   );
 }
+
+const toCollection = inPlace(() => leave());
 
 // the round buttons in the top bar, on paper and over a dark section
 const ROUND = [
@@ -317,7 +320,7 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
         )}
       </AnimatePresence>
 
-      <a href={siteUrl(nextId)} onClick={onGo && inPlace(() => onGo(nextId))} data-tone="dark" className="group relative block h-[62svh] w-full overflow-hidden text-left">
+      <a href={siteUrl(nextId)} onClick={inPlace((e) => (onGo ? onGo(nextId) : leave(nextId, e.currentTarget.getBoundingClientRect())))} data-tone="dark" className="group relative block h-[62svh] w-full overflow-hidden text-left">
         <img
           src={`${projects[nextId].hero}.jpg`}
           alt=""
@@ -339,7 +342,7 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
       </a>
 
       <footer className={`flex items-center justify-between py-10 ${GUTTER}`}>
-        <a href={siteUrl()} onClick={onClose && inPlace(onClose)} className="font-inscription text-[0.78rem] tracking-[0.3em] text-ink/75 uppercase hover:text-gold-ink">
+        <a href={siteUrl()} onClick={onClose ? inPlace(onClose) : toCollection} className="font-inscription text-[0.78rem] tracking-[0.3em] text-ink/75 uppercase hover:text-gold-ink">
           Back to the facade
         </a>
         <Mark className="h-8 w-auto text-ink/70" />

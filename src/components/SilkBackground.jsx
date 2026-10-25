@@ -61,18 +61,25 @@ const DRIFT = [
   { x: ["-5%", "1%"], y: ["-1%", "3%"], rotate: ["-2deg", "2deg"] },
 ];
 
-export default function SilkBackground() {
+// playing: false while the hero is scrolled away or covered, so seven full-screen layers stop
+// costing frames nobody sees
+export default function SilkBackground({ playing = true }) {
   const reduce = useReducedMotion();
   const root = useRef(null);
+  const anims = useRef([]);
 
   useEffect(() => {
     if (reduce) return;
     const layers = root.current.querySelectorAll("[data-fold]");
-    const anims = [...layers].map((el, i) =>
-      animate(el, { ...DRIFT[i], scale: [1.08, 1.16], duration: 15000 + i * 2300, ease: "inOutSine", loop: true, alternate: true })
+    anims.current = [...layers].map((el, i) =>
+      animate(el, { ...DRIFT[i], scale: [1.08, 1.16], duration: 15000 + i * 2300, ease: "inOutSine", loop: true, alternate: true, autoplay: false })
     );
-    return () => anims.forEach((a) => a.revert());
+    return () => (anims.current.forEach((a) => a.revert()), (anims.current = []));
   }, [reduce]);
+
+  useEffect(() => {
+    anims.current.forEach((a) => (playing ? a.play() : a.pause()));
+  }, [playing, reduce]);
 
   return (
     <div ref={root} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-paper">

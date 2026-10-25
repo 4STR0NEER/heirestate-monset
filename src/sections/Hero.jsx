@@ -38,7 +38,7 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
 
   return (
     <section ref={section} id="top" className="relative flex min-h-svh flex-col overflow-hidden pt-[clamp(84px,12vh,120px)]">
-      <SilkBackground />
+      <SilkBackground playing={inView && !paused} />
 
       <div className="relative px-4 text-center">
         <h1 className="font-display text-[clamp(2rem,4.4vw,4.4rem)] leading-[1.06] font-normal tracking-[-0.02em] text-balance text-ink">

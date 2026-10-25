@@ -4,7 +4,7 @@
 // robots.txt and sitemap.xml, and, for a project, only that project's media.
 import { readdirSync, readFileSync } from "node:fs";
 import { order, projects } from "./src/projects.js";
-import { DOMAIN, devPort, siteUrl } from "./src/lib/links.js";
+import { DOMAIN, HOUSE, devPort, siteUrl } from "./src/lib/links.js";
 
 const BRAND = "Heir Estate";
 const HEADLINE = "Building your future, one property at a time";
@@ -128,14 +128,16 @@ export default function sites() {
         `<meta property="og:image" content="${s.image}" />`,
         `<meta name="twitter:card" content="summary_large_image" />`,
         s.preload && `<link rel="preload" as="image" href="${s.preload}" fetchpriority="high" />`,
-        // arriving from the collection (links.js leave()): open out of the project's colour, not a blank page
-        site !== "main" &&
-          `<style>html[data-arrive]::before{content:"";position:fixed;inset:0;z-index:80;background:${projects[site].accent}}</style>`,
+        // until the page has drawn, the site's colour instead of a blank page: a project lifts it like a
+        // blind (ProjectPage), the collection hands it to its loader. It is the colour leave() arrives in.
+        // Should the scripts never run, it stands aside after 8s.
+        `<style>html[data-arrive]::before{content:"";position:fixed;inset:0;z-index:80;background:${
+          site === "main" ? HOUSE : projects[site].accent
+        };animation:arrive-hold 0s 8s forwards}@keyframes arrive-hold{to{visibility:hidden}}</style>`,
         // a project with a palette of its own paints the house tokens before the page draws
         projects[site]?.theme &&
           `<style>html:root{${Object.entries(projects[site].theme).map(([k, v]) => `${k}:${v}`).join(";")}}</style>`,
-        site !== "main" &&
-          `<script>if(location.hash==="#arrive"){document.documentElement.dataset.arrive="";history.replaceState(null,"",location.pathname)}</script>`,
+        `<script>document.documentElement.dataset.arrive=""</script>`,
         `<script type="application/ld+json">${ld}</script>`,
       ];
       return html

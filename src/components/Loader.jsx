@@ -39,6 +39,7 @@ export default function Loader({ onReveal, onDone }) {
     let cancelled = false;
     let scene;
     const html = document.documentElement;
+    delete html.dataset.arrive; // the navy painted before the scripts ran (sites.js); the loader is that navy now
     html.style.overflow = "hidden";
     const assets = heroAssets();
 

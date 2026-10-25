@@ -28,15 +28,18 @@ export const inPlace = (fn) => (e) => {
 
 const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px)`;
 
-// Leaving for a project's own site: its colour grows out of the window that was clicked (or rises
-// from below) until it fills the screen, and the project's site opens out of that same colour
-// (#arrive, handled in its HTML by sites.js).
+// The collection's navy, written out: a project's palette repaints --color-navy on its own site.
+export const HOUSE = "#14213a";
+
+// Leaving for another site (a project's, or the collection with no id): its colour grows out of
+// the element that was clicked (or rises from below) until it fills the screen, and the next page
+// opens out of that same colour (data-arrive, set in its HTML by sites.js), never a blank page.
 export function leave(id, rect) {
-  const url = `${siteUrl(id)}#arrive`;
+  const url = siteUrl(id);
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return location.assign(url);
   const from = rect ? insetOf(rect) : "inset(100% 0px 0px 0px)";
   const veil = document.createElement("div");
-  veil.style.cssText = `position:fixed;inset:0;z-index:90;background:${projects[id].accent};clip-path:${from}`;
+  veil.style.cssText = `position:fixed;inset:0;z-index:90;background:${id ? projects[id].accent : HOUSE};clip-path:${from}`;
   document.body.append(veil);
   // coming back with the browser's back button restores this page as it was left: clear the veil
   addEventListener("pageshow", () => veil.remove(), { once: true });
