@@ -13,14 +13,14 @@ npm run build                # every site, into dist/<site>/
 
 One codebase, one site per project: the collection, and each project's own page with its own title, description, canonical URL, Open Graph tags, JSON-LD, robots.txt and sitemap.xml (`sites.js`), its text written into the HTML so crawlers read it without running JavaScript.
 
-`npm run build` builds every site into `dist/<site>/` and puts them together in `dist/all/`, which is what Vercel serves (`vercel.json`): the collection at `/`, each project at `/<id>/`, all sharing one set of media and assets.
+`npm run build` builds every site into `dist/<site>/` and puts them together in `dist/all/`, which is what Cloudflare serves (`wrangler.jsonc`, deployed on every push to `main`): the collection at `/`, each project at `/<id>/`, all sharing one set of media and assets.
 
-- **Now, on a `*.vercel.app` address** (which cannot have subdomains): projects live at `/wave/` and so on, and links between the sites are paths.
-- **With a domain:** add `<domain>` and `wave.<domain>` (and the other projects) to the Vercel project, set the environment variable `VITE_DOMAIN=<domain>`, and redeploy. Links and SEO tags switch to the subdomains, and `vercel.json` serves `/wave/` to anyone arriving on `wave.<domain>`.
+- **On heirestates.com** (the default, `DOMAIN` in `src/lib/links.js`): the collection on the bare domain, each project on its subdomain (`wave.heirestates.com`). `worker.js` serves `/wave/` to anyone arriving on `wave.<domain>`, and sends `www` to the bare domain.
+- **On one address without subdomains:** build with `VITE_DOMAIN=""` and `SITE_HOST=<address>`; projects live at `/wave/` and links between the sites are paths.
 
 On the main site, project links are real links to the subdomains (crawlers and new tabs follow them); a plain click still opens the project in place over the facade.
 
-A new project needs an entry in `src/projects.js` (and `order`), its media in `public/media/p/`, its id added to the host rule in `vercel.json` (the build stops if it is missing), and, once there is a domain, its subdomain added in Vercel.
+A new project needs an entry in `src/projects.js` (and `order`), its media in `public/media/p/`, and its subdomain added as a custom domain on the Cloudflare Worker.
 
 - `src/projects.js`: the five facade windows and each project's page content.
 - `resources/` (not in git) holds the client's raw files; web cuts live in `public/media/`.
@@ -73,7 +73,7 @@ Green and geometric where The Wave is navy and ink: its `theme` in `src/projects
 
 ## North Grove at Pristina Town's site
 
-The project id stays `pristina` (it is in every address and in `vercel.json`); the site leads with North Grove, as its plans do. Its hand is the land, `motif: "contours"`: topographic rings that draw themselves in behind sections (`Contours.jsx`), a ridgeline of hills on the edge of every dark section (`Edge.jsx`), spaces that open in a widening ring, and the plans' plumeria (`Plumeria.jsx`), all drawn from seeds in `src/lib/topo.js`. Its palette is the plans' own paper, olive and unit colours (`--color-grove-*`, `--color-unit-*`).
+The project id stays `pristina` (it is in every address); the site leads with North Grove, as its plans do. Its hand is the land, `motif: "contours"`: topographic rings that draw themselves in behind sections (`Contours.jsx`), a ridgeline of hills on the edge of every dark section (`Edge.jsx`), spaces that open in a widening ring, and the plans' plumeria (`Plumeria.jsx`), all drawn from seeds in `src/lib/topo.js`. Its palette is the plans' own paper, olive and unit colours (`--color-grove-*`, `--color-unit-*`).
 
 From `resources/pristina town/`: `grove-intro.mp4` is the town film's first 6.3 s; the floor plates (`grove-lumina-*`, `grove-terra-*`) and unit sheets (`grove-sheet-*`) are the developer's own sheets as webp, the unit photographs cropped from the sheets (`crop=630:542:0:0`). The payment terms are the shape of the sample term sheet's scheme, without its figures.
 

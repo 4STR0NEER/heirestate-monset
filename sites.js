@@ -16,9 +16,9 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const clip = (s, n = 158) => (s.length <= n ? s : `${s.slice(0, s.lastIndexOf(" ", n - 1))}…`);
 const names = new Intl.ListFormat("en").format(order.map((id) => projects[id].name));
 const nextOf = (id) => order[(order.indexOf(id) + 1) % order.length];
-// Search engines and link previews need full addresses. Before a domain is set, the sites share
-// the deployment's own address (Vercel provides it to the build), each project under its path.
-const HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL || "localhost";
+// Search engines and link previews need full addresses. Without a domain (VITE_DOMAIN=""), the
+// sites share one address, each project under its path: set SITE_HOST to that address.
+const HOST = process.env.SITE_HOST || "localhost";
 const absolute = (u) => (u.startsWith("http") ? u : `https://${HOST}${u}`);
 const urlOf = (id) => absolute(siteUrl(id));
 // where a site's files are served from: its subdomain, or the shared address (media is at the root either way)

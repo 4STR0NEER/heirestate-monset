@@ -4,10 +4,9 @@ import { order, projects } from "../projects.js";
 const env = import.meta.env ?? process.env;
 
 // The domain the sites live on: the collection on the bare domain, each project on its own
-// subdomain (wave.<domain>, ...). Set VITE_DOMAIN in the host's environment once the domain is
-// connected. Until then every site is served from one address, each project under its own path
-// (/wave/), which is how a *.vercel.app address works: it cannot have subdomains.
-export const DOMAIN = env.VITE_DOMAIN || "";
+// subdomain (wave.<domain>, ...), routed by worker.js. VITE_DOMAIN="" builds every site onto one
+// address instead, each project under its own path (/wave/), for a host without subdomains.
+export const DOMAIN = env.VITE_DOMAIN ?? "heirestates.com";
 
 // In development each site runs its own server (`npm run dev`), one port up per project.
 export const devPort = (id) => 5173 + (id ? order.indexOf(id) + 1 : 0);

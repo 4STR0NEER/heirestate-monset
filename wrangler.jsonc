@@ -1,5 +1,10 @@
 {
   "name": "heirestate-monset",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "dist/all" }
+  "main": "worker.js",
+  "assets": {
+    "directory": "dist/all",
+    "binding": "ASSETS",
+    "run_worker_first": ["/", "/robots.txt", "/sitemap.xml"]
+  }
 }

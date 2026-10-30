@@ -14,7 +14,7 @@ const LARANJO = {
     ["DHSUD registration", "R7-A-04/21-630"],
   ],
   phones: ["+63 935 662 5281", "+63 956 870 7294"],
-  email: "lenlaranjo@gmail.com",
+  email: "heirestates.fh@gmail.com",
 };
 
 // Project pages. Every fact comes from the client's material: the presentation deck (Alto),
@@ -584,7 +584,7 @@ export const projects = {
 
   pristina: {
     // The residences of Pristina Town, named as its own plans name them. The id stays
-    // "pristina": it is in every address and in the host rule (vercel.json).
+    // "pristina": it is in every address (pristina.<domain>).
     name: "North Grove",
     accent: "var(--color-grove-mid)",
     site: true,
