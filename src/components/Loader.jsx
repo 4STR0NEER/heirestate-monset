@@ -3,7 +3,6 @@ import { animate, createDrawable, createTimeline, stagger } from "animejs";
 import { Mark } from "@/components/Logo";
 
 const SEEN = "heir-intro-seen";
-const WORD = "HEIR ESTATES";
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Resolves when fonts and the first frame of the hero's film are in (the others wait unloaded), or after 8s so a slow
@@ -46,7 +45,6 @@ export default function Loader({ onReveal, onDone }) {
     const svg = stage.current.querySelector("svg");
     const win = svg.querySelector("rect");
     const strokes = createDrawable(svg.querySelectorAll("path"));
-    const letters = stage.current.querySelectorAll("[data-letter]");
     win.style.opacity = "0";
 
     async function run() {
@@ -74,15 +72,14 @@ export default function Loader({ onReveal, onDone }) {
       await assets;
       if (cancelled) return;
 
-      // the building settles into the flat mark: strokes draw, the window switches on, the name rises
+      // the building settles into the flat mark: strokes draw, the window switches on
       const k = short ? 0.5 : 0.7;
       const mark = play(createTimeline({ defaults: { ease: "inOutQuart" } }));
       if (!short) mark.add(canvas.current, { opacity: 0, scale: 1.12, filter: "blur(6px)", duration: 500, ease: "outQuad" }, 0);
       mark
         .add(stage.current, { opacity: [0, 1], duration: 400 * k, ease: "outQuad" }, 100 * k)
         .add(strokes, { draw: ["0 0", "0 1"], duration: 900 * k, delay: stagger(110 * k) }, 150 * k)
-        .add(win, { opacity: [0, 0.7, 0.3, 1], duration: 500 * k, ease: "outQuad" }, 900 * k)
-        .add(letters, { opacity: [0, 1], y: ["0.6em", "0em"], duration: 700 * k, ease: "outExpo", delay: stagger(35 * k) }, 700 * k);
+        .add(win, { opacity: [0, 0.7, 0.3, 1], duration: 500 * k, ease: "outQuad" }, 900 * k);
       await mark;
       await wait(short ? 100 : 250);
       if (cancelled) return;
@@ -124,13 +121,6 @@ export default function Loader({ onReveal, onDone }) {
       <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
       <div ref={stage} className="relative flex flex-col items-center opacity-0">
         <Mark className="h-[clamp(88px,16vh,160px)] w-auto text-champagne" />
-        <p aria-hidden="true" className="font-inscription mt-7 text-[clamp(0.8rem,1.2vw,1.05rem)] tracking-[0.42em] text-champagne">
-          {WORD.split("").map((l, i) => (
-            <span key={i} data-letter className="inline-block whitespace-pre opacity-0">
-              {l}
-            </span>
-          ))}
-        </p>
       </div>
     </div>
   );

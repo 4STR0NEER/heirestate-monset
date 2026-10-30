@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
+import { motion, useInView, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
 import Agents from "@/sections/Agents";
@@ -64,8 +64,12 @@ function Descent({ onOpen, onSection }) {
   const seqs = useMemo(() => order.map(sequence), []);
   const n = order.length;
 
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: root, offset: ["start start", "end end"] });
-  const x = useTransform(scrollYProgress, (p) => p * n);
+  const raw = useTransform(scrollYProgress, (p) => p * n);
+  // the picture follows the scroll on a light spring, so a flick of the wheel glides instead of stepping
+  const smooth = useSpring(raw, { stiffness: 170, damping: 32, mass: 0.5, restDelta: 0.0002 });
+  const x = reduce ? raw : smooth;
 
   // start fetching the first building's frames a screen before the visitor gets there
   const near = useInView(root, { margin: "100% 0px", once: true });
@@ -73,17 +77,25 @@ function Descent({ onOpen, onSection }) {
     if (near) seqs[0].load();
   }, [near, seqs]);
 
-  useMotionValueEvent(x, "change", (v) => {
+  useMotionValueEvent(raw, "change", (v) => {
     if (v > 0 && v < n) onSection(order[Math.min(n - 1, Math.floor(v))]);
   });
 
   useEffect(() => {
     const c = canvas.current;
-    const ctx = c.getContext("2d");
-    let w = 0;
-    let h = 0;
+    const ctx = c.getContext("2d", { alpha: false });
     let drawn = "";
     let queued = false;
+
+    // cover the screen, cropping around the tower
+    const paint = (img, b, alpha) => {
+      const k = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight);
+      const dw = img.naturalWidth * k;
+      const dh = img.naturalHeight * k;
+      const dx = clamp(c.width / 2 - FOCUS[order[b]] * dw, c.width - dw, 0);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, dx, (c.height - dh) / 2, dw, dh);
+    };
 
     const draw = () => {
       queued = false;
@@ -93,40 +105,43 @@ function Descent({ onOpen, onSection }) {
       const s = seqs[b];
       s.load();
       if (t > 0.35) seqs[b + 1]?.load(); // the next building loads while this one is on screen
-      const i = Math.round(easeInOut(clamp((t - 0.02) / 0.78, 0, 1)) * (s.count - 1));
+      // between two frames, the next is laid over the last at the fraction between them, so the
+      // footage moves continuously rather than in frame-sized steps
+      const f = easeInOut(clamp((t - 0.02) / 0.78, 0, 1)) * (s.count - 1);
+      const i = Math.floor(f);
       const img = s.nearest(i);
       if (!img) return;
-      const key = `${w}:${img.src}`;
+      const over = s.images[i + 1] && s.images[i] ? s.images[i + 1] : null;
+      const a = over ? Math.round((f - i) * 16) / 16 : 0;
+      const key = `${c.width}:${c.height}:${img.src}:${a}`;
       if (key === drawn) return;
       drawn = key;
-      // cover the screen, cropping around the tower
-      const k = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight);
-      const dw = img.naturalWidth * k;
-      const dh = img.naturalHeight * k;
-      const dx = clamp(c.width / 2 - FOCUS[order[b]] * dw, c.width - dw, 0);
-      ctx.drawImage(img, dx, (c.height - dh) / 2, dw, dh);
+      paint(img, b, 1);
+      if (a > 0) paint(over, b, a);
     };
     const schedule = () => {
       if (!queued) (queued = true), requestAnimationFrame(draw);
     };
-    const size = () => {
-      // the footage is 1024 wide: on a phone or tablet a denser canvas only adds work, not detail
-      const dpr = innerWidth < 1024 ? 1 : Math.min(devicePixelRatio, 1.5);
-      w = innerWidth;
-      h = innerHeight;
-      c.width = Math.round(w * dpr);
-      c.height = Math.round(h * dpr);
+    // sized to the canvas's own box, which is the large viewport: a phone's address bar showing
+    // and hiding as you scroll never resizes (and so never blanks) it
+    const ro = new ResizeObserver(([e]) => {
+      const dpr = Math.min(devicePixelRatio, 2);
+      const cw = Math.round(e.contentRect.width * dpr);
+      const ch = Math.round(e.contentRect.height * dpr);
+      if (cw === c.width && ch === c.height) return;
+      c.width = cw;
+      c.height = ch;
+      ctx.imageSmoothingQuality = "high";
       drawn = "";
-      schedule();
-    };
+      draw();
+    });
 
-    size();
+    ro.observe(c);
     const off = x.on("change", schedule);
-    addEventListener("resize", size);
     addEventListener("heir:frame", schedule);
     return () => {
       off();
-      removeEventListener("resize", size);
+      ro.disconnect();
       removeEventListener("heir:frame", schedule);
     };
   }, [x, seqs, n]);
@@ -146,8 +161,10 @@ function Descent({ onOpen, onSection }) {
 
   return (
     <section ref={root} id="portfolio" aria-label="The portfolio" className="relative" style={{ height: `${n * PER}vh` }}>
-      <div className="sticky top-0 h-svh overflow-hidden bg-paper">
-        <motion.canvas ref={canvas} aria-hidden="true" className="absolute inset-0 size-full" style={{ scale: dolly }} />
+      {/* the picture fills the large viewport, so it reaches under a phone's address bar whether
+          the bar is showing or not; the type sits in the small one, so the bar never covers it */}
+      <div className="sticky top-0 h-lvh overflow-hidden bg-paper">
+        <motion.canvas ref={canvas} aria-hidden="true" className="absolute inset-0 size-full will-change-transform" style={{ scale: dolly }} />
         {/* soften the top and bottom so the floating nav and the project card always read */}
         <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-ink/25 via-transparent to-ink/30" />
 
@@ -157,13 +174,15 @@ function Descent({ onOpen, onSection }) {
           style={{ opacity: veil }}
         />
 
-        {order.map((id, b) => (
-          <BuildingName key={id} id={id} b={b} x={x} />
-        ))}
-        {order.map((id, b) => (
-          <Card key={id} id={id} b={b} x={x} onOpen={onOpen} />
-        ))}
-        <Altimeter x={x} />
+        <div className="absolute inset-x-0 top-0 h-svh">
+          {order.map((id, b) => (
+            <BuildingName key={id} id={id} b={b} x={x} />
+          ))}
+          {order.map((id, b) => (
+            <Card key={id} id={id} b={b} x={x} onOpen={onOpen} />
+          ))}
+          <Altimeter x={x} />
+        </div>
       </div>
     </section>
   );

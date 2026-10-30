@@ -38,9 +38,9 @@ Credits: the floating nav follows [Skiper UI](https://skiper-ui.com) (skiper02) 
 `public/frames/<project>/` holds the frame sequences the portfolio scrubs on scroll (`src/lib/frames.js`, counts in `COUNTS`). Cut from the films in `resources/`:
 
 ```
-ffmpeg -ss 90   -t 9.3 -i "resources/Alto Ranudo/Copy of Alto Walkthrough.mp4"        -vf "reverse,fps=10,scale=1024:-2"                -c:v libwebp -quality 55 public/frames/alto/%03d.webp
-ffmpeg -ss 8.4  -t 2.9 -i "resources/the wave/The Wave Towers AVP.mp4"             -vf "fps=22,scale=1024:-2"                        -c:v libwebp -quality 55 public/frames/wave/%03d.webp
-ffmpeg -ss 51.6 -t 5.2 -i "resources/Pristina Town_Walkthrough (1).mp4"   -vf "crop=1920:960:0:0,fps=12,scale=1024:-2"      -c:v libwebp -quality 55 public/frames/pristina/%03d.webp
+ffmpeg -ss 90   -t 9.3 -i "resources/Alto Ranudo/Copy of Alto Walkthrough.mp4"        -vf "reverse,fps=10"                            -c:v libwebp -quality 72 public/frames/alto/%03d.webp
+ffmpeg -ss 8.4  -t 2.9 -i "resources/the wave/The Wave Towers AVP.mp4"             -vf "fps=22"                                    -c:v libwebp -quality 72 public/frames/wave/%03d.webp
+ffmpeg -ss 51.6 -t 5.2 -i "resources/pristina town/Pristina Town_Walkthrough (1).mp4" -vf "crop=1920:960:0:0,fps=12" -c:v libwebp -quality 72 public/frames/pristina/%03d.webp
 ```
 
 ## The Wave's films
