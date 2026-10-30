@@ -120,19 +120,17 @@ body::after {
   font: 2.6rem/1.05 var(--font-display);
 }
 
-/* the blur that turns the morphing shapes into silk (SilkBackground.jsx) */
-.silk {
-  filter: blur(11px) saturate(1.1);
+/* the line under the hero's project that is showing: fills, and when full the next film comes (Hero.jsx) */
+.hero-progress {
+  animation: hero-progress linear forwards;
 }
-
-/* a panel's film fading into its project colour (--accent) at the foot, where its name sits */
-.accent-fade {
-  background: linear-gradient(
-    to top,
-    color-mix(in oklab, var(--accent) 88%, transparent) 0%,
-    color-mix(in oklab, var(--accent) 35%, transparent) 38%,
-    transparent 70%
-  );
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 /* a tour's note draws in each time the camera comes to rest (TourPlayer.jsx) */

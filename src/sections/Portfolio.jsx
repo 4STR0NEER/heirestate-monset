@@ -290,7 +290,7 @@ function Forthcoming({ onSection, sold, onBook }) {
             Two more windows, still shuttered
           </h3>
           <p data-rise className="mt-6 max-w-[40ch] text-[1.05rem] text-paper/75">
-            The fourth and fifth Heir Estate projects are still on the drawing board. They will be unveiled here first.
+            The fourth and fifth Heir Estates projects are still on the drawing board. They will be unveiled here first.
           </p>
           {sold.length > 0 && (
             <div data-rise className="mt-9 flex flex-wrap gap-3">
@@ -357,10 +357,10 @@ function Footer({ onOpen }) {
 
       {/* the house's name, set across the foot in outline */}
       <p aria-hidden="true" className="outline-word font-display mt-[clamp(48px,8vh,96px)] text-center text-[clamp(4rem,15vw,15rem)] leading-[0.8] whitespace-nowrap select-none">
-        Heir Estate
+        Heir Estates
       </p>
       <div className={`mx-auto flex max-w-[1480px] flex-wrap justify-between gap-4 border-t border-ink/10 py-6 text-[0.85rem] text-charcoal/70 ${GUTTER}`}>
-        <span>© {new Date().getFullYear()} Heir Estate</span>
+        <span>© {new Date().getFullYear()} Heir Estates</span>
         <span>Renders and films by each project’s developer.</span>
         <a href="#top" className="text-ink underline-offset-4 hover:underline">
           Back to the top

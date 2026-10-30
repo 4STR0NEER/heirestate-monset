@@ -1,6 +1,6 @@
-# Heir Estate
+# Heir Estates
 
-Showcase site for Heir Estate's projects. Vite + React + Tailwind v4, Motion, anime.js, Three.js.
+Showcase site for Heir Estates's projects. Vite + React + Tailwind v4, Motion, anime.js, Three.js.
 
 ```
 npm install
@@ -25,7 +25,7 @@ A new project needs an entry in `src/projects.js` (and `order`), its media in `p
 - `src/projects.js`: the five facade windows and each project's page content.
 - `resources/` (not in git) holds the client's raw files; web cuts live in `public/media/`.
 
-Credits: the expand-on-hover panels follow [Skiper UI](https://skiper-ui.com) (skiper52/53). The silk background is adapted from VengeanceUI's FluidMorphBg ([MIT](https://github.com/Ashutoshx7/VengeanceUI)).
+Credits: the hero's film wipe follows [Skiper UI](https://skiper-ui.com)'s clip-path image reveals; the floating nav follows Skiper UI (skiper02) and VengeanceUI's notch-navbar ([MIT](https://github.com/Ashutoshx7/VengeanceUI)).
 
 ## Scroll descent frames
 

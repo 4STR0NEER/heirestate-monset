@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { order, projects } from "./src/projects.js";
 import { DOMAIN, HOUSE, devPort, siteUrl } from "./src/lib/links.js";
 
-const BRAND = "Heir Estate";
+const BRAND = "Heir Estates";
 const HEADLINE = "Building your future, one property at a time";
 const SUB = "Securing wealth, creating your legacy";
 const PUBLIC = new URL("./public/", import.meta.url);
@@ -33,6 +33,7 @@ function page(site) {
       title: `${BRAND} · ${HEADLINE}`,
       description: `${BRAND}. ${SUB}. ${names}.`,
       image: `${originOf()}media/p/${order[0]}-hero.jpg`,
+      preload: `${projects[order[0]].hero}.jpg`, // the hero's opening film's poster is the first big paint
       graph: [
         ORG,
         { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, publisher: { "@id": ORG["@id"] } },

@@ -6,7 +6,7 @@ import { order, projects } from "@/projects";
 
 const SPRING = { type: "spring", duration: 0.55, bounce: 0.18 };
 
-// The top bar. At the top of the page it is an open row on the silk; once you scroll it
+// The top bar. At the top of the page it is an open row over the hero's film; once you scroll it
 // gathers into a floating navy island (after the Dynamic Island idea: Skiper UI skiper02,
 // VengeanceUI notch-navbar) that stays on screen, names the section you are in, and grows
 // into a project menu. Motion's layout animation does the morphing between the two.
@@ -50,18 +50,18 @@ export default function IslandNav({ section, onOpen, hidden }) {
         transition={SPRING}
         style={{ borderRadius: menu ? 26 : 999 }}
         className={`overflow-hidden ${hidden ? "" : "pointer-events-auto"} ${
-          island ? "bg-ink text-paper shadow-[0_18px_40px_-18px_rgb(20_33_58/0.55)]" : "w-full max-w-[1480px] text-ink"
+          island ? "bg-ink text-paper shadow-[0_18px_40px_-18px_rgb(20_33_58/0.55)]" : "w-full max-w-[1480px] text-paper"
         }`}
       >
         <motion.div layout="position" transition={SPRING} className={`flex items-center gap-2 ${island ? "py-1.5 pr-1.5 pl-4" : "justify-between px-[clamp(4px,2.4vw,36px)] py-2"}`}>
-          <motion.a layout="position" href="#top" aria-label="Heir Estate, back to top" className="flex items-center gap-3 py-1">
+          <motion.a layout="position" href="#top" aria-label="Heir Estates, back to top" className="flex items-center gap-3 py-1">
             {island ? (
               <>
                 <Mark className="h-6 w-auto text-paper" />
-                <span className="font-inscription hidden text-[0.72rem] tracking-[0.32em] sm:inline">HEIR ESTATE</span>
+                <span className="font-inscription hidden text-[0.72rem] tracking-[0.32em] sm:inline">HEIR ESTATES</span>
               </>
             ) : (
-              <Logo />
+              <Logo className="text-paper *:last:hidden sm:*:last:inline" />
             )}
           </motion.a>
 
@@ -89,17 +89,17 @@ export default function IslandNav({ section, onOpen, hidden }) {
               aria-expanded={menu}
               aria-controls="project-menu"
               onClick={() => setMenu((m) => !m)}
-              className={`${link} flex items-center gap-2 ${island ? "hover:bg-paper/10" : "hover:bg-ink/5"}`}
+              className={`${link} flex items-center gap-2 hover:bg-paper/10`}
             >
               Projects
               <svg viewBox="0 0 10 6" className={`w-2.5 transition-transform duration-300 ${menu ? "rotate-180" : ""}`} aria-hidden="true">
                 <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
               </svg>
             </button>
-            <a href="#portfolio" className={`${link} hidden md:block ${island ? "hover:bg-paper/10" : "hover:bg-ink/5"}`}>
+            <a href="#portfolio" className={`${link} hidden md:block hover:bg-paper/10`}>
               Portfolio
             </a>
-            <a href="#enquiry" className={`${link} ${island ? "bg-gold text-ink hover:bg-champagne" : "bg-ink text-paper hover:bg-charcoal"}`}>
+            <a href="#enquiry" className={`${link} bg-gold text-ink hover:bg-champagne`}>
               Enquire
             </a>
           </motion.div>

@@ -20,7 +20,7 @@ export default function Logo({ className = "text-ink" }) {
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
       <Mark className="h-10 w-auto" />
-      <span className="font-inscription text-[0.95rem] leading-none tracking-[0.34em]">HEIR ESTATE</span>
+      <span className="font-inscription text-[0.95rem] leading-none tracking-[0.34em]">HEIR ESTATES</span>
     </span>
   );
 }

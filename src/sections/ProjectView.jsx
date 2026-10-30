@@ -124,7 +124,7 @@ export function ProjectPage({ id }) {
       <Bar>
         {(dark) => (
           <>
-            <a href={siteUrl()} onClick={toCollection} aria-label="Heir Estate, the collection">
+            <a href={siteUrl()} onClick={toCollection} aria-label="Heir Estates, the collection">
               <Logo className={`transition-colors duration-300 ${dark ? "text-paper drop-shadow-[0_1px_10px_rgb(12_21_38/0.6)]" : "text-ink"}`} />
             </a>
             {/* a round arrow on phones, where the logo leaves no room for the label */}

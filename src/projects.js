@@ -1,5 +1,5 @@
-// The five projects side by side in the hero, left to right. "soon" marks the two
-// not yet announced; replace one with a project id when it launches.
+// The five places in the collection: the projects open now, and "soon" for the two not yet
+// announced (counted in the collection and the portfolio); replace one with a project id when it launches.
 export const showcase = ["alto", "wave", "pristina", "soon", "soon"];
 
 const P = "/media/p";

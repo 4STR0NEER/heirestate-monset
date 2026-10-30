@@ -16,7 +16,7 @@ International buyers and investors judging a developer's portfolio; the client a
 
 ## Product Purpose
 
-Heir Estate showcases five property projects. Headline "Building your future, one property at a time"; subheader "Securing wealth, creating your legacy".
+Heir Estates showcases five property projects. Headline "Building your future, one property at a time"; subheader "Securing wealth, creating your legacy".
 
 ## Brand Commitments
 

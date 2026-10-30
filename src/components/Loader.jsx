@@ -3,13 +3,13 @@ import { animate, createDrawable, createTimeline, stagger } from "animejs";
 import { Mark } from "@/components/Logo";
 
 const SEEN = "heir-intro-seen";
-const WORD = "HEIR ESTATE";
+const WORD = "HEIR ESTATES";
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Resolves when fonts and the first frame of each hero video are in, or after 8s so a slow
+// Resolves when fonts and the first frame of the hero's film are in (the others wait unloaded), or after 8s so a slow
 // connection still gets in. The loops buffer the rest while they play.
 function heroAssets() {
-  const videos = [...document.querySelectorAll("video")].map((v) =>
+  const videos = [...document.querySelectorAll("video[src]")].map((v) =>
     v.readyState >= 2
       ? null
       : new Promise((r) => {
@@ -120,7 +120,7 @@ export default function Loader({ onReveal, onDone }) {
   }, [onReveal, onDone]);
 
   return (
-    <div ref={root} role="status" aria-label="Loading Heir Estate" className="fixed inset-0 z-50 grid place-items-center bg-navy">
+    <div ref={root} role="status" aria-label="Loading Heir Estates" className="fixed inset-0 z-50 grid place-items-center bg-navy">
       <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
       <div ref={stage} className="relative flex flex-col items-center opacity-0">
         <Mark className="h-[clamp(88px,16vh,160px)] w-auto text-champagne" />
