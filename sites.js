@@ -37,6 +37,20 @@ function page(site) {
       graph: [
         ORG,
         { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, publisher: { "@id": ORG["@id"] } },
+        // the licensed agents who handle the projects, with how to reach them and their registrations
+        ...[order.map((id) => projects[id].agent).find(Boolean)].filter(Boolean).map((a) => ({
+          "@type": "RealEstateAgent",
+          "@id": `${url}#agents`,
+          name: a.names,
+          description: `${a.role}, ${a.firm}`,
+          url: `${url}#agents`,
+          image: `${originOf()}${a.photo.slice(1)}`,
+          email: a.email,
+          telephone: a.phones,
+          address: { "@type": "PostalAddress", streetAddress: a.address, addressCountry: "PH" },
+          parentOrganization: { "@type": "Organization", name: a.firm },
+          identifier: a.licences.map(([name, value]) => ({ "@type": "PropertyValue", name, value })),
+        })),
         {
           "@type": "ItemList",
           name: `${BRAND} projects`,
@@ -45,7 +59,7 @@ function page(site) {
       ],
       body: `<h1>${esc(HEADLINE)}</h1><p>${esc(SUB)}</p><ul>${order
         .map((id) => `<li><a href="${siteUrl(id)}">${esc(projects[id].name)}</a>: ${esc(projects[id].tagline)}. ${esc(projects[id].statement)}</li>`)
-        .join("")}</ul>`,
+        .join("")}</ul>${agentsText()}`,
     };
   }
 
@@ -86,6 +100,15 @@ function page(site) {
       next
     )}">${esc(projects[next].name)}</a> · <a href="${siteUrl()}">${BRAND}, the collection</a></p>`,
   };
+}
+
+// the agents, written out for crawlers: who they are, their registrations, how to reach them
+function agentsText() {
+  const a = order.map((id) => projects[id].agent).find(Boolean);
+  if (!a) return "";
+  return `<h2>Your agents: ${esc(a.names)}</h2><p>${esc(a.role)}, ${esc(a.firm)}. ${a.licences
+    .map(([k, v]) => `${esc(k)} ${esc(v)}`)
+    .join(". ")}. ${esc(a.phones.join(", "))}. ${esc(a.email)}. ${esc(a.address ?? "")}</p>`;
 }
 
 // a project's site carries its own media and frames, plus the next project's poster for the "next project" link

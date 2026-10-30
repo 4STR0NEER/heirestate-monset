@@ -99,6 +99,9 @@ export default function IslandNav({ section, onOpen, hidden }) {
             <a href="#portfolio" className={`${link} hidden md:block hover:bg-paper/10`}>
               Portfolio
             </a>
+            <a href="#agents" className={`${link} hidden lg:block hover:bg-paper/10`}>
+              Agents
+            </a>
             <a href="#enquiry" className={`${link} bg-gold text-ink hover:bg-champagne`}>
               Enquire
             </a>

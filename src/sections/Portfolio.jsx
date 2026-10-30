@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
+import Agents from "@/sections/Agents";
 import Enquiry from "@/sections/Enquiry";
 import { FINS } from "@/lib/fins";
 import { sequence } from "@/lib/frames";
@@ -31,6 +32,7 @@ export default memo(function Portfolio({ onOpen, onSection }) {
     <>
       <Descent onOpen={onOpen} onSection={onSection} />
       <Forthcoming onSection={onSection} sold={sold} onBook={book} />
+      {sold.length > 0 && <Agents agent={projects[sold[0]].agent} handles={sold} onSection={onSection} onBook={book} />}
       {sold.length > 0 && (
         <Enquiry
           agent={projects[sold[0]].agent}

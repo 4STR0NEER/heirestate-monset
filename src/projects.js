@@ -15,6 +15,9 @@ const LARANJO = {
   ],
   phones: ["+63 935 662 5281", "+63 956 870 7294"],
   email: "heirestates.fh@gmail.com",
+  network: "LR Direct",
+  address: "Teves, Vito, Minglanilla, Cebu 6000",
+  photo: `${P}/laranjo.webp`, // their portrait, cut out of its white backdrop
 };
 
 // Project pages. Every fact comes from the client's material: the presentation deck (Alto),
