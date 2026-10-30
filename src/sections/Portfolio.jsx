@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useInView, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
+import { motion, useInView, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
 import Agents from "@/sections/Agents";
@@ -66,10 +66,7 @@ function Descent({ onOpen, onSection }) {
 
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: root, offset: ["start start", "end end"] });
-  const raw = useTransform(scrollYProgress, (p) => p * n);
-  // the picture follows the scroll on a light spring, so a flick of the wheel glides instead of stepping
-  const smooth = useSpring(raw, { stiffness: 170, damping: 32, mass: 0.5, restDelta: 0.0002 });
-  const x = reduce ? raw : smooth;
+  const x = useTransform(scrollYProgress, (p) => p * n);
 
   // start fetching the first building's frames a screen before the visitor gets there
   const near = useInView(root, { margin: "100% 0px", once: true });
@@ -77,62 +74,65 @@ function Descent({ onOpen, onSection }) {
     if (near) seqs[0].load();
   }, [near, seqs]);
 
-  useMotionValueEvent(raw, "change", (v) => {
+  useMotionValueEvent(x, "change", (v) => {
     if (v > 0 && v < n) onSection(order[Math.min(n - 1, Math.floor(v))]);
   });
 
   useEffect(() => {
     const c = canvas.current;
-    const ctx = c.getContext("2d", { alpha: false });
-    let drawn = "";
+    const ctx = c.getContext("2d");
+    let drawn = null;
     let queued = false;
-
-    // cover the screen, cropping around the tower
-    const paint = (img, b, alpha) => {
-      const k = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight);
-      const dw = img.naturalWidth * k;
-      const dh = img.naturalHeight * k;
-      const dx = clamp(c.width / 2 - FOCUS[order[b]] * dw, c.width - dw, 0);
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(img, dx, (c.height - dh) / 2, dw, dh);
-    };
+    let b = -1; // the building on screen
+    let shown = 0; // the frame on screen, easing toward the one the scroll asks for
 
     const draw = () => {
       queued = false;
       const v = clamp(x.get(), 0, n - 0.0001);
-      const b = Math.floor(v);
-      const t = v - b;
+      const nb = Math.floor(v);
+      const t = v - nb;
+      if (nb !== b) {
+        seqs[b]?.release();
+        b = nb;
+        shown = -1;
+      }
       const s = seqs[b];
       s.load();
       if (t > 0.35) seqs[b + 1]?.load(); // the next building loads while this one is on screen
-      // between two frames, the next is laid over the last at the fraction between them, so the
-      // footage moves continuously rather than in frame-sized steps
-      const f = easeInOut(clamp((t - 0.02) / 0.78, 0, 1)) * (s.count - 1);
-      const i = Math.floor(f);
+      const target = easeInOut(clamp((t - 0.02) / 0.78, 0, 1)) * (s.count - 1);
+      // the footage catches up with the scroll over a few frames, so a flick of the wheel plays
+      // through the frames between rather than jumping; the type above it never lags
+      shown = shown < 0 || reduce ? target : shown + (target - shown) * 0.3;
+      if (Math.abs(target - shown) < 0.05) shown = target;
+      else schedule();
+      const i = Math.round(shown);
+      s.focus(i);
       const img = s.nearest(i);
-      if (!img) return;
-      const over = s.images[i + 1] && s.images[i] ? s.images[i + 1] : null;
-      const a = over ? Math.round((f - i) * 16) / 16 : 0;
-      const key = `${c.width}:${c.height}:${img.src}:${a}`;
-      if (key === drawn) return;
-      drawn = key;
-      paint(img, b, 1);
-      if (a > 0) paint(over, b, a);
+      if (!img || img === drawn) return;
+      drawn = img;
+      // cover the screen, cropping around the tower
+      const k = Math.max(c.width / img.width, c.height / img.height);
+      const dw = img.width * k;
+      const dh = img.height * k;
+      const dx = clamp(c.width / 2 - FOCUS[order[b]] * dw, c.width - dw, 0);
+      ctx.drawImage(img, dx, (c.height - dh) / 2, dw, dh);
     };
     const schedule = () => {
       if (!queued) (queued = true), requestAnimationFrame(draw);
     };
-    // sized to the canvas's own box, which is the large viewport: a phone's address bar showing
-    // and hiding as you scroll never resizes (and so never blanks) it
+    // Sized to the canvas's own box, which is the large viewport: a phone's address bar showing
+    // and hiding as you scroll never resizes (and so never blanks) it. Never denser than the
+    // 1920x1080 footage itself: past that the screen only fills more pixels with the same detail.
     const ro = new ResizeObserver(([e]) => {
-      const dpr = Math.min(devicePixelRatio, 2);
-      const cw = Math.round(e.contentRect.width * dpr);
-      const ch = Math.round(e.contentRect.height * dpr);
+      const { width: w, height: h } = e.contentRect;
+      const dpr = clamp(Math.min(devicePixelRatio, 1920 / w, 1080 / h), 1, 2);
+      const cw = Math.round(w * dpr);
+      const ch = Math.round(h * dpr);
       if (cw === c.width && ch === c.height) return;
       c.width = cw;
       c.height = ch;
       ctx.imageSmoothingQuality = "high";
-      drawn = "";
+      drawn = null;
       draw();
     });
 
@@ -144,7 +144,7 @@ function Descent({ onOpen, onSection }) {
       ro.disconnect();
       removeEventListener("heir:frame", schedule);
     };
-  }, [x, seqs, n]);
+  }, [x, seqs, n, reduce]);
 
   // the sky veil: full at the start of each descent, gone once the building is in view,
   // back again as the view lifts toward the next one
