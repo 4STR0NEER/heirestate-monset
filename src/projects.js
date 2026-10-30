@@ -64,7 +64,15 @@ export const projects = {
       ["Lot area", "2,134.80 sqm"],
       ["Gross floor area", "14,890.22 sqm"],
       ["Architect", "Casas Architects"],
+      // the walkthrough film's end card
+      ["Developer", "Cebu Landmasters, in partnership with MAC, a joint venture under CLIMAC Developers, Inc."],
     ],
+    // what a search result shows: the name people search for, where it is and what it is
+    seo: {
+      title: "Alto Ranudo Condominiums, V. Ranudo Street, Cebu City | Heir Estates",
+      description:
+        "Alto Ranudo: 389 studio and one-bedroom residences in a 20-storey tower on V. Ranudo Street, Cebu City, by Cebu Landmasters. Floor plans and viewings.",
+    },
     // [9, 10, 15, 16]
     profile: {
       word: "Landmark",
@@ -230,6 +238,13 @@ export const projects = {
     film: `${P}/wave-film`,
     tagline: "A New Wave of Living",
     kicker: "Rooted in Japan, rising from Cebu",
+    // the name the developer markets it under, and what a search result shows
+    fullName: "The Wave Towers",
+    seo: {
+      title: "The Wave Towers: Condominiums in Cebu I.T. Park | Heir Estates",
+      description:
+        "The Wave Towers: 709 residences, studio to three-bedroom, in a 40-storey tower in Cebu I.T. Park, by Cebu Landmasters and NTT UD Asia. Plans and viewings.",
+    },
     statement:
       "Set against the vibrant backdrop of Cebu, it stands as a testament to the harmonious blend of Japanese minimalism and Filipino warmth, an invitation to experience a lifestyle where serenity is strength.",
     facts: [
@@ -616,6 +631,13 @@ export const projects = {
     // sheet and the town film. Lines marked "ours" are descriptive, written from the film.
     tagline: "At Pristina Town",
     kicker: "Welcome to Pristina Town",
+    // the name on its plans, and what a search result shows
+    fullName: "North Grove at Pristina Town",
+    seo: {
+      title: "North Grove at Pristina Town: Studio & 1BR Condos | Heir Estates",
+      description:
+        "North Grove at Pristina Town by Cebu Landmasters: studio (22.75 sqm) and one-bedroom (34.41 sqm) homes, ten percent down over five years. Plans and viewings.",
+    },
     // ours
     statement:
       "A town planned around a garden roundabout: residences with planted rooftops, palm-lined avenues, shaded walks and a retail promenade, all set against green hills.",

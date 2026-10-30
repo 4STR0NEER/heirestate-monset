@@ -5,16 +5,16 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { order, projects } from "./src/projects.js";
 import { ARRIVE, DOMAIN, HOUSE, devPort, siteUrl } from "./src/lib/links.js";
+import { BRAND, agentOf, amenitiesOf, fact, faqFor, fullName, pageText, unitTypes } from "./src/lib/seo.js";
 
-const BRAND = "Heir Estates";
 const HEADLINE = "Building your future, one property at a time";
 const SUB = "Securing wealth, creating your legacy";
 const PUBLIC = new URL("./public/", import.meta.url);
+const BUILT = new Date().toISOString().slice(0, 10); // each sitemap's lastmod: the day the sites were built
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 // search results show about 160 characters; cut on a word
 const clip = (s, n = 158) => (s.length <= n ? s : `${s.slice(0, s.lastIndexOf(" ", n - 1))}…`);
-const names = new Intl.ListFormat("en").format(order.map((id) => projects[id].name));
 const nextOf = (id) => order[(order.indexOf(id) + 1) % order.length];
 // Search engines and link previews need full addresses. Without a domain (VITE_DOMAIN=""), the
 // sites share one address, each project under its path: set SITE_HOST to that address.
@@ -23,43 +23,83 @@ const absolute = (u) => (u.startsWith("http") ? u : `https://${HOST}${u}`);
 const urlOf = (id) => absolute(siteUrl(id));
 // where a site's files are served from: its subdomain, or the shared address (media is at the root either way)
 const originOf = (id) => `${new URL(urlOf(id)).origin}/`;
-const ORG = { "@type": "Organization", "@id": `${urlOf()}#org`, name: BRAND, url: urlOf() };
+
+// "Street, City" or "Street, Town, Province 6000" as schema.org's PostalAddress
+function postal(line) {
+  const parts = line.split(", ");
+  const long = parts.length > 2;
+  const [region, code] = long ? parts.at(-1).split(" ") : ["Cebu"];
+  const street = parts.slice(0, long ? -2 : -1).join(", ");
+  return {
+    "@type": "PostalAddress",
+    ...(street && { streetAddress: street }),
+    addressLocality: long ? parts.at(-2) : parts.at(-1),
+    addressRegion: region,
+    ...(code && { postalCode: code }),
+    addressCountry: "PH",
+  };
+}
+
+// The house, and the licensed agents behind every project: the same two entities on every site,
+// so search and answer engines tie the sites together and to the people who answer for them.
+const AGENT = agentOf();
+const ORG = {
+  "@type": "Organization",
+  "@id": `${urlOf()}#org`,
+  name: BRAND,
+  url: urlOf(),
+  areaServed: "Cebu, Philippines",
+  ...(AGENT && {
+    email: AGENT.email,
+    contactPoint: { "@type": "ContactPoint", contactType: "sales", email: AGENT.email, telephone: AGENT.phones[0], areaServed: "PH" },
+    member: { "@id": `${urlOf()}#agents` },
+  }),
+};
+const AGENTS = AGENT && {
+  "@type": "RealEstateAgent",
+  "@id": `${urlOf()}#agents`,
+  name: AGENT.names,
+  description: `${AGENT.role}, ${AGENT.firm}`,
+  url: `${urlOf()}#agents`,
+  image: `${originOf()}${AGENT.photo.slice(1)}`,
+  email: AGENT.email,
+  telephone: AGENT.phones,
+  areaServed: "Cebu, Philippines",
+  ...(AGENT.address && { address: postal(AGENT.address) }),
+  parentOrganization: { "@type": "Organization", name: AGENT.firm },
+  identifier: AGENT.licences.map(([name, value]) => ({ "@type": "PropertyValue", name, value })),
+};
+const faqPage = (url, id) => ({
+  "@type": "FAQPage",
+  "@id": `${url}#faq`,
+  mainEntity: faqFor(id).map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+});
 
 function page(site) {
   if (site === "main") {
     const url = urlOf();
     return {
       url,
-      title: `${BRAND} · ${HEADLINE}`,
-      description: `${BRAND}. ${SUB}. ${names}.`,
+      title: `${BRAND} · Cebu Condominiums: Alto Ranudo, The Wave, North Grove`,
+      description: clip(
+        `Three Cebu condominium projects: ${new Intl.ListFormat("en").format(order.map((id) => fullName(projects[id])))}. Floor plans, amenities and viewings with licensed agents.`
+      ),
       image: `${originOf()}media/p/${order[0]}-hero.jpg`,
+      imageAlt: `${fullName(projects[order[0]])}, one of the ${BRAND} projects`,
+      images: [...order.map((id) => `${originOf()}${projects[id].hero.slice(1)}.jpg`), AGENTS?.image].filter(Boolean),
       preload: `${projects[order[0]].hero}.jpg`, // the hero's opening film's poster is the first big paint
       graph: [
         ORG,
-        { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, publisher: { "@id": ORG["@id"] } },
-        // the licensed agents who handle the projects, with how to reach them and their registrations
-        ...[order.map((id) => projects[id].agent).find(Boolean)].filter(Boolean).map((a) => ({
-          "@type": "RealEstateAgent",
-          "@id": `${url}#agents`,
-          name: a.names,
-          description: `${a.role}, ${a.firm}`,
-          url: `${url}#agents`,
-          image: `${originOf()}${a.photo.slice(1)}`,
-          email: a.email,
-          telephone: a.phones,
-          address: { "@type": "PostalAddress", streetAddress: a.address, addressCountry: "PH" },
-          parentOrganization: { "@type": "Organization", name: a.firm },
-          identifier: a.licences.map(([name, value]) => ({ "@type": "PropertyValue", name, value })),
-        })),
+        { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, inLanguage: "en", publisher: { "@id": ORG["@id"] } },
+        AGENTS,
         {
           "@type": "ItemList",
           name: `${BRAND} projects`,
-          itemListElement: order.map((id, i) => ({ "@type": "ListItem", position: i + 1, url: urlOf(id), name: projects[id].name })),
+          itemListElement: order.map((id, i) => ({ "@type": "ListItem", position: i + 1, url: urlOf(id), name: fullName(projects[id]) })),
         },
-      ],
-      body: `<h1>${esc(HEADLINE)}</h1><p>${esc(SUB)}</p><ul>${order
-        .map((id) => `<li><a href="${siteUrl(id)}">${esc(projects[id].name)}</a>: ${esc(projects[id].tagline)}. ${esc(projects[id].statement)}</li>`)
-        .join("")}</ul>${agentsText()}`,
+        faqPage(url),
+      ].filter(Boolean),
+      body: `<h1>${esc(HEADLINE)}</h1><p>${esc(SUB)}</p>${pageText(null, siteUrl)}${agentsText()}<p><a href="${siteUrl()}privacy/">Privacy notice</a></p>`,
     };
   }
 
@@ -67,48 +107,71 @@ function page(site) {
   const url = urlOf(site);
   const abs = (path) => `${originOf(site)}${path.slice(1)}`;
   const next = nextOf(site);
-  const location = p.facts.find(([label]) => label === "Location")?.[1];
+  const where = fact(p, "Location");
+  const homes = parseInt(fact(p, "Residences")?.replace(/,/g, "") ?? "", 10);
+  const amenities = amenitiesOf(p);
+  const images = [abs(`${p.hero}.jpg`), ...p.spaces.map((s) => abs(s.src))];
   return {
     url,
-    title: `${p.name} · ${p.tagline} | ${BRAND}`,
-    description: clip(`${p.name}, ${p.tagline.toLowerCase()}. ${p.statement}`),
+    title: p.seo?.title ?? `${p.name} · ${p.tagline} | ${BRAND}`,
+    description: clip(p.seo?.description ?? `${p.name}, ${p.tagline.toLowerCase()}. ${p.statement}`),
     image: abs(`${p.hero}.jpg`),
+    imageAlt: `${fullName(p)}, the developer's render`,
+    images,
     preload: `${p.hero}.jpg`, // the hero film's poster is the first big paint
     graph: [
       ORG,
+      AGENTS,
       {
         "@type": "WebPage",
         "@id": url,
         url,
-        name: `${p.name} · ${p.tagline}`,
+        name: p.seo?.title ?? fullName(p),
+        inLanguage: "en",
         about: { "@id": `${url}#residence` },
+        primaryImageOfPage: images[0],
         publisher: { "@id": ORG["@id"] },
       },
+      // the project as what it is: a complex of apartments, with its address, its homes, what it
+      // offers, and each unit type's bedrooms and floor area from the developer's plans
       {
-        "@type": "Residence",
+        "@type": "ApartmentComplex",
         "@id": `${url}#residence`,
-        name: p.name,
+        name: fullName(p),
+        ...(p.fullName && { alternateName: p.name }),
         description: p.statement,
         url,
-        image: [abs(`${p.hero}.jpg`), ...p.spaces.map((s) => abs(s.src))],
-        ...(location && { address: location }),
+        image: images,
+        ...(where && { address: postal(where) }),
+        ...(p.place && { containedInPlace: { "@type": "Place", name: p.place } }),
+        ...(homes > 0 && { numberOfAccommodationUnits: homes }),
+        ...(amenities && { amenityFeature: amenities.map((name) => ({ "@type": "LocationFeatureSpecification", name, value: true })) }),
+        accommodationFloorPlan: unitTypes(p).map((u) => ({
+          "@type": "FloorPlan",
+          name: u.name,
+          numberOfBedrooms: u.beds,
+          floorSize:
+            u.min === u.max
+              ? { "@type": "QuantitativeValue", value: u.min, unitCode: "MTK" }
+              : { "@type": "QuantitativeValue", minValue: u.min, maxValue: u.max, unitCode: "MTK" },
+          layoutImage: abs(p.residences.find((r) => r.id === u.id).plans[0][1]),
+        })),
+        ...(p.agent && { tourBookingPage: `${url}#enquiry` }),
       },
-    ],
+      faqPage(url, site),
+    ].filter(Boolean),
     body: `<h1>${esc(p.name)}</h1><p>${esc(p.tagline)}</p>${p.kicker ? `<p>${esc(p.kicker)}</p>` : ""}<p>${esc(p.statement)}</p>${
       p.facts.length ? `<dl>${p.facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""
-    }<h2>Spaces</h2><ul>${p.spaces.map((s) => `<li>${esc(s.name)}${s.area ? `, ${esc(s.area)}` : ""}</li>`).join("")}</ul><p><a href="${siteUrl(
-      next
-    )}">${esc(projects[next].name)}</a> · <a href="${siteUrl()}">${BRAND}, the collection</a></p>`,
+    }${pageText(site, siteUrl)}${agentsText()}<p><a href="${siteUrl(next)}">${esc(fullName(projects[next]))}</a> · <a href="${siteUrl()}">${BRAND}, the collection</a> · <a href="${siteUrl()}privacy/">Privacy notice</a></p>`,
   };
 }
 
 // the agents, written out for crawlers: who they are, their registrations, how to reach them
 function agentsText() {
-  const a = order.map((id) => projects[id].agent).find(Boolean);
-  if (!a) return "";
-  return `<h2>Your agents: ${esc(a.names)}</h2><p>${esc(a.role)}, ${esc(a.firm)}. ${a.licences
+  if (!AGENT) return "";
+  return `<h2>Your agents: ${esc(AGENT.names)}</h2><p>${esc(AGENT.role)}, ${esc(AGENT.firm)}. ${AGENT.licences
     .map(([k, v]) => `${esc(k)} ${esc(v)}`)
-    .join(". ")}. ${esc(a.phones.join(", "))}. ${esc(a.email)}. ${esc(a.address ?? "")}</p>`;
+    .join(". ")}. ${esc(AGENT.phones.join(", "))}. ${esc(AGENT.email)}. ${esc(AGENT.address ?? "")}</p>`;
 }
 
 // a project's site carries its own media and frames, plus the next project's poster for the "next project" link
@@ -153,6 +216,8 @@ export default function sites() {
         `<meta property="og:description" content="${esc(s.description)}" />`,
         `<meta property="og:url" content="${s.url}" />`,
         `<meta property="og:image" content="${s.image}" />`,
+        `<meta property="og:image:alt" content="${esc(s.imageAlt)}" />`,
+        `<meta property="og:locale" content="en_PH" />`,
         `<meta name="twitter:card" content="summary_large_image" />`,
         s.preload && `<link rel="preload" as="image" href="${s.preload}" fetchpriority="high" />`,
         face && `<link rel="preload" as="font" type="font/woff2" href="/${face}" crossorigin />`,
@@ -179,9 +244,13 @@ export default function sites() {
       // on one shared address (no domain yet) the collection's sitemap lists every project's page too
       const urls = site === "main" && !DOMAIN ? [url, ...order.map(urlOf)] : [url];
       emit("robots.txt", `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`);
+      // each address with the day it was built and the pictures on it (Google's image sitemap extension)
+      const pics = (u) => (u === url ? page(site).images : []).map((i) => `<image:image><image:loc>${i}</image:loc></image:image>`).join("");
       emit(
         "sitemap.xml",
-        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((u) => `<url><loc>${u}</loc></url>`).join("")}</urlset>\n`
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls
+          .map((u) => `<url><loc>${u}</loc><lastmod>${BUILT}</lastmod>${pics(u)}</url>`)
+          .join("")}</urlset>\n`
       );
       if (site !== "main") for (const f of mediaFor(site)) emit(f.slice(1), readFileSync(new URL(f.slice(1), PUBLIC)));
     },

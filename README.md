@@ -20,7 +20,9 @@ One codebase, one site per project: the collection, and each project's own page 
 
 On the main site, project links are real links to the subdomains (crawlers and new tabs follow them); a plain click still opens the project in place over the facade.
 
-A new project needs an entry in `src/projects.js` (and `order`), its media in `public/media/p/`, and its subdomain added as a custom domain on the Cloudflare Worker.
+**Search and answer engines** read the same data the pages draw (`src/lib/seo.js`): each project's questions and answers, shown on its page (`Faq.jsx`) and marked up as `FAQPage`; its full account written into the HTML for crawlers that do not run scripts; and its schema.org graph (`sites.js`): the project as an `ApartmentComplex` with its address, homes, amenities and each unit type's `FloorPlan`, and on every site the house (`Organization`) and its agents (`RealEstateAgent`). Each project's `seo.title` and `seo.description` are what a search result shows. `public/privacy/` is the privacy notice the enquiry form links to; `public/404.html` answers missing addresses; `public/_headers` sets caching and HTTPS headers.
+
+A new project needs an entry in `src/projects.js` (and `order`), its path in `run_worker_first` in `wrangler.jsonc` (the build stops if it is missing), its media in `public/media/p/`, and its subdomain added as a custom domain on the Cloudflare Worker.
 
 - `src/projects.js`: the five facade windows and each project's page content.
 - `resources/` (not in git) holds the client's raw files; web cuts live in `public/media/`.

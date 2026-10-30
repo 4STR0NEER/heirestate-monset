@@ -4,6 +4,7 @@ import { Mark } from "@/components/Logo";
 import Reveal from "@/components/Reveal";
 import Agents from "@/sections/Agents";
 import Enquiry from "@/sections/Enquiry";
+import Faq from "@/sections/Faq";
 import { FINS } from "@/lib/fins";
 import { sequence } from "@/lib/frames";
 import { brushEdge } from "@/lib/ink";
@@ -33,6 +34,7 @@ export default memo(function Portfolio({ onOpen, onSection }) {
       <Descent onOpen={onOpen} onSection={onSection} />
       <Forthcoming onSection={onSection} sold={sold} onBook={book} />
       {sold.length > 0 && <Agents agent={projects[sold[0]].agent} handles={sold} onSection={onSection} onBook={book} />}
+      <Faq />
       {sold.length > 0 && (
         <Enquiry
           agent={projects[sold[0]].agent}
@@ -364,6 +366,9 @@ function Footer({ onOpen }) {
       <div className={`mx-auto flex max-w-[1480px] flex-wrap justify-between gap-4 border-t border-ink/10 py-6 text-[0.85rem] text-charcoal/70 ${GUTTER}`}>
         <span>© {new Date().getFullYear()} Heir Estates</span>
         <span>Renders and films by each project’s developer.</span>
+        <a href="/privacy/" className="text-ink underline-offset-4 hover:underline">
+          Privacy notice
+        </a>
         <a href="#top" className="text-ink underline-offset-4 hover:underline">
           Back to the top
         </a>

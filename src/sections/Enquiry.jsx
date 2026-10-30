@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import Edge from "@/components/Edge";
+import { siteUrl } from "@/lib/links";
 
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 const EASE = [0.23, 1, 0.32, 1];
@@ -290,7 +291,11 @@ export default function Enquiry({ agent, name, units = [], pick = "Unit type", d
                     className="mt-1 size-4 shrink-0 accent-ink"
                   />
                   <span>
-                    I agree that the agents named here may use these details to respond to my enquiry, in line with the Data Privacy Act of 2012 (Republic Act 10173).
+                    I agree that the agents named here may use these details to respond to my enquiry, in line with the Data Privacy Act of 2012 (Republic Act 10173) and the{" "}
+                    <a href={`${siteUrl()}privacy/`} target="_blank" rel="noopener" className="underline underline-offset-4">
+                      privacy notice
+                    </a>
+                    .
                     {error("consent")}
                   </span>
                 </label>

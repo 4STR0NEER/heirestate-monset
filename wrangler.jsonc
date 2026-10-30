@@ -5,6 +5,10 @@
   "assets": {
     "directory": "dist/all",
     "binding": "ASSETS",
-    "run_worker_first": ["/", "/robots.txt", "/sitemap.xml"]
+    // the paths worker.js answers: each host's front door, and every project's path (one entry per
+    // project, which build.js checks), so a project is only ever served from its own subdomain
+    "run_worker_first": ["/", "/robots.txt", "/sitemap.xml", "/alto/*", "/wave/*", "/pristina/*"],
+    // an address that is not there gets the house's 404 page (public/404.html), with a real 404
+    "not_found_handling": "404-page"
   }
 }

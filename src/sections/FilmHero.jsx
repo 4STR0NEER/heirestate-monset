@@ -83,8 +83,9 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
 
         <div className={`absolute inset-x-0 bottom-0 pb-[clamp(56px,11vh,120px)] ${GUTTER}`}>
           <Title className="font-display text-[clamp(3.4rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-paper">
-            {p.name.split(" ").map((w, i) => (
-              <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
+            {p.name.split(" ").map((w, i) => [
+              i > 0 && " ",
+              <span key={i} className="inline-block overflow-hidden pb-[0.08em] align-bottom">
                 <motion.span
                   className="inline-block"
                   initial={false}
@@ -94,7 +95,7 @@ export default function FilmHero({ p, Title, onBook, onFilm, children }) {
                   {w}
                 </motion.span>
               </span>
-            ))}
+            ])}
           </Title>
           <motion.p
             className="font-display mt-3 text-[clamp(1.15rem,2vw,1.6rem)] text-champagne italic"

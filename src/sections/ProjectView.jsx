@@ -6,6 +6,7 @@ import { inPlace, leave, siteUrl } from "@/lib/links";
 import Contours from "@/components/Contours";
 import Reveal from "@/components/Reveal";
 import Enquiry from "@/sections/Enquiry";
+import Faq from "@/sections/Faq";
 import FilmHero from "@/sections/FilmHero";
 import FloorStack from "@/sections/FloorStack";
 import Nearby from "@/sections/Nearby";
@@ -254,8 +255,9 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
             <div className={`absolute inset-x-0 bottom-0 flex flex-col gap-8 pb-[clamp(32px,7vh,80px)] md:flex-row md:items-end md:justify-between ${GUTTER}`}>
               <div>
                 <Title className="font-display text-[clamp(3.2rem,10vw,9.5rem)] leading-[0.92] font-normal tracking-[-0.03em] text-ink">
-                  {p.name.split(" ").map((w, i) => (
-                    <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom">
+                  {p.name.split(" ").map((w, i) => [
+              i > 0 && " ",
+                    <span key={i} className="inline-block overflow-hidden pb-[0.08em] align-bottom">
                       <motion.span
                         className="inline-block"
                         initial={{ transform: "translateY(105%)" }}
@@ -265,7 +267,7 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
                         {w}
                       </motion.span>
                     </span>
-                  ))}
+                  ])}
                 </Title>
                 <motion.p
                   className="font-inscription mt-4 text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.3em] text-gold-ink uppercase"
@@ -315,6 +317,7 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
       {p.terms && <Terms terms={p.terms} onBook={p.agent && book} />}
       {p.nearby && <Nearby places={p.nearby} name={p.name} line={p.locationLine} onBook={p.agent && (() => book())} />}
       {!p.intro && <Film ref={film} src={p.film} name={p.name} />}
+      <Faq id={id} name={p.name} />
       {p.agent && <Enquiry agent={p.agent} name={p.name} units={p.residences} developer={p.disclaimer} ask={ask} motif={p.motif} />}
       {p.agent && <BookBar onBook={book} phone={p.agent.phones[0]} hidden={!!tour || filming} />}
       <AnimatePresence>{filming && <FilmPlayer src={p.film} name={p.name} onClose={() => setFilming(false)} />}</AnimatePresence>
