@@ -4,7 +4,7 @@
 // robots.txt and sitemap.xml, and, for a project, only that project's media.
 import { readdirSync, readFileSync } from "node:fs";
 import { order, projects } from "./src/projects.js";
-import { DOMAIN, HOUSE, devPort, siteUrl } from "./src/lib/links.js";
+import { ARRIVE, DOMAIN, HOUSE, devPort, siteUrl } from "./src/lib/links.js";
 
 const BRAND = "Heir Estates";
 const HEADLINE = "Building your future, one property at a time";
@@ -117,7 +117,8 @@ const list = (dir) =>
 function mediaFor(id) {
   const refs = JSON.stringify(projects[id]).match(/\/(media|frames)\/[^"]+/g);
   const files = [...list("/media"), ...list("/frames")];
-  const own = files.filter((f) => refs.some((r) => f === r || f.startsWith(`${r}.`) || f.startsWith(`${r}/`)));
+  // a film comes with its phone cut (film.js): name-sm.mp4
+  const own = files.filter((f) => refs.some((r) => f === r || f.startsWith(`${r}.`) || f.startsWith(`${r}-sm.`) || f.startsWith(`${r}/`)));
   return ["/favicon.svg", `${projects[nextOf(id)].hero}.jpg`, ...own];
 }
 
@@ -137,8 +138,10 @@ export default function sites() {
         preview: { port: devPort(site === "main" ? null : site) + 1000 },
       };
     },
-    transformIndexHtml(html) {
+    transformIndexHtml(html, ctx) {
       const s = page(site);
+      // the display face, fetched with the page: the name on the arriving colour is set in it
+      const face = Object.keys(ctx.bundle ?? {}).find((f) => /bodoni-moda-latin-wght-normal-.*\.woff2$/.test(f));
       const ld = JSON.stringify({ "@context": "https://schema.org", "@graph": s.graph }).replace(/</g, "\\u003c");
       const head = [
         `<title>${esc(s.title)}</title>`,
@@ -152,10 +155,12 @@ export default function sites() {
         `<meta property="og:image" content="${s.image}" />`,
         `<meta name="twitter:card" content="summary_large_image" />`,
         s.preload && `<link rel="preload" as="image" href="${s.preload}" fetchpriority="high" />`,
-        // until the page has drawn, the site's colour instead of a blank page: a project lifts it like a
-        // blind (ProjectPage), the collection hands it to its loader. It is the colour leave() arrives in.
-        // Should the scripts never run, it stands aside after 8s.
-        `<style>html[data-arrive]::before{content:"";position:fixed;inset:0;z-index:80;background:${
+        face && `<link rel="preload" as="font" type="font/woff2" href="/${face}" crossorigin />`,
+        // until the page has drawn, the site's colour instead of a blank page: a project carries its
+        // name in it, exactly where leave() set it on the page before, and lifts it like a blind
+        // (ProjectPage); the collection's card hands over to its loader. Should the scripts never run,
+        // it stands aside after 8s.
+        `<style>html[data-arrive]::before{content:"${site === "main" ? BRAND : esc(projects[site].name)}";${ARRIVE};background:${
           site === "main" ? HOUSE : projects[site].accent
         };animation:arrive-hold 0s 8s forwards}@keyframes arrive-hold{to{visibility:hidden}}</style>`,
         // a project with a palette of its own paints the house tokens before the page draws

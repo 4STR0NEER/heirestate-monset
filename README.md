@@ -25,7 +25,11 @@ A new project needs an entry in `src/projects.js` (and `order`), its media in `p
 - `src/projects.js`: the five facade windows and each project's page content.
 - `resources/` (not in git) holds the client's raw files; web cuts live in `public/media/`.
 
-Credits: the hero's film wipe follows [Skiper UI](https://skiper-ui.com)'s clip-path image reveals; the floating nav follows Skiper UI (skiper02) and VengeanceUI's notch-navbar ([MIT](https://github.com/Ashutoshx7/VengeanceUI)).
+**Hero films** (`public/media/p/<id>-hero.mp4`, used by the collection's hero and each project's): one drone shot from the developer's film, cut at 1080p and 30fps, slowed with motion interpolation (never frame-doubled), cropped clear of any burned-in logo, and looped by dissolving its last second into its first. Each has a 960px cut for phones (`-sm.mp4`, chosen by `src/lib/film.js`) and a poster (`.jpg`). The collection's hero shows one at a time, crossfading in over the one before only once the next can play.
+
+**Between the sites**, the destination's colour grows out of what was clicked with its name settling in the middle (`leave()` in `src/lib/links.js`), and the next site's very first frame is that same card (`html[data-arrive]::before`, written by `sites.js` from the same `ARRIVE` style), which lifts once its page has drawn. Pointing at a link to another site prefetches it (`src/main.jsx`).
+
+Credits: the floating nav follows [Skiper UI](https://skiper-ui.com) (skiper02) and VengeanceUI's notch-navbar ([MIT](https://github.com/Ashutoshx7/VengeanceUI)).
 
 ## Scroll descent frames
 

@@ -1,13 +1,13 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { animate, splitText, stagger } from "animejs";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { film } from "@/lib/film";
 import { inPlace, siteUrl } from "@/lib/links";
 import { order, projects } from "@/projects";
 
 const EASE = [0.23, 1, 0.32, 1];
-const WIPE = "cubic-bezier(0.77, 0, 0.175, 1)";
-const HOVER_INTENT = 90; // ms the pointer must rest on a name, so sweeping across the row never flickers
-const HOLD = 7; // seconds each film holds before the next wipes in
+const HOVER_INTENT = 140; // ms the pointer must rest on a name, so sweeping across the row never flickers
+const HOLD = 8; // seconds each film holds before the next comes in
 
 // memo: the nav's section label changes as you scroll and re-renders the page around it;
 // this section's own props never change with it, so it sits that render out
@@ -16,9 +16,12 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
   const section = useRef(null);
   const heading = useRef(null);
   const inView = useInView(section, { margin: "-10% 0px" });
-  // the film showing, and the one before it, which stays whole beneath the next one's wipe
-  const [[active, before], setPair] = useState([0, null]);
-  const setActive = (next) => setPair(([a, b]) => (next === a ? [a, b] : [next, a]));
+  // the film asked for, and the film on screen: a film comes on screen only once it can play,
+  // so a crossfade never starts on a frozen or empty frame
+  const [active, setActive] = useState(0);
+  // the film on screen, and the one it is fading in over (whole beneath it, so the fade never dims)
+  const [[shown, under], setScreen] = useState([0, null]);
+  const show = (i) => setScreen(([s, u]) => (i === s ? [s, u] : [i, s]));
   const [held, setHeld] = useState(false); // the pointer is on the index: hold the film it chose
   const intent = useRef(0);
   const playing = ready && inView && !paused;
@@ -51,18 +54,23 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
 
   return (
     <section ref={section} id="top" className="relative isolate flex min-h-svh flex-col justify-end overflow-hidden bg-ink text-paper">
-      {/* One film at a time, full bleed. The camera of the loader arrives through the lit window
-          into this frame, so it settles from a slight push-in. */}
-      <motion.div
-        className="absolute inset-0 -z-10"
-        initial={{ transform: "scale(1.08)" }}
-        animate={ready ? { transform: "scale(1)" } : undefined}
-        transition={{ duration: 1.8, ease: EASE }}
-      >
+      {/* One film at a time, full bleed, crossfading (opacity only: composited, never repainted) */}
+      <div className="absolute inset-0 -z-10">
         {order.map((id, i) => (
-          <Film key={id} p={projects[id]} layer={active === i ? 2 : before === i ? 1 : 0} playing={playing && active === i} reduce={reduce} />
+          <Film
+            key={id}
+            p={projects[id]}
+            wanted={active === i}
+            visible={shown === i}
+            under={under === i}
+            next={(active + 1) % order.length === i}
+            playing={playing}
+            onReady={() => active === i && show(i)}
+            // faded fully in: the one beneath is covered, so it stops (one film decoding at a time)
+            onFaded={() => shown === i && setScreen([i, null])}
+          />
         ))}
-      </motion.div>
+      </div>
       {/* dark at the foot for the type, a little at the top for the nav, the film open in between */}
       <div
         aria-hidden="true"
@@ -86,8 +94,8 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
         </motion.p>
 
         {/* The projects as an index across the foot. Pointing at a name (or reaching it by keyboard)
-            wipes its film in; choosing it opens the project. Left alone, the films take turns:
-            the line under the one showing fills, and when it is full the next wipes in. */}
+            brings its film in; choosing it opens the project. Left alone, the films take turns:
+            the line under the one showing fills, and when it is full the next comes in. */}
         <ol
           className="mt-[clamp(40px,8vh,88px)] mb-[clamp(20px,4vh,40px)] grid border-t border-paper/20 md:grid-cols-3"
           onPointerEnter={(e) => e.pointerType === "mouse" && setHeld(true)}
@@ -110,7 +118,7 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
                     <span
                       key={active}
                       className="hero-progress block h-full origin-left bg-champagne"
-                      style={{ animationDuration: `${HOLD}s`, animationPlayState: playing && !held ? "running" : "paused" }}
+                      style={{ animationDuration: `${HOLD}s`, animationPlayState: playing && !held && shown === active ? "running" : "paused" }}
                       onAnimationEnd={() => setActive((active + 1) % order.length)}
                     />
                   )}
@@ -149,31 +157,36 @@ export default memo(function Hero({ ready = true, onOpen, paused, onSection }) {
   );
 });
 
-// A project's film. The one chosen comes in on top of the one before, wiped in from the left
-// (the clip-path reveal of Skiper UI's image reveals); the one before stays whole beneath it until
-// covered. Only the film showing plays and loads; the rest wait on their posters.
-function Film({ p, layer, playing, reduce }) {
+// A project's film. The one asked for loads and starts playing out of sight, and once it can play
+// it fades in over the one before, which stays whole and playing beneath it until covered. The
+// next in turn loads ahead, so its moment never waits on the network.
+function Film({ p, wanted, visible, under, next, playing, onReady, onFaded }) {
   const video = useRef(null);
-  const first = useRef(layer === 2); // the opening film is simply there, no wipe
-  const [seen, setSeen] = useState(first.current);
+  const [seen, setSeen] = useState(wanted);
+  if ((wanted || next) && !seen) setSeen(true);
+  const ready = useRef(onReady);
+  ready.current = onReady;
 
+  // shown as soon as it can play through (at once if it already can)
   useEffect(() => {
-    if (layer !== 2) return;
-    setSeen(true);
-    if (first.current) return void (first.current = false);
-    if (!reduce) video.current.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)" }], { duration: 1100, easing: WIPE });
-  }, [layer, reduce]);
+    const v = video.current;
+    if (!wanted) return;
+    const go = () => ready.current();
+    if (v.readyState >= 3) return go();
+    v.addEventListener("canplay", go, { once: true });
+    return () => v.removeEventListener("canplay", go);
+  }, [wanted, seen]);
 
   useEffect(() => {
     const v = video.current;
-    if (playing) v.play().catch(() => {});
+    if (playing && (wanted || visible || under)) v.play().catch(() => {});
     else v.pause();
-  }, [playing]);
+  }, [playing, wanted, visible, under]);
 
   return (
     <video
       ref={video}
-      src={seen ? `${p.hero}.mp4` : undefined}
+      src={seen ? film(p.hero) : undefined}
       poster={`${p.hero}.jpg`}
       muted
       loop
@@ -181,8 +194,10 @@ function Film({ p, layer, playing, reduce }) {
       preload={seen ? "auto" : "none"}
       disablePictureInPicture
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-      style={{ zIndex: layer }}
+      onTransitionEnd={(e) => e.propertyName === "opacity" && visible && onFaded()}
+      className={`pointer-events-none absolute inset-0 h-full w-full object-cover ${
+        visible ? "z-2 opacity-100 transition-opacity duration-[1400ms] ease-[cubic-bezier(0.45,0,0.55,1)] motion-reduce:duration-300" : under ? "z-1 opacity-100" : "z-0 opacity-0"
+      }`}
     />
   );
 }

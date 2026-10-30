@@ -1,26 +1,19 @@
 import { memo, useEffect, useRef } from "react";
-import { motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import Reveal from "@/components/Reveal";
 import { projects } from "@/projects";
 
 const GUTTER = "px-[clamp(16px,4vw,64px)]";
 const EASE = [0.23, 1, 0.32, 1];
-const WIPE = [0.77, 0, 0.175, 1];
 
-// The agents behind every viewing: their portrait rising out of the paper, their name set large,
+// The agents behind every viewing: their portrait standing in a panel of its own, their name set large,
 // and their licences as numbers that settle digit by digit, the way a register is read off, with
 // the projects they handle and every way to reach them. Leads straight into the enquiry desk.
 // memo: the nav's section label changes as you scroll and re-renders the page around it;
 // this section's own props never change with it, so it sits that render out
 export default memo(function Agents({ agent, handles, onSection, onBook }) {
-  const reduce = useReducedMotion();
   const root = useRef(null);
-  const photo = useRef(null);
   const inView = useInView(root, { amount: 0.4 });
-  const shown = useInView(photo, { once: true, amount: 0.35 });
-  // the portrait drifts a touch slower than the page: they stand a little in front of it
-  const { scrollYProgress } = useScroll({ target: root, offset: ["start end", "end start"] });
-  const drift = useTransform(scrollYProgress, [0, 1], reduce ? ["0%", "0%"] : ["6%", "-6%"]);
 
   useEffect(() => {
     if (inView) onSection?.("top");
@@ -29,34 +22,29 @@ export default memo(function Agents({ agent, handles, onSection, onBook }) {
   const surname = agent.names.split(" ").at(-1);
 
   return (
-    <section ref={root} id="agents" aria-labelledby="agents-title" className="grid-paper relative overflow-hidden bg-paper">
-
-      <div className={`relative mx-auto grid max-w-[1480px] items-end gap-x-16 gap-y-10 pt-[clamp(88px,14vh,160px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] ${GUTTER}`}>
-        {/* the portrait, cut out so they stand on the page itself; it rises out of the ground line
-            when it first comes into view */}
-        <motion.div ref={photo} style={{ y: drift }} className="relative mx-auto w-full max-w-[min(600px,92vw)] max-lg:max-w-[440px]">
-          {/* their surname set along the ground in outline, behind them, the way the house's name sits at the foot */}
+    <section ref={root} id="agents" aria-labelledby="agents-title" className="grid-paper relative bg-paper py-[clamp(88px,14vh,160px)]">
+      <div className={`mx-auto grid max-w-[1480px] gap-x-16 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] ${GUTTER}`}>
+        {/* the portrait in a panel of champagne as tall as everything beside it, their surname in
+            outline behind them (from tablets up: on a phone it would crowd their faces); it simply
+            fades in, nothing moves over the text */}
+        <div className="relative isolate aspect-[4/5] overflow-hidden sm:aspect-[5/4] rounded-[6px] bg-[linear-gradient(165deg,var(--color-champagne),color-mix(in_oklab,var(--color-champagne)_55%,var(--color-gold)))] shadow-lift lg:aspect-auto lg:min-h-[560px]">
           <p
             aria-hidden="true"
-            className="outline-word font-display pointer-events-none absolute inset-x-[-12%] bottom-[-0.14em] text-center text-[clamp(4.5rem,13vw,12rem)] leading-none whitespace-nowrap select-none"
+            className="font-display pointer-events-none absolute inset-x-0 top-[6%] -z-10 hidden text-center sm:block text-[clamp(4rem,11vw,10rem)] leading-none whitespace-nowrap text-transparent select-none [-webkit-text-stroke:1px_color-mix(in_oklab,var(--color-gold-ink)_45%,transparent)]"
           >
             {surname}
           </p>
-          <motion.img
+          <FadeImg
             src={agent.photo}
             alt={`${agent.names}, ${agent.role.toLowerCase()} with ${agent.firm}`}
-            width="1100"
-            height="950"
-            loading="lazy"
-            className="relative block w-full"
-            initial={reduce ? false : { clipPath: "inset(100% 0% 0% 0%)", transform: "scale(1.04)" }}
-            animate={shown ? { clipPath: "inset(0% 0% 0% 0%)", transform: "scale(1)" } : undefined}
-            transition={{ duration: 1.3, ease: WIPE }}
+            className="absolute inset-x-0 bottom-0 mx-auto h-[86%] w-auto max-w-[96%] object-contain object-bottom sm:h-[90%]"
           />
-          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-px bg-ink/25" />
-        </motion.div>
+          <p className="font-inscription absolute top-5 left-5 rounded-full bg-paper/80 px-3 py-1.5 text-[0.6rem] tracking-[0.24em] text-ink uppercase backdrop-blur-sm">
+            {agent.firm}
+          </p>
+        </div>
 
-        <div className="pb-[clamp(40px,8vh,96px)] max-lg:-order-1">
+        <div className="self-center">
           <Reveal>
             <p data-rise className="font-display text-[1.15rem] text-gold-ink italic">
               Your agents
@@ -130,6 +118,24 @@ export default memo(function Agents({ agent, handles, onSection, onBook }) {
     </section>
   );
 });
+
+// fades in once loaded and in view, so it never pops in half drawn; no movement
+function FadeImg({ className, ...props }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.img
+      {...props}
+      width="1100"
+      height="950"
+      loading="lazy"
+      className={className}
+      initial={reduce ? false : { opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.8, ease: EASE }}
+    />
+  );
+}
 
 function Line({ label, children }) {
   return (

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Logo, { Mark } from "@/components/Logo";
+import { film } from "@/lib/film";
 import { inPlace, leave, siteUrl } from "@/lib/links";
 import Contours from "@/components/Contours";
 import Reveal from "@/components/Reveal";
@@ -108,15 +109,24 @@ export function ProjectPage({ id }) {
     if (!("arrive" in html.dataset)) return;
     const done = () => delete html.dataset.arrive;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return done();
-    html
-      .animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], {
-        duration: 900,
-        delay: 150,
-        easing: "cubic-bezier(0.77, 0, 0.175, 1)",
-        pseudoElement: "::before",
-        fill: "forwards",
-      })
-      .finished.then(done, done);
+    // hold the card until the page beneath has its type and hero poster (at most a moment), so the
+    // blind lifts on a finished page, never on one still drawing itself
+    const poster = new Promise((r) => {
+      const img = new Image();
+      img.onload = img.onerror = r;
+      img.src = `${projects[id].hero}.jpg`;
+    });
+    Promise.race([Promise.all([document.fonts.ready, poster]), new Promise((r) => setTimeout(r, 1200))]).then(() =>
+      html
+        .animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], {
+          duration: 1000,
+          delay: 120,
+          easing: "cubic-bezier(0.77, 0, 0.175, 1)",
+          pseudoElement: "::before",
+          fill: "forwards",
+        })
+        .finished.then(done, done)
+    );
   }, []);
 
   return (
@@ -228,7 +238,7 @@ function Project({ id, onClose, onGo, opened, heading: Title = "h2" }) {
         <>
           <section className="relative h-svh overflow-hidden">
             <motion.video
-              src={`${p.hero}.mp4`}
+              src={film(p.hero)}
               poster={`${p.hero}.jpg`}
               autoPlay
               muted

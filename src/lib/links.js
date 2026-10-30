@@ -30,6 +30,12 @@ const insetOf = (r) => `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight
 // The collection's navy, written out: a project's palette repaints --color-navy on its own site.
 export const HOUSE = "#14213a";
 
+// The colour card between two sites, the same on both sides of the page load: the destination's
+// name centred in its colour. leave() draws it on the page you leave; sites.js paints it as the
+// next page's very first frame (html[data-arrive]::before), so the two meet without a seam.
+export const ARRIVE =
+  "position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:0 16px;text-align:center;color:#f6f1e8;font:400 clamp(2.6rem,7vw,5.6rem)/1 var(--font-display);letter-spacing:-0.02em";
+
 // Leaving for another site (a project's, or the collection with no id): its colour grows out of
 // the element that was clicked (or rises from below) until it fills the screen, and the next page
 // opens out of that same colour (data-arrive, set in its HTML by sites.js), never a blank page.
@@ -38,11 +44,21 @@ export function leave(id, rect) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return location.assign(url);
   const from = rect ? insetOf(rect) : "inset(100% 0px 0px 0px)";
   const veil = document.createElement("div");
-  veil.style.cssText = `position:fixed;inset:0;z-index:90;background:${id ? projects[id].accent : HOUSE};clip-path:${from}`;
+  veil.style.cssText = `${ARRIVE};background:${id ? projects[id].accent : HOUSE};clip-path:${from}`;
+  const name = document.createElement("span");
+  name.textContent = id ? projects[id].name : "Heir Estates";
+  veil.append(name);
   document.body.append(veil);
+  // the name settles in as the colour fills, so the next page opens on the very same card
+  name.animate([{ opacity: 0, transform: "translateY(10px)", filter: "blur(4px)" }, { opacity: 1, transform: "none", filter: "none" }], {
+    duration: 420,
+    delay: 260,
+    easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+    fill: "backwards",
+  });
   // coming back with the browser's back button restores this page as it was left: clear the veil
   addEventListener("pageshow", () => veil.remove(), { once: true });
   veil
-    .animate([{ clipPath: from }, { clipPath: "inset(0px 0px 0px 0px)" }], { duration: 650, easing: "cubic-bezier(0.77, 0, 0.175, 1)", fill: "forwards" })
+    .animate([{ clipPath: from }, { clipPath: "inset(0px 0px 0px 0px)" }], { duration: 680, easing: "cubic-bezier(0.77, 0, 0.175, 1)", fill: "forwards" })
     .finished.then(() => location.assign(url));
 }
