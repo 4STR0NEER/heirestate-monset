@@ -24,16 +24,17 @@ const urlOf = (id) => absolute(siteUrl(id));
 // where a site's files are served from: its subdomain, or the shared address (media is at the root either way)
 const originOf = (id) => `${new URL(urlOf(id)).origin}/`;
 
-// "Street, City" or "Street, Town, Province 6000" as schema.org's PostalAddress
+// an address line as schema.org's PostalAddress: "Street, City", "Place, District, City" or, with
+// a postcode, "Street, Town, Province 6000". Everything here is in the province of Cebu.
 function postal(line) {
   const parts = line.split(", ");
-  const long = parts.length > 2;
-  const [region, code] = long ? parts.at(-1).split(" ") : ["Cebu"];
-  const street = parts.slice(0, long ? -2 : -1).join(", ");
+  const coded = parts.at(-1).match(/^(.*) (\d{4})$/);
+  const [locality, region, code] = coded ? [parts.at(-2), coded[1], coded[2]] : [parts.at(-1), "Cebu"];
+  const street = parts.slice(0, coded ? -2 : -1).join(", ");
   return {
     "@type": "PostalAddress",
     ...(street && { streetAddress: street }),
-    addressLocality: long ? parts.at(-2) : parts.at(-1),
+    addressLocality: locality,
     addressRegion: region,
     ...(code && { postalCode: code }),
     addressCountry: "PH",
@@ -67,6 +68,7 @@ const AGENTS = AGENT && {
   areaServed: "Cebu, Philippines",
   ...(AGENT.address && { address: postal(AGENT.address) }),
   parentOrganization: { "@type": "Organization", name: AGENT.firm },
+  ...(AGENT.profiles?.length && { sameAs: AGENT.profiles.map(([, href]) => href) }),
   identifier: AGENT.licences.map(([name, value]) => ({ "@type": "PropertyValue", name, value })),
 };
 const faqPage = (url, id) => ({

@@ -18,6 +18,10 @@ const LARANJO = {
   network: "LR Direct",
   address: "Teves, Vito, Minglanilla, Cebu 6000",
   photo: `${P}/laranjo.webp`, // their portrait, cut out of its white backdrop
+  // their pages elsewhere (Facebook, property portals, the brokerage's directory): each one is
+  // linked from the agents section and tells search engines these are the same people (sameAs)
+  // e.g. ["Facebook", "https://www.facebook.com/..."]
+  profiles: [],
 };
 
 // Project pages. Every fact comes from the client's material: the presentation deck (Alto),
@@ -634,14 +638,15 @@ export const projects = {
     // the name on its plans, and what a search result shows
     fullName: "North Grove at Pristina Town",
     seo: {
-      title: "North Grove at Pristina Town: Studio & 1BR Condos | Heir Estates",
+      title: "North Grove, Pristina Town Talamban: Studio & 1BR Condos | Heir Estates",
       description:
-        "North Grove at Pristina Town by Cebu Landmasters: studio (22.75 sqm) and one-bedroom (34.41 sqm) homes, ten percent down over five years. Plans and viewings.",
+        "North Grove at Pristina Town, Talamban, Cebu City, by Cebu Landmasters: studio (22.75 sqm) and one-bedroom (34.41 sqm) homes, 10% down over five years.",
     },
     // ours
     statement:
       "A town planned around a garden roundabout: residences with planted rooftops, palm-lined avenues, shaded walks and a retail promenade, all set against green hills.",
     facts: [
+      ["Location", "Pristina North, Talamban, Cebu City"],
       ["Towers", "Lumina (Tower 1) and Terra (Tower 2)"],
       ["Residences", "Studio and one-bedroom"],
       ["Typical studio", "22.75 sqm, Terra"],

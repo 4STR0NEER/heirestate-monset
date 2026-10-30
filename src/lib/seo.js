@@ -67,8 +67,13 @@ export function faqFor(id) {
   const units = unitTypes(p);
   const qa = [];
 
-  if (where) qa.push([`Where is ${name}?`, `${name} is ${/street/i.test(where) ? "on" : "in"} ${where}.${p.locationLine ? ` ${p.locationLine}` : ""}`]);
-  else if (p.place) qa.push([`Where is ${name}?`, `${p.name} is at ${p.place}.${towers ? ` Its residences are in two towers: ${towers}.` : ""}`]);
+  const inTowers = towers ? ` Its residences are in two towers: ${towers}.` : "";
+  if (where)
+    qa.push([
+      `Where is ${name}?`,
+      `${p.place ? `${p.name} is at ${p.place}, in` : `${name} is ${/street/i.test(where) ? "on" : "in"}`} ${where}.${p.locationLine ? ` ${p.locationLine}` : ""}${inTowers}`,
+    ]);
+  else if (p.place) qa.push([`Where is ${name}?`, `${p.name} is at ${p.place}.${inTowers}`]);
   if (dev) qa.push([`Who is the developer of ${name}?`, `${name} is developed by ${stop(dev)}.`]);
   if (units.length)
     qa.push([

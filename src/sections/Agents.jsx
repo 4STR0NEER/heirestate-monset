@@ -100,6 +100,15 @@ export default memo(function Agents({ agent, handles, onSection, onBook }) {
                 <span className="text-ink">{agent.address}</span>
               </Line>
             )}
+            {agent.profiles?.length > 0 && (
+              <Line label="Find them on">
+                {agent.profiles.map(([label, href]) => (
+                  <a key={href} href={href} target="_blank" rel="noopener me" className="block text-ink underline-offset-4 hover:underline">
+                    {label}
+                  </a>
+                ))}
+              </Line>
+            )}
             <div className="self-end">
               <button
                 type="button"
