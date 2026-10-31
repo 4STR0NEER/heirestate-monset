@@ -73,9 +73,9 @@ export const projects = {
     ],
     // what a search result shows: the name people search for, where it is and what it is
     seo: {
-      title: "Alto Ranudo Condominiums, V. Ranudo Street, Cebu City | Heir Estates",
+      title: "Alto Ranudo: Pre-Selling Condo on V. Ranudo St, Cebu City | Heir Estates",
       description:
-        "Alto Ranudo: 389 studio and one-bedroom residences in a 20-storey tower on V. Ranudo Street, Cebu City, by Cebu Landmasters. Floor plans and viewings.",
+        "Alto Ranudo, a pre-selling condo on V. Ranudo Street, Cebu City, by Cebu Landmasters: 389 studio and one-bedroom units in a 20-storey tower.",
     },
     // [9, 10, 15, 16]
     profile: {
@@ -245,14 +245,14 @@ export const projects = {
     // the name the developer markets it under, and what a search result shows
     fullName: "The Wave Towers",
     seo: {
-      title: "The Wave Towers: Condominiums in Cebu I.T. Park | Heir Estates",
+      title: "The Wave Towers: Pre-Selling Condo in Cebu IT Park | Heir Estates",
       description:
-        "The Wave Towers: 709 residences, studio to three-bedroom, in a 40-storey tower in Cebu I.T. Park, by Cebu Landmasters and NTT UD Asia. Plans and viewings.",
+        "The Wave Towers, a pre-selling condo in Cebu IT Park by Cebu Landmasters and NTT UD Asia: 709 studio to three-bedroom units among IT Park's offices.",
     },
     statement:
       "Set against the vibrant backdrop of Cebu, it stands as a testament to the harmonious blend of Japanese minimalism and Filipino warmth, an invitation to experience a lifestyle where serenity is strength.",
     facts: [
-      ["Location", "Cebu I.T. Park, Cebu City"],
+      ["Location", "Cebu IT Park, Cebu City"],
       ["Tower", "40 storeys, 35 residential floors"],
       ["Residences", "709 units"],
       ["Elevators", "5"],
@@ -331,7 +331,7 @@ export const projects = {
         src: `${P}/wave-dropoff.webp`,
         name: "Drop Off Area",
         pos: "30% 50%",
-        note: "Rising within Cebu I.T. Park, The Wave Towers stands at the center of one of Cebu's most dynamic business and lifestyle hubs.",
+        note: "Rising within Cebu IT Park, The Wave Towers stands at the center of one of Cebu's most dynamic business and lifestyle hubs.",
       },
       {
         src: `${P}/wave-lobby.webp`,
@@ -587,7 +587,7 @@ export const projects = {
       "The Wave Towers is developed by CLNUD Ventures, a joint venture of Cebu Landmasters and NTT UD Asia. Renders are architect's perspectives; layouts and areas are from the developer's brochure and may change.",
     agent: LARANJO,
     // the brochure's location page (page 10): its line, and its distances in km, each with the kind of place it is
-    locationLine: "Within Cebu I.T. Park, one of Cebu's most dynamic business and lifestyle hubs, with seamless connectivity to top-tier offices, retail and urban conveniences.",
+    locationLine: "Within Cebu IT Park, one of Cebu's most dynamic business and lifestyle hubs, with seamless connectivity to top-tier offices, retail and urban conveniences.",
     nearby: [
       ["Ayala Central Bloc", 0.22, "Shopping"],
       ["Cebu Country Club", 1.1, "School, club and church"],
@@ -638,9 +638,9 @@ export const projects = {
     // the name on its plans, and what a search result shows
     fullName: "North Grove at Pristina Town",
     seo: {
-      title: "North Grove, Pristina Town Talamban: Studio & 1BR Condos | Heir Estates",
+      title: "North Grove, Pristina North Talamban: Pre-Selling Condos | Heir Estates",
       description:
-        "North Grove at Pristina Town, Talamban, Cebu City, by Cebu Landmasters: studio (22.75 sqm) and one-bedroom (34.41 sqm) homes, 10% down over five years.",
+        "North Grove, Pristina North, Talamban, Cebu: pre-selling studio (22.75 sqm) and one-bedroom (34.41 sqm) condos by Cebu Landmasters, 10% down over 5 years.",
     },
     // ours
     statement:

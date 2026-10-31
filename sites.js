@@ -41,6 +41,9 @@ function postal(line) {
   };
 }
 
+// the house's name as people type it into a search box: Google's site name reads these
+const ALIASES = ["HeirEstates", "heirestates.com"];
+
 // The house, and the licensed agents behind every project: the same two entities on every site,
 // so search and answer engines tie the sites together and to the people who answer for them.
 const AGENT = agentOf();
@@ -48,6 +51,7 @@ const ORG = {
   "@type": "Organization",
   "@id": `${urlOf()}#org`,
   name: BRAND,
+  alternateName: ALIASES,
   url: urlOf(),
   areaServed: "Cebu, Philippines",
   ...(AGENT && {
@@ -82,9 +86,14 @@ function page(site) {
     const url = urlOf();
     return {
       url,
-      title: `${BRAND} · Cebu Condominiums: Alto Ranudo, The Wave, North Grove`,
+      title: `${BRAND} | Pre-Selling Condos in Cebu City: Alto Ranudo, The Wave, North Grove`,
       description: clip(
-        `Three Cebu condominium projects: ${new Intl.ListFormat("en").format(order.map((id) => fullName(projects[id])))}. Floor plans, amenities and viewings with licensed agents.`
+        `Pre-selling condos in Cebu City: ${new Intl.ListFormat("en").format(
+          order.map((id) => {
+            const where = fact(projects[id], "Location").replace(/, Cebu City$/, "");
+            return `${projects[id].name} ${/street/i.test(where) ? "on" : "in"} ${where}`;
+          })
+        )}. Plans and viewings.`
       ),
       image: `${originOf()}media/p/${order[0]}-hero.jpg`,
       imageAlt: `${fullName(projects[order[0]])}, one of the ${BRAND} projects`,
@@ -92,7 +101,7 @@ function page(site) {
       preload: `${projects[order[0]].hero}.jpg`, // the hero's opening film's poster is the first big paint
       graph: [
         ORG,
-        { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, inLanguage: "en", publisher: { "@id": ORG["@id"] } },
+        { "@type": "WebSite", "@id": `${url}#website`, url, name: BRAND, alternateName: ALIASES, inLanguage: "en", publisher: { "@id": ORG["@id"] } },
         AGENTS,
         {
           "@type": "ItemList",
@@ -245,7 +254,9 @@ export default function sites() {
       const emit = (fileName, source) => this.emitFile({ type: "asset", fileName, source });
       // on one shared address (no domain yet) the collection's sitemap lists every project's page too
       const urls = site === "main" && !DOMAIN ? [url, ...order.map(urlOf)] : [url];
-      emit("robots.txt", `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`);
+      // the collection's robots.txt also names each project's sitemap, so finding the house finds every subdomain
+      const maps = site === "main" && DOMAIN ? [url, ...order.map(urlOf)] : [url];
+      emit("robots.txt", `User-agent: *\nAllow: /\n\n${maps.map((u) => `Sitemap: ${u}sitemap.xml`).join("\n")}\n`);
       // each address with the day it was built and the pictures on it (Google's image sitemap extension)
       const pics = (u) => (u === url ? page(site).images : []).map((i) => `<image:image><image:loc>${i}</image:loc></image:image>`).join("");
       emit(

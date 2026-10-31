@@ -46,12 +46,19 @@ export function faqFor(id) {
       const kinds = unitTypes(p).map((u) => u.name.toLowerCase());
       return `${fullName(p)}${where ? `, ${where}` : ""}: ${list(kinds)} residences`;
     };
+    // the project in Cebu IT Park, for people looking to buy there and lease to the people who work there
+    const it = order.map((pid) => projects[pid]).find((p) => /IT Park/.test(fact(p, "Location") ?? ""));
     return [
       [
         `What is ${BRAND}?`,
-        `${BRAND} presents ${["no", "one", "two", "three", "four", "five"][order.length] ?? order.length} residential projects in Cebu: ${list(order.map((pid) => fullName(projects[pid])))}. Each has a site of its own with its films, floor plans, amenities and a way to arrange a viewing.`,
+        `${BRAND} presents ${["no", "one", "two", "three", "four", "five"][order.length] ?? order.length} pre-selling condominium projects in Cebu City: ${list(order.map((pid) => fullName(projects[pid])))}. Each has a site of its own with its films, floor plans, amenities and a way to arrange a viewing.`,
       ],
-      ["Which projects are open now?", `${order.map(line).join("; ")}.`],
+      ["Which pre-selling condos are open now?", `${order.map(line).join("; ")}.`],
+      it &&
+        a && [
+          "Is there a condo in Cebu IT Park I can buy and rent out?",
+          `${fullName(it)} is within Cebu IT Park itself, among its offices${it.nearby ? `, ${away(it.nearby[0][1])} from ${it.nearby[0][0]}` : ""}. If you plan to lease your unit, ask ${a.names} about rental demand in IT Park and the developer's leasing rules.`,
+        ],
       a && ["Who handles enquiries and viewings?", contact(a)],
       a && ["How do I get a price list or book a viewing?", `Ask ${a.names} for the current price list, floor plans or a viewing of any of the projects. ${contact(a).split(". ").slice(1).join(". ")}`],
     ].filter(Boolean);
